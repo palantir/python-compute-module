@@ -13,11 +13,13 @@
 #  limitations under the License.
 
 
+import shutil
 import subprocess
 import sys
 from itertools import chain
+from os import unlink
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Iterator, List, Tuple
 
 SOURCE_DIR = "compute_modules"
 TESTS_DIR = "tests"
@@ -79,6 +81,10 @@ def _iterate_licensed_files(num_lines: int) -> Iterator[Tuple[str, str]]:
         yield filename, file_head
 
 
+def _get_files_list_str(files_list: List[str]) -> str:
+    return "\n".join([f"\t{filename}" for filename in files_list])
+
+
 def check_license() -> None:
     """Raises an exception if there are any files with no license present at the top of the file"""
     expected_license_content, num_lines = _get_license_content()
@@ -87,16 +93,34 @@ def check_license() -> None:
         if not file_head.startswith(expected_license_content):
             failed_files.append(filename)
     if failed_files:
-        failed_files_str = "\n".join([f"\t{filename}" for filename in failed_files])
         print(
-            "Some files did not have the license header included! "
-            f"Files listed below:\n\n {failed_files_str}\n\n"
-            "Run `poetry run license` and commit to fix the issue"
+            "Some files did not have the license header included!\n\n"
+            + _get_files_list_str(failed_files)
+            + "\n\nRun `poetry run license` and commit to fix the issue"
         )
     else:
         print(f"All {FILES_WITH_LICENSE_NEEDED_GLOB_EXPR} have license header")
     sys.exit(len(failed_files))
 
 
-# if __name__ == "__main__":
-#     check_license()
+def _add_license_to_file(filepath: str, license_content: str) -> None:
+    """Adds license header to top of a file"""
+    with open(filepath, "r") as old:
+        unlink(filepath)
+        with open(filepath, "w") as new:
+            new.write(license_content + "\n\n\n")
+            shutil.copyfileobj(old, new)
+
+
+def license() -> None:
+    """Adds license header to any files that are missing it"""
+    expected_license_content, num_lines = _get_license_content()
+    updated_files = []
+    for filename, file_head in _iterate_licensed_files(num_lines=num_lines):
+        if not file_head.startswith(expected_license_content):
+            _add_license_to_file(filepath=filename, license_content=expected_license_content)
+            updated_files.append(filename)
+    if updated_files:
+        print(f"Added license to the following files:\n\n{_get_files_list_str(updated_files)}")
+    else:
+        print(f"All {FILES_WITH_LICENSE_NEEDED_GLOB_EXPR} have license header")
