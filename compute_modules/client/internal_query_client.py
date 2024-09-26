@@ -25,8 +25,8 @@ from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
+from compute_modules.function_registry.types import ComputeModuleFunctionSchema, PythonClassNode
 from compute_modules.logging.internal import get_internal_logger
-from compute_modules.types import ComputeModuleFunctionSchema, PythonClassNode
 
 from ..context import get_extra_context_parameters
 

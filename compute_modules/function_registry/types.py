@@ -16,6 +16,7 @@
 import datetime
 import decimal
 import typing
+from dataclasses import dataclass
 
 DataTypeDict = typing.Dict[str, typing.Any]
 
@@ -55,6 +56,13 @@ class ComputeModuleFunctionSchema(typing.TypedDict):
     functionName: str
     inputs: typing.List[FunctionInputType]
     output: FunctionOutputType
+
+
+@dataclass
+class ParseFunctionSchemaResult:
+    function_schema: ComputeModuleFunctionSchema
+    class_node: typing.Optional[PythonClassNode]
+    is_context_typed: bool
 
 
 Byte = typing.NewType("Byte", int)

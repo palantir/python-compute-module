@@ -18,8 +18,8 @@ from typing import Optional
 import pytest
 
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
-from compute_modules.types import ComputeModuleFunctionSchema, FunctionOutputType
-from tests.function_registry.dummy_app import DummyInput, ParentClass, dummy_func_1, dummy_func_2
+from compute_modules.function_registry.types import ComputeModuleFunctionSchema, FunctionOutputType
+from tests.function_registry.dummy_app import DummyInput, ParentClass, dummy_func_1, dummy_func_2, dummy_func_3
 from tests.function_registry.dummy_app_with_issues import (
     dummy_args_init,
     dummy_kwargs_init,
@@ -27,7 +27,7 @@ from tests.function_registry.dummy_app_with_issues import (
     dummy_no_type_hints,
 )
 
-EXPECTED_OUTPUT = {
+EXPECTED_OUTPUT_1 = {
     "single": {
         "dataType": {
             "anonymousCustomType": {
@@ -43,6 +43,16 @@ EXPECTED_OUTPUT = {
                 }
             },
             "type": "anonymousCustomType",
+        }
+    },
+    "type": "single",
+}
+
+EXPECTED_OUTPUT_3 = {
+    "single": {
+        "dataType": {
+            "integer": {},
+            "type": "integer",
         }
     },
     "type": "single",
@@ -103,27 +113,29 @@ EXPECTED_INPUTS = [
 
 def test_function_schema_parser() -> None:
     """Test the happy path for parse_function_schemas_from_module"""
-    function_schema, class_node = parse_function_schema(dummy_func_1, "dummy_func_1")
-    assert function_schema["functionName"] == "dummy_func_1"
-    assert function_schema["output"] == EXPECTED_OUTPUT
-    assert len(function_schema["inputs"]) == len(EXPECTED_INPUTS)
-    assert class_node is not None
-    assert class_node["constructor"] is DummyInput
-    assert function_schema["inputs"] == EXPECTED_INPUTS
-    assert class_node["children"] is not None
-    assert class_node["children"]["parent_class"]["constructor"] is ParentClass
-    assert class_node["children"]["optional_field"]["constructor"] is Optional
-    assert class_node["children"]["set_field"]["constructor"] is set
-    assert class_node["children"]["map_field"]["constructor"] is dict
-    assert class_node["children"]["some_flag"]["constructor"] is bool
-    assert class_node["children"]["some_flag"]["children"] is None
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1")
+    assert parse_result.function_schema["functionName"] == "dummy_func_1"
+    assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_1
+    assert len(parse_result.function_schema["inputs"]) == len(EXPECTED_INPUTS)
+    assert parse_result.class_node is not None
+    assert parse_result.class_node["constructor"] is DummyInput
+    assert parse_result.function_schema["inputs"] == EXPECTED_INPUTS
+    assert parse_result.class_node["children"] is not None
+    assert parse_result.class_node["children"]["parent_class"]["constructor"] is ParentClass
+    assert parse_result.class_node["children"]["optional_field"]["constructor"] is Optional
+    assert parse_result.class_node["children"]["set_field"]["constructor"] is set
+    assert parse_result.class_node["children"]["map_field"]["constructor"] is dict
+    assert parse_result.class_node["children"]["some_flag"]["constructor"] is bool
+    assert parse_result.class_node["children"]["some_flag"]["children"] is None
+    assert parse_result.is_context_typed is False
 
 
 def test_function_schema_parser_no_type_hints() -> None:
     """Test 'happy' path, but on a function with no type hints"""
-    function_schema, class_node = parse_function_schema(dummy_func_2, "dummy_func_2")
-    assert class_node is None
-    assert function_schema == ComputeModuleFunctionSchema(
+    parse_result = parse_function_schema(dummy_func_2, "dummy_func_2")
+    assert parse_result.class_node is None
+    assert parse_result.is_context_typed is False
+    assert parse_result.function_schema == ComputeModuleFunctionSchema(
         functionName="dummy_func_2",
         inputs=[],
         output=FunctionOutputType(
@@ -136,6 +148,16 @@ def test_function_schema_parser_no_type_hints() -> None:
             },
         ),
     )
+
+
+def test_function_schema_parser_context_output_only() -> None:
+    """Test 'happy' path for a function that uses type hints only for the context & return type"""
+    parse_result = parse_function_schema(dummy_func_3, "dummy_func_3")
+    assert parse_result.class_node is None
+    assert parse_result.is_context_typed
+    assert parse_result.function_schema["functionName"] == "dummy_func_3"
+    assert parse_result.function_schema["inputs"] == []
+    assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_3
 
 
 def test_exception_no_type_hints() -> None:
