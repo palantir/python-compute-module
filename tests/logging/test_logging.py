@@ -33,7 +33,7 @@ CLIENT_CRITICAL_STR = "how I wonder"
 
 
 def _emit_internal_logs() -> None:
-    logger = internal.get_internal_logger("teapot")
+    logger = internal.create_log_adapter(process_id="0", job_id="teapot")
     logger.debug(DEBUG_STR)
     logger.info(INFO_STR)
     logger.warning(WARNING_STR)

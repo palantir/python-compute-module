@@ -26,4 +26,6 @@ def set_compute_modules_log_level(level: Union[str, int]) -> None:
 
 def get_logger(name: str, format: Optional[str] = None) -> logging.Logger:
     """Creates a logging.Logger instance for use within a compute module"""
+    # TODO: maybe return a LoggerAdapter here so we can include job_id & process_id in client logs too?
+    # that would require adding process_id to the query_context
     return _create_logger(name=name, format=format)

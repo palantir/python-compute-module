@@ -24,9 +24,8 @@ logger = logging.getLogger(__name__)
 def convert_payload(
     raw_payload: typing.Any,
     class_tree: PythonClassNode,
-    process_logger: typing.Optional[logging.Logger] = None,
+    process_logger: logging.LoggerAdapter[typing.Any],
 ) -> typing.Any:
-    my_logger = process_logger or logger
     try:
         if raw_payload is None:
             return None
@@ -63,5 +62,5 @@ def convert_payload(
             )
         return type_constructor(**converted_children)
     except Exception as e:
-        my_logger.error(f"Error converting {raw_payload} to type {class_tree['constructor']}")
+        process_logger.error(f"Error converting {raw_payload} to type {class_tree['constructor']}")
         raise e

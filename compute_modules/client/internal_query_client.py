@@ -21,12 +21,12 @@ import ssl
 import time
 import traceback
 from contextlib import contextmanager
-from logging import Logger
+from logging import LoggerAdapter
 from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
-from compute_modules.logging.internal import get_internal_logger
+from compute_modules.logging.internal import create_log_adapter
 from compute_modules.types import ComputeModuleFunctionSchema, PythonClassNode
 
 from ..utils._context import get_extra_context_parameters
@@ -61,13 +61,22 @@ class InternalQueryService:
         self.context = ssl.create_default_context(cafile=self.certPath)
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
-        self._logger = get_internal_logger("pre_fork")
-        self._job_logger: Optional[Logger] = None
+        self.process_id = -1
+        self._logger = create_log_adapter()
+        self._job_logger: Optional[LoggerAdapter[Any]] = None
 
     @property
-    def logger(self) -> Logger:
+    def logger(self) -> LoggerAdapter[Any]:
         """Provide the proper logger depending on location"""
         return self._job_logger or self._logger
+
+    def _clear_job_logger(self) -> None:
+        """Clear the _job_logger until we receive another job"""
+        self._job_logger = None
+
+    def _set_job_logger(self, job_id: str) -> None:
+        """Create a new LoggerAdapter to provide contextual information in logs"""
+        self._job_logger = create_log_adapter(process_id=str(self.process_id), job_id=job_id)
 
     def _initialize_auth_token(self) -> None:
         try:
@@ -203,7 +212,7 @@ class InternalQueryService:
             "authHeader": authHeader,
             **get_extra_context_parameters(),
         }
-        self._job_logger = get_internal_logger(f"job.{job_id}", parent=self._logger)
+        self._set_job_logger(job_id=job_id)
         self.logger.debug(f"Received job: {job_id}, queryType: {query_type}")
         try:
             self.logger.debug(f"Executing job: {job_id}")
@@ -215,7 +224,7 @@ class InternalQueryService:
 
         self.logger.debug(f"Reporting result for job: {job_id}")
         self.report_job_result(job_id, result)
-        self._job_logger = None
+        self._clear_job_logger()
 
     def get_result(
         self,
@@ -230,7 +239,7 @@ class InternalQueryService:
                 typed_query = convert_payload(
                     query,
                     self.function_schema_conversions[query_type],
-                    process_logger=self._logger,
+                    process_logger=self.logger,
                 )
                 return self.registered_functions[query_type](query_context, typed_query)
             else:
@@ -253,7 +262,8 @@ class InternalQueryService:
             p.join()
 
     def poll_forever(self, process_id: int) -> None:
-        self._logger = get_internal_logger(f"process.{process_id}")
+        self.process_id = process_id
+        self._logger = create_log_adapter(process_id=str(process_id))
         while True:
             self.logger.info("Polling for new jobs...")
             self.handle_query()

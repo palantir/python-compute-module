@@ -20,6 +20,7 @@ import pytest
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
+from compute_modules.logging.internal import create_log_adapter
 from tests.function_registry.dummy_app import ChildClass, DummyInput, ParentClass, dummy_func_1
 
 RAW_PAYLOAD = {
@@ -45,6 +46,8 @@ BAD_RAW_PAYLOAD = {
     "map_field": {"dmFsdWU=": "1.0", "dmFsdWUy": "2.0"},
     "some_flag": True,
 }
+
+LOGGER_ADAPTER = create_log_adapter()
 
 
 @pytest.fixture()
@@ -78,7 +81,7 @@ def test_convert_payload(
     """Test the happy path for convert_payload"""
     _, class_node = parse_function_schema(dummy_func_1, "dummy_func_1")
     assert class_node
-    processed_payload: DummyInput = convert_payload(RAW_PAYLOAD, class_node)
+    processed_payload: DummyInput = convert_payload(RAW_PAYLOAD, class_node, LOGGER_ADAPTER)
     assert processed_payload is not None
     assert processed_payload.parent_class.child.__dict__ == expected_return_value.parent_class.child.__dict__
     assert processed_payload.parent_class.some_flag == expected_return_value.parent_class.some_flag
@@ -96,6 +99,6 @@ def test_convert_payload_error(
     _, class_node = parse_function_schema(dummy_func_1, "dummy_func_1")
     assert class_node
     with pytest.raises(ValueError) as exc_info:
-        convert_payload(BAD_RAW_PAYLOAD, class_node)
+        convert_payload(BAD_RAW_PAYLOAD, class_node, LOGGER_ADAPTER)
     assert str(exc_info.value) == "Invalid isoformat string: 'do'"
     assert "Error converting do to type <built-in method fromisoformat" in caplog.text

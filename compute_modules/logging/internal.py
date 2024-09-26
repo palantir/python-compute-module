@@ -14,7 +14,8 @@
 
 
 import logging
-from typing import Optional, Union
+from typing import Any, Optional, Union
+from uuid import UUID
 
 
 def _create_logger(name: str, format: Optional[str] = None) -> logging.Logger:
@@ -34,30 +35,34 @@ def _create_logger(name: str, format: Optional[str] = None) -> logging.Logger:
 
 def _set_log_level(level: Union[str, int]) -> None:
     """Set the log level of the compute_modules logger"""
-    _ROOT_LOGGER.setLevel(level=level)
+    INTERNAL_ROOT_LOGGER.setLevel(level=level)
 
 
-def get_internal_logger(logger_name: str, parent: Optional[logging.Logger] = None) -> logging.Logger:
-    """Produces a Logger that is a child of the parent Logger provided.
-    If no parent logger is provided, then _ROOT_LOGGER is used as the parent.
-    This is useful because child loggers inherit configurations from their ancestors,
-    while also providing additional information about the source of a log in the log itself.
-
-    For internal (within compute_modules library) use only.
-    """
-    my_parent = parent or _ROOT_LOGGER
-    return my_parent.getChild(logger_name)
+def create_log_adapter(
+    process_id: str = "-1",
+    job_id: str = str(UUID(int=0)),
+) -> logging.LoggerAdapter[Any]:
+    return logging.LoggerAdapter(
+        logger=INTERNAL_ROOT_LOGGER,
+        extra=dict(
+            process_id=process_id,
+            job_id=job_id,
+        ),
+    )
 
 
 # TODO: add instance/replica ID to root logger
-_ROOT_LOGGER = _create_logger(
+# DO NOT USE INTERNAL_ROOT_LOGGER DIRECTLY. You will get an error
+# Use `create_log_adapter`; this will create a wrapper that provides contextural information to the logs
+# See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
+INTERNAL_ROOT_LOGGER = _create_logger(
     name="compute_modules",
-    format="%(levelname)s:%(name)s:%(filename)s:%(lineno)d:%(message)s",
+    format="%(levelname)-8s PID: %(process_id)-2s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s",
 )
 _set_log_level(logging.ERROR)
 
 
 __all__ = [
-    "get_internal_logger",
+    "create_log_adapter",
     "_set_log_level",
 ]
