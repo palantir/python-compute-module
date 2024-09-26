@@ -191,11 +191,11 @@ class InternalQueryService:
         job_id = v1.get("jobId")
         query_type = v1.get("queryType")
         query = v1.get("query")
-        tempToken = v1.get("temporaryCredentialsAuthToken", "")
+        tempCredsAuthToken = v1.get("temporaryCredentialsAuthToken", "")
         authHeader = v1.get("authHeader", "")
         query_context = {
             "jobId": job_id,
-            "tempToken": tempToken,
+            "tempCredsAuthToken": tempCredsAuthToken,
             "authHeader": authHeader,
             **get_extra_context_parameters(),
         }
