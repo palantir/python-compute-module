@@ -203,7 +203,7 @@ class InternalQueryService:
             "authHeader": authHeader,
             **get_extra_context_parameters(),
         }
-        self._job_logger = get_internal_logger(f"job.{job_id}")
+        self._job_logger = get_internal_logger(f"job.{job_id}", parent=self._logger)
         self.logger.debug(f"Received job: {job_id}, queryType: {query_type}")
         try:
             self.logger.debug(f"Executing job: {job_id}")
