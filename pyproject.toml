@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "foundry-compute-modules"
+version = "0.0.0"
+description = "The official Python library for creating Compute Modules"
+authors = ["Palantir Technologies, Inc."]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/palantir/python-compute-module"
+keywords = ["Palantir", "Foundry", "Compute Modules"]
+packages = [{ include = "compute_modules" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "24.1.1"
+isort = "5.13.2"
+mypy = "1.9.0"
+ruff = "0.2.1"
+pytest = "8.0.0"
+pytest-html = "4.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+test = "scripts.checks:test"
+check_format = "scripts.checks:check_format"
+check_mypy = "scripts.checks:check_mypy"
+format = "scripts.checks:format"
+set_version = "scripts.set_version:main"
+
+[tool.black]
+line_length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pytest.ini_options]
+addopts = "--junitxml=./build/pytest-results/pytest-results.xml --html=./build/pytest-results/pytest-results.html"
+cache_dir = "build/.pytest_cache"
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+line-length = 120
+cache-dir = "build/.ruff_cache"
+
+[tool.mypy]
+strict = true
