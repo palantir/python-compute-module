@@ -19,9 +19,30 @@ from typing import Any, Dict, Optional
 
 @dataclass
 class QueryContext:
+    """Metadata for the job being executed that is not included in the event payload"""
+
     authHeader: str
+    """Foundry auth token that can be used to call other services within Foundry.
+    Only available in certain modes
+    """
+
     jobId: str
+    """The unique identifier for the given job"""
+
     tempCredsAuthToken: Optional[str] = None
+    """A temporary token that is used with the Foundry data sidecar."""
+
     CLIENT_ID: Optional[str] = None
+    """Client ID of the third party application associated with this compute module.
+    Present when in functions mode and when using application permissions.
+    Use this to get a Foundry scoped token from your third party application service user.
+    """
+
     CLIENT_SECRET: Optional[str] = None
+    """Client secret of the third party application associated with this compute module.
+    Present when in functions mode and when using application permission.
+    Use this to get a Foundry scoped token from your third party application service user.
+    """
+
     sources: Optional[Dict[str, Any]] = None
+    """dict containing the metadata of any sources configured for this compute module."""
