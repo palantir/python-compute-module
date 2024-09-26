@@ -21,6 +21,7 @@ import ssl
 import time
 import traceback
 from contextlib import contextmanager
+from logging import Logger
 from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
@@ -60,7 +61,13 @@ class InternalQueryService:
         self.context = ssl.create_default_context(cafile=self.certPath)
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
-        self.logger = get_internal_logger("pre_fork")
+        self._logger = get_internal_logger("pre_fork")
+        self._job_logger: Optional[Logger] = None
+
+    @property
+    def logger(self) -> Logger:
+        """Provide the proper logger depending on location"""
+        return self._job_logger or self._logger
 
     def _initialize_auth_token(self) -> None:
         try:
@@ -196,6 +203,7 @@ class InternalQueryService:
             "authHeader": authHeader,
             **get_extra_context_parameters(),
         }
+        self._job_logger = get_internal_logger(f"job.{job_id}")
         self.logger.debug(f"Received job: {job_id}, queryType: {query_type}")
         try:
             self.logger.debug(f"Executing job: {job_id}")
@@ -207,6 +215,7 @@ class InternalQueryService:
 
         self.logger.debug(f"Reporting result for job: {job_id}")
         self.report_job_result(job_id, result)
+        self._job_logger = None
 
     def get_result(
         self,
@@ -221,7 +230,7 @@ class InternalQueryService:
                 typed_query = convert_payload(
                     query,
                     self.function_schema_conversions[query_type],
-                    process_logger=self.logger,
+                    process_logger=self._logger,
                 )
                 return self.registered_functions[query_type](query_context, typed_query)
             else:
@@ -244,7 +253,7 @@ class InternalQueryService:
             p.join()
 
     def poll_forever(self, process_id: int) -> None:
-        self.logger = get_internal_logger(f"process.{process_id}")
+        self._logger = get_internal_logger(f"process.{process_id}")
         while True:
             self.logger.info("Polling for new jobs...")
             self.handle_query()
