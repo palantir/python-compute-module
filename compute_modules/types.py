@@ -16,7 +16,6 @@
 import datetime
 import decimal
 import typing
-from dataclasses import dataclass
 
 DataTypeDict = typing.Dict[str, typing.Any]
 
@@ -56,14 +55,6 @@ class ComputeModuleFunctionSchema(typing.TypedDict):
     functionName: str
     inputs: typing.List[FunctionInputType]
     output: FunctionOutputType
-
-
-# TODO: enable user to use this static type for the `context` param
-@dataclass
-class QueryContext:
-    authHeader: str
-    jobId: str
-    tempCredsAuthToken: typing.Optional[str]
 
 
 Byte = typing.NewType("Byte", int)

@@ -11,3 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
+
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
+
+@dataclass
+class QueryContext:
+    authHeader: str
+    jobId: str
+    tempCredsAuthToken: Optional[str] = None
+    CLIENT_ID: Optional[str] = None
+    CLIENT_SECRET: Optional[str] = None
+    sources: Optional[Dict[str, Any]] = None

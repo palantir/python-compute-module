@@ -28,7 +28,7 @@ from compute_modules.function_registry.function_payload_converter import convert
 from compute_modules.logging.internal import get_internal_logger
 from compute_modules.types import ComputeModuleFunctionSchema, PythonClassNode
 
-from ..utils._context import get_extra_context_parameters
+from ..context import get_extra_context_parameters
 
 POST_RESULT_MAX_ATTEMPTS = 5
 POST_SCHEMAS_MAX_ATTEMPTS = 5
