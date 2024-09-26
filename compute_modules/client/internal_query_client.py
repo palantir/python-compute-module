@@ -248,4 +248,3 @@ class InternalQueryService:
         while True:
             self.logger.info("Polling for new jobs...")
             self.handle_query()
-            self.handle_query()
