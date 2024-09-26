@@ -24,6 +24,7 @@ from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
+from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema, PythonClassNode
 from compute_modules.logging.internal import get_internal_logger
@@ -45,10 +46,12 @@ class InternalQueryService:
         registered_functions: Dict[str, Callable[..., Any]],
         function_schemas: List[ComputeModuleFunctionSchema],
         function_schema_conversions: Dict[str, PythonClassNode],
+        is_function_context_typed: Dict[str, bool],
     ):
         self.registered_functions = registered_functions
         self.function_schemas = function_schemas
         self.function_schema_conversions = function_schema_conversions
+        self.is_function_context_typed = is_function_context_typed
         self.host = os.environ["RUNTIME_HOST"]
         self.port = int(os.environ["RUNTIME_PORT"])
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
@@ -216,6 +219,8 @@ class InternalQueryService:
     ) -> Any:
         registered_fn_keys = self.registered_functions.keys()
         if query_type in self.registered_functions:
+            typed_query = query
+            typed_context = query_context
             if query_type in self.function_schema_conversions:
                 self.logger.debug(f"Found schema conversion for query {query_type}. Converting to typed payload")
                 typed_query = convert_payload(
@@ -223,9 +228,9 @@ class InternalQueryService:
                     self.function_schema_conversions[query_type],
                     process_logger=self.logger,
                 )
-                return self.registered_functions[query_type](query_context, typed_query)
-            else:
-                return self.registered_functions[query_type](query_context, query)
+            if self.is_function_context_typed[query_type]:
+                typed_context = QueryContext(**query_context)  # type: ignore[assignment]
+            return self.registered_functions[query_type](typed_context, typed_query)
         else:
             self.logger.error(f"Unknown query type: {query_type}. Known query runners: {registered_fn_keys}")
             return {"error": "Unknown query type"}

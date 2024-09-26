@@ -17,6 +17,7 @@ from compute_modules.client.internal_query_client import InternalQueryService
 from compute_modules.function_registry.function_registry import (
     FUNCTION_SCHEMA_CONVERSIONS,
     FUNCTION_SCHEMAS,
+    IS_FUNCTION_CONTEXT_TYPED,
     REGISTERED_FUNCTIONS,
 )
 
@@ -27,5 +28,6 @@ def start_compute_module() -> None:
         registered_functions=REGISTERED_FUNCTIONS,
         function_schemas=FUNCTION_SCHEMAS,
         function_schema_conversions=FUNCTION_SCHEMA_CONVERSIONS,
+        is_function_context_typed=IS_FUNCTION_CONTEXT_TYPED,
     )
     query_client.start()
