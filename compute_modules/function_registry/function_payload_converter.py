@@ -16,6 +16,8 @@
 import logging
 import typing
 
+from compute_modules.logging.common import ComputeModulesLoggerAdapter
+
 from ..types import PythonClassNode
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 def convert_payload(
     raw_payload: typing.Any,
     class_tree: PythonClassNode,
-    process_logger: logging.LoggerAdapter[typing.Any],
+    process_logger: ComputeModulesLoggerAdapter,
 ) -> typing.Any:
     try:
         if raw_payload is None:

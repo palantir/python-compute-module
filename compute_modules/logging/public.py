@@ -13,19 +13,21 @@
 #  limitations under the License.
 
 
-import logging
-from typing import Optional, Union
-
-from .internal import _create_logger, _set_log_level
+from .common import ComputeModulesLoggerAdapter, create_logger
 
 
-def set_compute_modules_log_level(level: Union[str, int]) -> None:
-    """Set the log level for logs produces by the compute_modules library. Useful for debugging"""
-    _set_log_level(level)
+def get_logger() -> ComputeModulesLoggerAdapter:
+    """Creates a logger instance for use within a compute module"""
+    return PUBLIC_LOGGER_ADAPTER
 
 
-def get_logger(name: str, format: Optional[str] = None) -> logging.Logger:
-    """Creates a logging.Logger instance for use within a compute module"""
-    # TODO: maybe return a LoggerAdapter here so we can include job_id & process_id in client logs too?
-    # that would require adding process_id to the query_context
-    return _create_logger(name=name, format=format)
+# DO NOT USE PUBLIC_LOGGER DIRECTLY. You will get an error
+# Use `create_log_adapter`; this will create a wrapper that provides contextural information to the logs
+# See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
+PUBLIC_LOGGER = create_logger("compute_modules")
+PUBLIC_LOGGER_ADAPTER = ComputeModulesLoggerAdapter(logger=PUBLIC_LOGGER)
+
+
+__all__ = [
+    "get_logger",
+]

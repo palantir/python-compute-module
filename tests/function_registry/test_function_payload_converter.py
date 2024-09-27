@@ -20,7 +20,7 @@ import pytest
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
-from compute_modules.logging.internal import create_log_adapter
+from compute_modules.logging.internal import get_internal_logger
 from tests.function_registry.dummy_app import ChildClass, DummyInput, ParentClass, dummy_func_1
 
 RAW_PAYLOAD = {
@@ -47,7 +47,7 @@ BAD_RAW_PAYLOAD = {
     "some_flag": True,
 }
 
-LOGGER_ADAPTER = create_log_adapter()
+LOGGER_ADAPTER = get_internal_logger()
 
 
 @pytest.fixture()

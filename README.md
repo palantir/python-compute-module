@@ -281,10 +281,10 @@ logger.critical("Peekaboo!")
 ```
 
 ### Surfacing logs from the `compute_modules` library
-By default, the logs emitted from within the `compute_modules` library have a level of `ERROR`, meaning only error- or critical-level logs will be emitted. If for any reason you want to see other logs being emitted from within `compute_modules` you can use the `set_compute_modules_log_level` function.
+By default, the logs emitted from within the `compute_modules` library have a level of `ERROR`, meaning only error- or critical-level logs will be emitted. If for any reason you want to see other logs being emitted from within `compute_modules` you can use the `set_internal_log_level` function.
 
 ```python
-from compute_modules.logging import set_compute_modules_log_level
+from compute_modules.logging import set_internal_log_level
 
-set_compute_modules_log_level(logging.DEBUG)
+set_internal_log_level(logging.DEBUG)
 ```

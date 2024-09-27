@@ -17,7 +17,7 @@ import logging
 
 import pytest
 
-from compute_modules.logging import get_logger, internal, set_compute_modules_log_level
+from compute_modules.logging import get_logger, internal, set_internal_log_level
 
 DEBUG_STR = "I'm a little teapot"
 INFO_STR = "Short and stout"
@@ -33,7 +33,7 @@ CLIENT_CRITICAL_STR = "how I wonder"
 
 
 def _emit_internal_logs() -> None:
-    logger = internal.create_log_adapter(process_id="0", job_id="teapot")
+    logger = internal.get_internal_logger()
     logger.debug(DEBUG_STR)
     logger.info(INFO_STR)
     logger.warning(WARNING_STR)
@@ -56,8 +56,8 @@ def test_default_log_levels(
 def test_log_level_override(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test calling set_compute_modules_log_level to change CM log level"""
-    set_compute_modules_log_level(logging.INFO)
+    """Test calling set_internal_log_level to change CM log level"""
+    set_internal_log_level(logging.INFO)
     _emit_internal_logs()
     assert DEBUG_STR not in caplog.text
     assert INFO_STR in caplog.text
@@ -69,11 +69,11 @@ def test_log_level_override(
 def test_log_level_override_with_client_level_lower(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test calling set_compute_modules_log_level to change CM log level,
+    """Test calling set_internal_log_level to change CM log level,
     while having public logger at a different level
     """
-    set_compute_modules_log_level(logging.WARNING)
-    client_logger = get_logger("twinkle")
+    set_internal_log_level(logging.WARNING)
+    client_logger = get_logger()
     client_logger.setLevel(logging.DEBUG)
     client_logger.debug(CLIENT_DEBUG_STR)
     client_logger.info(CLIENT_INFO_STR)
@@ -97,11 +97,11 @@ def test_log_level_override_with_client_level_lower(
 def test_log_level_override_with_client_level_higher(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test calling set_compute_modules_log_level to change CM log level,
+    """Test calling set_internal_log_level to change CM log level,
     while having public logger at a different level
     """
-    set_compute_modules_log_level(logging.DEBUG)
-    client_logger = get_logger("twinkle")
+    set_internal_log_level(logging.DEBUG)
+    client_logger = get_logger()
     client_logger.setLevel(logging.ERROR)
     client_logger.debug(CLIENT_DEBUG_STR)
     client_logger.info(CLIENT_INFO_STR)
