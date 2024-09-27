@@ -15,7 +15,6 @@
 
 import logging
 from typing import Any
-from uuid import UUID
 
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
@@ -23,34 +22,20 @@ DEFAULT_LOG_FORMAT = (
 )
 
 
-# TODO: support for SLS logging format
-def create_logger(name: str) -> logging.Logger:
+# TODO: support for SLS logging format (need access to selected logging format)
+# TODO: support for log file output (need access to selected log output location)
+def _create_logger(name: str) -> logging.Logger:
     """Creates a logger that can have its log level set ... and actually work.
 
     See: https://stackoverflow.com/a/59705351
     """
     logger = logging.getLogger(name)
-    # TODO: need a way to inspect the selected container log source so we can modify here accordingly to use a FileHandler
     handler = logging.StreamHandler()
     formatter = logging.Formatter(DEFAULT_LOG_FORMAT)
     handler.setFormatter(formatter)
     logger.handlers.clear()
     logger.addHandler(handler)
     return logger
-
-
-def create_log_adapter(
-    logger: logging.Logger,
-    process_id: str = "-1",
-    job_id: str = str(UUID(int=0)),
-) -> logging.LoggerAdapter[Any]:
-    return logging.LoggerAdapter(
-        logger=logger,
-        extra=dict(
-            process_id=process_id,
-            job_id=job_id,
-        ),
-    )
 
 
 # Wrapper around a logging.LoggerAdapter instance.
@@ -60,16 +45,18 @@ def create_log_adapter(
 # based on the process_id or job_id so that information is emitted as part of the log context
 # Technically, this class does not actually extend `logging.LoggerAdapter` but I put that as the
 # base class for this so intellisense shows up for normal Logger APIs (e.g., `info`, `debug`, etc.)
+#
+# See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
 class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
     "`logging.LoggerAdapter`. This can be used like a normal `logging.Logger` instance"
 
     def __init__(
         self,
-        logger: logging.Logger,
+        logger_name: str,
         process_id: int = -1,
         job_id: str = "",
     ) -> None:
-        self._logger = logger
+        self._logger = _create_logger(logger_name)
         self._process_id = process_id
         self._job_id = job_id
         self._set_log_adapter()
@@ -99,8 +86,5 @@ class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
 
 
 __all__ = [
-    "create_logger",
-    "create_log_adapter",
-    "DEFAULT_LOG_FORMAT",
     "ComputeModulesLoggerAdapter",
 ]

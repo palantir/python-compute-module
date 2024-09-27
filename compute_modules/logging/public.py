@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 
-from .common import ComputeModulesLoggerAdapter, create_logger
+from .common import ComputeModulesLoggerAdapter
 
 
 def get_logger() -> ComputeModulesLoggerAdapter:
@@ -21,11 +21,7 @@ def get_logger() -> ComputeModulesLoggerAdapter:
     return PUBLIC_LOGGER_ADAPTER
 
 
-# DO NOT USE PUBLIC_LOGGER DIRECTLY. You will get an error
-# Use `create_log_adapter`; this will create a wrapper that provides contextural information to the logs
-# See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
-PUBLIC_LOGGER = create_logger("compute_modules")
-PUBLIC_LOGGER_ADAPTER = ComputeModulesLoggerAdapter(logger=PUBLIC_LOGGER)
+PUBLIC_LOGGER_ADAPTER = ComputeModulesLoggerAdapter("compute_modules")
 
 
 __all__ = [

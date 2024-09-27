@@ -22,14 +22,14 @@ from compute_modules.logging import get_logger, internal, set_internal_log_level
 DEBUG_STR = "I'm a little teapot"
 INFO_STR = "Short and stout"
 WARNING_STR = "Here is my handle, here is my spout"
-ERROR_STR = "When I get all steamed up"
-CRITICAL_STR = "Hear me shout: tip me over and pour me out!"
+ERROR_STR = "When I get all steamed up hear me shout:"
+CRITICAL_STR = "Tip me over and pour me out!"
 
-CLIENT_DEBUG_STR = "little star"
-CLIENT_INFO_STR = "so bright"
-CLIENT_WARNING_STR = "like a diamond"
-CLIENT_ERROR_STR = "in the sky"
-CLIENT_CRITICAL_STR = "how I wonder"
+CLIENT_DEBUG_STR = "twinkle twinkle little star"
+CLIENT_INFO_STR = "how I wonder what you are"
+CLIENT_WARNING_STR = "up above the world so high"
+CLIENT_ERROR_STR = "like a diamond in the sky"
+CLIENT_CRITICAL_STR = "oh nvm that's a planet"
 
 
 def _emit_internal_logs() -> None:

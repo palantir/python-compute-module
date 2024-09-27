@@ -16,25 +16,20 @@
 import logging
 from typing import Union
 
-from .common import ComputeModulesLoggerAdapter, create_logger
+from .common import ComputeModulesLoggerAdapter
+
+INTERNAL_LOGGER_ADAPTER = ComputeModulesLoggerAdapter("compute_modules_internal")
+INTERNAL_LOGGER_ADAPTER.setLevel(logging.ERROR)
 
 
 def set_internal_log_level(level: Union[str, int]) -> None:
     """Set the log level of the compute_modules_internal logger"""
-    INTERNAL_LOGGER.setLevel(level=level)
+    INTERNAL_LOGGER_ADAPTER.setLevel(level=level)
 
 
 def get_internal_logger() -> ComputeModulesLoggerAdapter:
     """Provides the internal ComputeModulesLoggerAdapter singleton"""
     return INTERNAL_LOGGER_ADAPTER
-
-
-# DO NOT USE INTERNAL_ROOT_LOGGER DIRECTLY. You will get an error
-# Use `create_log_adapter`; this will create a wrapper that provides contextural information to the logs
-# See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
-INTERNAL_LOGGER = create_logger("compute_modules_internal")
-INTERNAL_LOGGER_ADAPTER = ComputeModulesLoggerAdapter(logger=INTERNAL_LOGGER)
-set_internal_log_level(logging.ERROR)
 
 
 __all__ = [
