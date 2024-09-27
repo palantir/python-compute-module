@@ -56,31 +56,31 @@ class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
         process_id: int = -1,
         job_id: str = "",
     ) -> None:
-        self._logger = _create_logger(logger_name)
-        self._process_id = process_id
-        self._job_id = job_id
-        self._set_log_adapter()
+        self._p_logger = _create_logger(logger_name)
+        self._p_process_id = process_id
+        self._p_job_id = job_id
+        self._p_set_log_adapter()
 
-    def _set_log_adapter(self) -> logging.LoggerAdapter[Any]:
+    def _p_set_log_adapter(self) -> logging.LoggerAdapter[Any]:
         self.adapter = logging.LoggerAdapter(
-            logger=self._logger,
+            logger=self._p_logger,
             extra=dict(
-                process_id=str(self._process_id),
-                job_id=self._job_id,
+                process_id=str(self._p_process_id),
+                job_id=self._p_job_id,
             ),
         )
         return self.adapter
 
-    def _update_process_id(self, process_id: int) -> None:
-        self._process_id = process_id
-        self._set_log_adapter()
+    def _p_update_process_id(self, process_id: int) -> None:
+        self._p_process_id = process_id
+        self._p_set_log_adapter()
 
-    def _update_job_id(self, job_id: str) -> None:
-        self._job_id = job_id
-        self._set_log_adapter()
+    def _p_update_job_id(self, job_id: str) -> None:
+        self._p_job_id = job_id
+        self._p_set_log_adapter()
 
     def __getattr__(self, name: str) -> Any:
-        if name.startswith("_"):
+        if name.startswith("_p_"):
             return getattr(self, name)
         return getattr(self.adapter, name)
 

@@ -66,18 +66,18 @@ class InternalQueryService:
 
     def _clear_logger_job_id(self) -> None:
         """Clear the _job_logger until we receive another job"""
-        self.internal_logger._update_job_id(job_id="")
-        self.public_logger._update_job_id(job_id="")
+        self.internal_logger._p_update_job_id(job_id="")
+        self.public_logger._p_update_job_id(job_id="")
 
     def _update_logger_job_id(self, job_id: str) -> None:
         """Create a new LoggerAdapter to provide contextual information in logs"""
-        self.internal_logger._update_job_id(job_id=job_id)
-        self.public_logger._update_job_id(job_id=job_id)
+        self.internal_logger._p_update_job_id(job_id=job_id)
+        self.public_logger._p_update_job_id(job_id=job_id)
 
     def _set_logger_process_id(self, process_id: int) -> None:
         """Set the process_id for internal & public logger"""
-        self.internal_logger._update_process_id(process_id=process_id)
-        self.public_logger._update_process_id(process_id=process_id)
+        self.internal_logger._p_update_process_id(process_id=process_id)
+        self.public_logger._p_update_process_id(process_id=process_id)
 
     def _initialize_auth_token(self) -> None:
         try:
