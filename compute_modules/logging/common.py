@@ -48,7 +48,9 @@ def _create_logger(name: str) -> logging.Logger:
 #
 # See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
 class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
-    "`logging.LoggerAdapter`. This can be used like a normal `logging.Logger` instance"
+    """Wrapper around Python's `logging.LoggerAdapter` class.
+    This can be used like a normal `logging.Logger` instance
+    """
 
     def __init__(
         self,
@@ -61,7 +63,7 @@ class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
         self._p_job_id = job_id
         self._p_set_log_adapter()
 
-    def _p_set_log_adapter(self) -> logging.LoggerAdapter[Any]:
+    def _p_set_log_adapter(self) -> None:
         self.adapter = logging.LoggerAdapter(
             logger=self._p_logger,
             extra=dict(
@@ -69,7 +71,6 @@ class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
                 job_id=self._p_job_id,
             ),
         )
-        return self.adapter
 
     def _p_update_process_id(self, process_id: int) -> None:
         self._p_process_id = process_id
