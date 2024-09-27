@@ -81,7 +81,6 @@ workflows:
             - python-3.10
             - python-3.11
             - python-3.12
-
             - mypy
             - check_format
             - check_license
