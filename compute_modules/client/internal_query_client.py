@@ -184,7 +184,7 @@ class InternalQueryService:
                     body=body,
                 ) as response:
                     if response.status == 204:
-                        self.internal_logger.debug(f"Successfully reported job result for job: {job_id}")
+                        self.internal_logger.debug("Successfully reported job result")
                         return
                     else:
                         self.internal_logger.error(f"Failed to post result: {response.status} {response.reason}")
@@ -218,16 +218,15 @@ class InternalQueryService:
             **get_extra_context_parameters(),
         }
         self._update_logger_job_id(job_id=job_id)
-        self.internal_logger.debug(f"Received job: {job_id}, queryType: {query_type}")
+        self.internal_logger.debug(f"Received job; queryType: {query_type}")
         try:
-            self.internal_logger.debug(f"Executing job: {job_id}")
+            self.internal_logger.debug("Executing job")
             result = self.get_result(query_type, query, query_context)
-            self.internal_logger.debug(f"Successfully executed job: {job_id}")
+            self.internal_logger.debug("Successfully executed job")
         except Exception as e:
             self.internal_logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
-
-        self.internal_logger.debug(f"Reporting result for job: {job_id}")
+        self.internal_logger.debug("Reporting result for job")
         self.report_job_result(job_id, result)
         self._clear_logger_job_id()
 

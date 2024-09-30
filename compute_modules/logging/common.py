@@ -43,8 +43,9 @@ def _create_logger(name: str) -> logging.Logger:
 # while having the flexibility to swap out the underlying `logging.LoggerAdapter` being used.
 # The use case here is that we want to update the `logging.LoggerAdapter`
 # based on the process_id or job_id so that information is emitted as part of the log context
+#
 # Technically, this class does not actually extend `logging.LoggerAdapter` but I put that as the
-# base class for this so intellisense shows up for normal Logger APIs (e.g., `info`, `debug`, etc.)
+# base class for this so intellisense shows up for normal Logger APIs (e.g., `info`, `debug`, etc.).
 #
 # See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
 class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
