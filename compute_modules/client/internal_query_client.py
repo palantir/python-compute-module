@@ -25,8 +25,8 @@ from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
+from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER
 from compute_modules.logging.internal import get_internal_logger
-from compute_modules.logging.public import get_logger
 from compute_modules.types import ComputeModuleFunctionSchema, PythonClassNode
 
 from ..utils._context import get_extra_context_parameters
@@ -62,22 +62,18 @@ class InternalQueryService:
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
         self.internal_logger = get_internal_logger()
-        self.public_logger = get_logger()
 
     def _clear_logger_job_id(self) -> None:
         """Clear the _job_logger until we receive another job"""
-        self.internal_logger._p_update_job_id(job_id="")
-        self.public_logger._p_update_job_id(job_id="")
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
 
     def _update_logger_job_id(self, job_id: str) -> None:
         """Create a new LoggerAdapter to provide contextual information in logs"""
-        self.internal_logger._p_update_job_id(job_id=job_id)
-        self.public_logger._p_update_job_id(job_id=job_id)
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
 
     def _set_logger_process_id(self, process_id: int) -> None:
         """Set the process_id for internal & public logger"""
-        self.internal_logger._p_update_process_id(process_id=process_id)
-        self.public_logger._p_update_process_id(process_id=process_id)
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=process_id)
 
     def _initialize_auth_token(self) -> None:
         try:

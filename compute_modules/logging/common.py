@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import Any
+from typing import Any, Dict
 
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
@@ -87,6 +87,30 @@ class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
         return getattr(self.adapter, name)
 
 
+class ComputeModulesAdapterManager(object):
+    adapters: Dict[str, ComputeModulesLoggerAdapter] = {}
+
+    def get_logger(self, name: str) -> ComputeModulesLoggerAdapter:
+        """Get a logger by name. If it does not already exist, creates it first"""
+        if name not in self.adapters:
+            self.adapters[name] = ComputeModulesLoggerAdapter(name)
+        return self.adapters[name]
+
+    def update_process_id(self, process_id: int) -> None:
+        """Update process_id for all registered adapters"""
+        for adapter in self.adapters.values():
+            adapter._p_update_process_id(process_id=process_id)
+
+    def update_job_id(self, job_id: str) -> None:
+        """Update job_id for all registered adapters"""
+        for adapter in self.adapters.values():
+            adapter._p_update_job_id(job_id=job_id)
+
+
+COMPUTE_MODULES_ADAPTER_MANAGER = ComputeModulesAdapterManager()
+
+
 __all__ = [
+    "COMPUTE_MODULES_ADAPTER_MANAGER",
     "ComputeModulesLoggerAdapter",
 ]

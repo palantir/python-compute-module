@@ -16,9 +16,9 @@
 import logging
 from typing import Union
 
-from .common import ComputeModulesLoggerAdapter
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 
-INTERNAL_LOGGER_ADAPTER = ComputeModulesLoggerAdapter("compute_modules_internal")
+INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger("compute_modules_internal")
 INTERNAL_LOGGER_ADAPTER.setLevel(logging.ERROR)
 
 

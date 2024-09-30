@@ -19,6 +19,9 @@ import pytest
 
 from compute_modules.logging import get_logger, internal, set_internal_log_level
 
+# TODO: update docs
+# TODO: figure out how to test ComputeModulesLoggerAdapter
+
 DEBUG_STR = "I'm a little teapot"
 INFO_STR = "Short and stout"
 WARNING_STR = "Here is my handle, here is my spout"
@@ -73,7 +76,7 @@ def test_log_level_override_with_client_level_lower(
     while having public logger at a different level
     """
     set_internal_log_level(logging.WARNING)
-    client_logger = get_logger()
+    client_logger = get_logger("twinkle")
     client_logger.setLevel(logging.DEBUG)
     client_logger.debug(CLIENT_DEBUG_STR)
     client_logger.info(CLIENT_INFO_STR)
@@ -101,7 +104,7 @@ def test_log_level_override_with_client_level_higher(
     while having public logger at a different level
     """
     set_internal_log_level(logging.DEBUG)
-    client_logger = get_logger()
+    client_logger = get_logger("twinkle")
     client_logger.setLevel(logging.ERROR)
     client_logger.debug(CLIENT_DEBUG_STR)
     client_logger.info(CLIENT_INFO_STR)

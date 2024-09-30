@@ -13,15 +13,12 @@
 #  limitations under the License.
 
 
-from .common import ComputeModulesLoggerAdapter
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 
 
-def get_logger() -> ComputeModulesLoggerAdapter:
+def get_logger(name: str) -> ComputeModulesLoggerAdapter:
     """Creates a logger instance for use within a compute module"""
-    return PUBLIC_LOGGER_ADAPTER
-
-
-PUBLIC_LOGGER_ADAPTER = ComputeModulesLoggerAdapter("compute_modules")
+    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name)
 
 
 __all__ = [
