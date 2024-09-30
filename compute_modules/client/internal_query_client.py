@@ -131,9 +131,7 @@ class InternalQueryService:
                     body=body,
                     headers=self.post_schema_headers,
                 ) as response:
-                    self.logger.debug(
-                        f"POST /schemas response status: {response.status} reason: {response.reason}"
-                    )
+                    self.logger.debug(f"POST /schemas response status: {response.status} reason: {response.reason}")
                 return
             except ConnectionRefusedError:
                 self.logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
@@ -185,9 +183,7 @@ class InternalQueryService:
                     else:
                         self.logger.error(f"Failed to post result: {response.status} {response.reason}")
             except Exception as e:
-                self.logger.error(
-                    f"POST of job result failed, attempting to re-establish connection: {str(e)}"
-                )
+                self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
                 self.logger.error(traceback.format_exc())
         raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
 
@@ -235,14 +231,8 @@ class InternalQueryService:
         registered_fn_keys = self.registered_functions.keys()
         if query_type in self.registered_functions:
             if query_type in self.function_schema_conversions:
-                self.logger.debug(
-                    f"Found schema conversion for query {query_type}. Converting to typed payload"
-                )
-                typed_query = convert_payload(
-                    query,
-                    self.function_schema_conversions[query_type],
-                    process_logger=self.logger,
-                )
+                self.logger.debug(f"Found schema conversion for query {query_type}. Converting to typed payload")
+                typed_query = convert_payload(query, self.function_schema_conversions[query_type])
                 return self.registered_functions[query_type](query_context, typed_query)
             else:
                 return self.registered_functions[query_type](query_context, query)

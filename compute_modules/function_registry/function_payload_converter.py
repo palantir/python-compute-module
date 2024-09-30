@@ -16,8 +16,6 @@
 import logging
 import typing
 
-from compute_modules.logging.common import ComputeModulesLoggerAdapter
-
 from ..types import PythonClassNode
 
 logger = logging.getLogger(__name__)
@@ -26,7 +24,6 @@ logger = logging.getLogger(__name__)
 def convert_payload(
     raw_payload: typing.Any,
     class_tree: PythonClassNode,
-    process_logger: ComputeModulesLoggerAdapter,
 ) -> typing.Any:
     try:
         if raw_payload is None:
@@ -37,32 +34,24 @@ def convert_payload(
         type_constructor = class_tree["constructor"]
         if type_constructor is list:
             child_class_tree = class_tree["children"]["list"]
-            return list([convert_payload(el, child_class_tree, process_logger) for el in raw_payload])
+            return list([convert_payload(el, child_class_tree) for el in raw_payload])
         if type_constructor is dict:
             key_class_tree = class_tree["children"]["key"]
             value_class_tree = class_tree["children"]["value"]
             return {
-                convert_payload(key, key_class_tree, process_logger): convert_payload(
-                    value,
-                    value_class_tree,
-                    process_logger,
-                )
+                convert_payload(key, key_class_tree): convert_payload(value, value_class_tree)
                 for key, value in raw_payload.items()
             }
         if type_constructor is typing.Optional:
             return raw_payload
         if type_constructor is set:
             child_class_tree = class_tree["children"]["set"]
-            return set([convert_payload(el, child_class_tree, process_logger) for el in raw_payload])
+            return set([convert_payload(el, child_class_tree) for el in raw_payload])
         # Complex class
         converted_children = {}
         for child_key, child_class_tree in class_tree["children"].items():
-            converted_children[child_key] = convert_payload(
-                raw_payload[child_key],
-                child_class_tree,
-                process_logger,
-            )
+            converted_children[child_key] = convert_payload(raw_payload[child_key], child_class_tree)
         return type_constructor(**converted_children)
     except Exception as e:
-        process_logger.error(f"Error converting {raw_payload} to type {class_tree['constructor']}")
+        logger.error(f"Error converting {raw_payload} to type {class_tree['constructor']}")
         raise e
