@@ -22,7 +22,6 @@ DEFAULT_LOG_FORMAT = (
 )
 
 
-# TODO: support for SLS logging format (need access to selected logging format)
 # TODO: support for log file output (need access to selected log output location)
 def _create_logger(name: str) -> logging.Logger:
     """Creates a logger that can have its log level set ... and actually work.
