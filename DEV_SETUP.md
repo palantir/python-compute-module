@@ -1,4 +1,6 @@
-# Contributing to `foundry-compute-modules`
+# `foundry-compute-modules` dev README
+
+[![Autorelease](https://img.shields.io/badge/Perform%20an-Autorelease-success.svg)](https://autorelease.general.dmz.palantir.tech/palantir/python-compute-module)
 
 ## Requirements
 

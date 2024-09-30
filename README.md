@@ -1,7 +1,8 @@
 # Compute Module Lib
-<!-- TODO: add badge(s) for supported python versions & pypi version -->
-
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/foundry-compute-modules)
+[![PyPI](https://img.shields.io/pypi/v/foundry-compute-modules)](https://pypi.org/project/foundry-compute-modules/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
+
 
 > [!WARNING]
 > This SDK is incubating and subject to change.
