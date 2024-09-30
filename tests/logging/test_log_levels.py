@@ -30,7 +30,7 @@ from .logging_test_utils import (
     ERROR_STR,
     INFO_STR,
     WARNING_STR,
-    _emit_internal_logs,
+    emit_internal_logs,
 )
 
 # TODO: update docs
@@ -40,7 +40,7 @@ def test_default_log_levels(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test default log level is ERROR"""
-    _emit_internal_logs()
+    emit_internal_logs()
     assert DEBUG_STR not in caplog.text
     assert INFO_STR not in caplog.text
     assert WARNING_STR not in caplog.text
@@ -53,7 +53,7 @@ def test_log_level_override(
 ) -> None:
     """Test calling set_internal_log_level to change CM log level"""
     set_internal_log_level(logging.INFO)
-    _emit_internal_logs()
+    emit_internal_logs()
     assert DEBUG_STR not in caplog.text
     assert INFO_STR in caplog.text
     assert WARNING_STR in caplog.text
@@ -75,7 +75,7 @@ def test_log_level_override_with_client_level_lower(
     client_logger.warning(CLIENT_WARNING_STR)
     client_logger.error(CLIENT_ERROR_STR)
     client_logger.critical(CLIENT_CRITICAL_STR)
-    _emit_internal_logs()
+    emit_internal_logs()
     assert DEBUG_STR not in caplog.text
     assert INFO_STR not in caplog.text
     assert WARNING_STR in caplog.text
@@ -103,7 +103,7 @@ def test_log_level_override_with_client_level_higher(
     client_logger.warning(CLIENT_WARNING_STR)
     client_logger.error(CLIENT_ERROR_STR)
     client_logger.critical(CLIENT_CRITICAL_STR)
-    _emit_internal_logs()
+    emit_internal_logs()
     assert DEBUG_STR in caplog.text
     assert INFO_STR in caplog.text
     assert WARNING_STR in caplog.text

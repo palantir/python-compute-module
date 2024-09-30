@@ -28,7 +28,7 @@ CLIENT_ERROR_STR = "like a diamond in the sky"
 CLIENT_CRITICAL_STR = "oh nvm that's a planet"
 
 
-def _emit_internal_logs() -> None:
+def emit_internal_logs() -> None:
     logger = internal.get_internal_logger()
     logger.debug(DEBUG_STR)
     logger.info(INFO_STR)

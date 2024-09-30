@@ -18,17 +18,22 @@ from typing import Union
 
 from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 
-INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger("compute_modules_internal")
-INTERNAL_LOGGER_ADAPTER.setLevel(logging.ERROR)
+INTERNAL_LOGGER_ADAPTER = None
 
 
 def set_internal_log_level(level: Union[str, int]) -> None:
     """Set the log level of the compute_modules_internal logger"""
-    INTERNAL_LOGGER_ADAPTER.setLevel(level=level)
+    get_internal_logger().setLevel(level=level)
 
 
 def get_internal_logger() -> ComputeModulesLoggerAdapter:
     """Provides the internal ComputeModulesLoggerAdapter singleton"""
+    global INTERNAL_LOGGER_ADAPTER
+    if not INTERNAL_LOGGER_ADAPTER:
+        INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(
+            "compute_modules_internal",
+            default_level=logging.ERROR,
+        )
     return INTERNAL_LOGGER_ADAPTER
 
 
