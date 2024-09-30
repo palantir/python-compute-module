@@ -61,7 +61,7 @@ class InternalQueryService:
         self.context = ssl.create_default_context(cafile=self.certPath)
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
-        self.internal_logger = get_internal_logger()
+        self.logger = get_internal_logger()
 
     def _clear_logger_job_id(self) -> None:
         """Clear the _job_logger until we receive another job"""
@@ -80,7 +80,7 @@ class InternalQueryService:
             with open(os.environ["MODULE_AUTH_TOKEN"], "r") as f:
                 self.moduleAuthToken = f.read()
         except Exception as e:
-            self.internal_logger.error(f"Failed to read auth token: {str(e)}")
+            self.logger.error(f"Failed to read auth token: {str(e)}")
             raise
 
     def _initialize_headers(self) -> None:
@@ -122,7 +122,7 @@ class InternalQueryService:
     def post_query_schemas(self) -> None:
         """Post the function schemas of the Compute Module"""
         body = json.dumps(self.function_schemas)
-        self.internal_logger.debug(f"Posting function schemas: {body}")
+        self.logger.debug(f"Posting function schemas: {body}")
         for i in range(POST_SCHEMAS_MAX_ATTEMPTS):
             try:
                 with self.request(
@@ -131,18 +131,18 @@ class InternalQueryService:
                     body=body,
                     headers=self.post_schema_headers,
                 ) as response:
-                    self.internal_logger.debug(
+                    self.logger.debug(
                         f"POST /schemas response status: {response.status} reason: {response.reason}"
                     )
                 return
             except ConnectionRefusedError:
-                self.internal_logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
+                self.logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
                 time.sleep(2**i)
             except Exception as e:
-                self.internal_logger.error(f"Unknown error posting function schemas: {str(e)}")
-                self.internal_logger.error(traceback.format_exc())
+                self.logger.error(f"Unknown error posting function schemas: {str(e)}")
+                self.logger.error(traceback.format_exc())
                 return
-        self.internal_logger.error(f"Failed to POST /schemas after {POST_SCHEMAS_MAX_ATTEMPTS} attempts")
+        self.logger.error(f"Failed to POST /schemas after {POST_SCHEMAS_MAX_ATTEMPTS} attempts")
 
     def get_job_or_none(self) -> Any:
         try:
@@ -152,25 +152,25 @@ class InternalQueryService:
                 if response.status == 200:
                     result = json.loads(response_data)
                 elif response.status == 204:
-                    self.internal_logger.info("No job found, retrying...")
+                    self.logger.info("No job found, retrying...")
                 else:
-                    self.internal_logger.error(f"Unexpected response status: {response.status}")
+                    self.logger.error(f"Unexpected response status: {response.status}")
                 self.connection_refused_count = 0
                 return result
         except ConnectionRefusedError:
-            self.internal_logger.warning(f"Connection refused. Sleeping for {2 ** self.connection_refused_count}s")
+            self.logger.warning(f"Connection refused. Sleeping for {2 ** self.connection_refused_count}s")
             time.sleep(2**self.connection_refused_count)
             self.connection_refused_count += 1
             return None
         except Exception as e:
-            self.internal_logger.error(f"Get job request failed, attempting to re-establish connection {str(e)}")
-            self.internal_logger.error(traceback.format_exc())
+            self.logger.error(f"Get job request failed, attempting to re-establish connection {str(e)}")
+            self.logger.error(traceback.format_exc())
             return None
 
     def report_job_result(self, job_id: str, result: Any) -> None:
         body = json.dumps(result).encode("utf-8")
         post_result_path = f"{self.post_result_path}/{job_id}"
-        self.internal_logger.debug(f"Posting result to {post_result_path}")
+        self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
                 with self.request(
@@ -180,15 +180,15 @@ class InternalQueryService:
                     body=body,
                 ) as response:
                     if response.status == 204:
-                        self.internal_logger.debug("Successfully reported job result")
+                        self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        self.internal_logger.error(f"Failed to post result: {response.status} {response.reason}")
+                        self.logger.error(f"Failed to post result: {response.status} {response.reason}")
             except Exception as e:
-                self.internal_logger.error(
+                self.logger.error(
                     f"POST of job result failed, attempting to re-establish connection: {str(e)}"
                 )
-                self.internal_logger.error(traceback.format_exc())
+                self.logger.error(traceback.format_exc())
         raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
 
     def handle_query(self) -> None:
@@ -196,7 +196,7 @@ class InternalQueryService:
         try:
             job = self.get_job_or_none()
         except Exception as e:
-            self.internal_logger.warning(f"Exception occurred while fetching job: {str(e)}")
+            self.logger.warning(f"Exception occurred while fetching job: {str(e)}")
         if job:
             self.handle_job(job)
 
@@ -214,15 +214,15 @@ class InternalQueryService:
             **get_extra_context_parameters(),
         }
         self._update_logger_job_id(job_id=job_id)
-        self.internal_logger.debug(f"Received job; queryType: {query_type}")
+        self.logger.debug(f"Received job; queryType: {query_type}")
         try:
-            self.internal_logger.debug("Executing job")
+            self.logger.debug("Executing job")
             result = self.get_result(query_type, query, query_context)
-            self.internal_logger.debug("Successfully executed job")
+            self.logger.debug("Successfully executed job")
         except Exception as e:
-            self.internal_logger.error(f"Error executing job: {str(e)}")
+            self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
-        self.internal_logger.debug("Reporting result for job")
+        self.logger.debug("Reporting result for job")
         self.report_job_result(job_id, result)
         self._clear_logger_job_id()
 
@@ -235,19 +235,19 @@ class InternalQueryService:
         registered_fn_keys = self.registered_functions.keys()
         if query_type in self.registered_functions:
             if query_type in self.function_schema_conversions:
-                self.internal_logger.debug(
+                self.logger.debug(
                     f"Found schema conversion for query {query_type}. Converting to typed payload"
                 )
                 typed_query = convert_payload(
                     query,
                     self.function_schema_conversions[query_type],
-                    process_logger=self.internal_logger,
+                    process_logger=self.logger,
                 )
                 return self.registered_functions[query_type](query_context, typed_query)
             else:
                 return self.registered_functions[query_type](query_context, query)
         else:
-            self.internal_logger.error(f"Unknown query type: {query_type}. Known query runners: {registered_fn_keys}")
+            self.logger.error(f"Unknown query type: {query_type}. Known query runners: {registered_fn_keys}")
             return {"error": "Unknown query type"}
 
     @staticmethod
@@ -256,7 +256,7 @@ class InternalQueryService:
 
     def start(self) -> None:
         self.post_query_schemas()
-        self.internal_logger.info(f"Starting to poll for jobs with concurrency {self.concurrency}")
+        self.logger.info(f"Starting to poll for jobs with concurrency {self.concurrency}")
         processes = [multiprocessing.Process(target=self.poll_forever, args=(i,)) for i in range(self.concurrency)]
         for p in processes:
             p.start()
@@ -266,5 +266,5 @@ class InternalQueryService:
     def poll_forever(self, process_id: int) -> None:
         self._set_logger_process_id(process_id=process_id)
         while True:
-            self.internal_logger.info("Polling for new jobs...")
+            self.logger.info("Polling for new jobs...")
             self.handle_query()
