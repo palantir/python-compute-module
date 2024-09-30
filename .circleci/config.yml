@@ -35,6 +35,14 @@ jobs:
       - run: poetry install
       - run: poetry run check_format
 
+  check_license:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run: poetry install
+      - run: poetry run check_license
+
   circle-all:
     docker:
       - image: node:lts
@@ -64,6 +72,8 @@ workflows:
         <<: *always-run
       - check_format:
         <<: *always-run
+      - check_license:
+        <<: *always-run
       - circle-all:
           <<: *always-run
           requires:
@@ -71,9 +81,9 @@ workflows:
             - python-3.10
             - python-3.11
             - python-3.12
-
             - mypy
             - check_format
+            - check_license
       - publish:
           requires:
             - circle-all
