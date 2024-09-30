@@ -33,8 +33,6 @@ from .logging_test_utils import (
     emit_internal_logs,
 )
 
-# TODO: update docs
-
 
 def test_default_log_levels(
     caplog: pytest.LogCaptureFixture,
