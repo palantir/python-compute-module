@@ -178,6 +178,26 @@ class BadClassKwargsInit:
 | class/TypedDict     | Struct       | JSON                    |
 
 
+### `QueryContext` typing
+
+You can annotate the `context` param in any function with the `QueryContext` type to make it statically typed:
+```python
+from typing import TypedDict
+
+from compute_modules.context import QueryContext
+
+
+class HelloInput(TypedDict):
+    x: str
+
+
+def hello(context: QueryContext, event: HelloInput) -> str:
+    return f"Hello {event['x']}! Your job ID is: {context.jobId}"
+```
+
+If left un-annotated, the `context` param will be a `dict`.
+
+
 ## Pipelines Mode
 ### Retrieving source credentials
 
