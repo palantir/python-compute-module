@@ -17,31 +17,23 @@ import logging
 
 import pytest
 
-from compute_modules.logging import get_logger, internal, set_internal_log_level
+from compute_modules.logging import get_logger, set_internal_log_level
+
+from .logging_test_utils import (
+    CLIENT_CRITICAL_STR,
+    CLIENT_DEBUG_STR,
+    CLIENT_ERROR_STR,
+    CLIENT_INFO_STR,
+    CLIENT_WARNING_STR,
+    CRITICAL_STR,
+    DEBUG_STR,
+    ERROR_STR,
+    INFO_STR,
+    WARNING_STR,
+    _emit_internal_logs,
+)
 
 # TODO: update docs
-# TODO: figure out how to test ComputeModulesLoggerAdapter
-
-DEBUG_STR = "I'm a little teapot"
-INFO_STR = "Short and stout"
-WARNING_STR = "Here is my handle, here is my spout"
-ERROR_STR = "When I get all steamed up hear me shout:"
-CRITICAL_STR = "Tip me over and pour me out!"
-
-CLIENT_DEBUG_STR = "twinkle twinkle little star"
-CLIENT_INFO_STR = "how I wonder what you are"
-CLIENT_WARNING_STR = "up above the world so high"
-CLIENT_ERROR_STR = "like a diamond in the sky"
-CLIENT_CRITICAL_STR = "oh nvm that's a planet"
-
-
-def _emit_internal_logs() -> None:
-    logger = internal.get_internal_logger()
-    logger.debug(DEBUG_STR)
-    logger.info(INFO_STR)
-    logger.warning(WARNING_STR)
-    logger.error(ERROR_STR)
-    logger.critical(CRITICAL_STR)
 
 
 def test_default_log_levels(
@@ -122,4 +114,24 @@ def test_log_level_override_with_client_level_higher(
     assert CLIENT_INFO_STR not in caplog.text
     assert CLIENT_WARNING_STR not in caplog.text
     assert CLIENT_ERROR_STR in caplog.text
+    assert CLIENT_CRITICAL_STR in caplog.text
+    assert CRITICAL_STR in caplog.text
+
+    assert CLIENT_DEBUG_STR not in caplog.text
+    assert CLIENT_INFO_STR not in caplog.text
+    assert CLIENT_WARNING_STR not in caplog.text
+    assert CLIENT_ERROR_STR in caplog.text
+    assert CLIENT_CRITICAL_STR in caplog.text
+    assert CLIENT_CRITICAL_STR in caplog.text
+    assert CLIENT_INFO_STR not in caplog.text
+    assert CLIENT_WARNING_STR not in caplog.text
+    assert CLIENT_ERROR_STR in caplog.text
+    assert CLIENT_CRITICAL_STR in caplog.text
+    assert CRITICAL_STR in caplog.text
+
+    assert CLIENT_DEBUG_STR not in caplog.text
+    assert CLIENT_INFO_STR not in caplog.text
+    assert CLIENT_WARNING_STR not in caplog.text
+    assert CLIENT_ERROR_STR in caplog.text
+    assert CLIENT_CRITICAL_STR in caplog.text
     assert CLIENT_CRITICAL_STR in caplog.text
