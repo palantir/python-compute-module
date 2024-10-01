@@ -237,11 +237,7 @@ class InternalQueryService:
             typed_context = query_context
             if query_type in self.function_schema_conversions:
                 self.logger.debug(f"Found schema conversion for query {query_type}. Converting to typed payload")
-                typed_query = convert_payload(
-                    query,
-                    self.function_schema_conversions[query_type],
-                    process_logger=self.logger,
-                )
+                typed_query = convert_payload(query, self.function_schema_conversions[query_type])
             if self.is_function_context_typed[query_type]:
                 typed_context = QueryContext(**query_context)  # type: ignore[assignment]
             return self.registered_functions[query_type](typed_context, typed_query)
