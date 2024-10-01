@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Include job ID & process ID in logger context
+  links:
+  - https://github.com/palantir/python-compute-module/pull/2

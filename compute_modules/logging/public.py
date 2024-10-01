@@ -13,17 +13,14 @@
 #  limitations under the License.
 
 
-import logging
-from typing import Optional, Union
-
-from .internal import _create_logger, _set_log_level
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 
 
-def set_compute_modules_log_level(level: Union[str, int]) -> None:
-    """Set the log level for logs produces by the compute_modules library. Useful for debugging"""
-    _set_log_level(level)
+def get_logger(name: str) -> ComputeModulesLoggerAdapter:
+    """Creates a logger instance for use within a compute module"""
+    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name)
 
 
-def get_logger(name: str, format: Optional[str] = None) -> logging.Logger:
-    """Creates a logging.Logger instance for use within a compute module"""
-    return _create_logger(name=name, format=format)
+__all__ = [
+    "get_logger",
+]

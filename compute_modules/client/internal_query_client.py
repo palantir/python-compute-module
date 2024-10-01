@@ -25,6 +25,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.function_registry.function_payload_converter import convert_payload
+from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER
 from compute_modules.logging.internal import get_internal_logger
 from compute_modules.types import ComputeModuleFunctionSchema, PythonClassNode
 
@@ -60,7 +61,19 @@ class InternalQueryService:
         self.context = ssl.create_default_context(cafile=self.certPath)
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
-        self.logger = get_internal_logger("pre_fork")
+        self.logger = get_internal_logger()
+
+    def _clear_logger_job_id(self) -> None:
+        """Clear the _job_logger until we receive another job"""
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
+
+    def _update_logger_job_id(self, job_id: str) -> None:
+        """Create a new LoggerAdapter to provide contextual information in logs"""
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
+
+    def _set_logger_process_id(self, process_id: int) -> None:
+        """Set the process_id for internal & public logger"""
+        COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=process_id)
 
     def _initialize_auth_token(self) -> None:
         try:
@@ -165,7 +178,7 @@ class InternalQueryService:
                     body=body,
                 ) as response:
                     if response.status == 204:
-                        self.logger.debug(f"Successfully reported job result for job: {job_id}")
+                        self.logger.debug("Successfully reported job result")
                         return
                     else:
                         self.logger.error(f"Failed to post result: {response.status} {response.reason}")
@@ -196,17 +209,18 @@ class InternalQueryService:
             "authHeader": authHeader,
             **get_extra_context_parameters(),
         }
-        self.logger.debug(f"Received job: {job_id}, queryType: {query_type}")
+        self._update_logger_job_id(job_id=job_id)
+        self.logger.debug(f"Received job; queryType: {query_type}")
         try:
-            self.logger.debug(f"Executing job: {job_id}")
+            self.logger.debug("Executing job")
             result = self.get_result(query_type, query, query_context)
-            self.logger.debug(f"Successfully executed job: {job_id}")
+            self.logger.debug("Successfully executed job")
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
-
-        self.logger.debug(f"Reporting result for job: {job_id}")
+        self.logger.debug("Reporting result for job")
         self.report_job_result(job_id, result)
+        self._clear_logger_job_id()
 
     def get_result(
         self,
@@ -218,11 +232,7 @@ class InternalQueryService:
         if query_type in self.registered_functions:
             if query_type in self.function_schema_conversions:
                 self.logger.debug(f"Found schema conversion for query {query_type}. Converting to typed payload")
-                typed_query = convert_payload(
-                    query,
-                    self.function_schema_conversions[query_type],
-                    process_logger=self.logger,
-                )
+                typed_query = convert_payload(query, self.function_schema_conversions[query_type])
                 return self.registered_functions[query_type](query_context, typed_query)
             else:
                 return self.registered_functions[query_type](query_context, query)
@@ -244,7 +254,7 @@ class InternalQueryService:
             p.join()
 
     def poll_forever(self, process_id: int) -> None:
-        self.logger = get_internal_logger(f"process.{process_id}")
+        self._set_logger_process_id(process_id=process_id)
         while True:
             self.logger.info("Polling for new jobs...")
             self.handle_query()
