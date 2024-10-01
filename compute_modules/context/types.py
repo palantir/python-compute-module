@@ -34,13 +34,15 @@ class QueryContext:
 
     CLIENT_ID: Optional[str] = None
     """Client ID of the third party application associated with this compute module.
-    Present when in functions mode and when using application permissions.
+    Present if compute module is configured to have application's permissions 
+    (this is by default only allowed with function mode).
     Use this to get a Foundry scoped token from your third party application service user.
     """
 
     CLIENT_SECRET: Optional[str] = None
     """Client secret of the third party application associated with this compute module.
-    Present when in functions mode and when using application permission.
+    Present if compute module is configured to have application's permissions 
+    (this is by default only allowed with function mode).
     Use this to get a Foundry scoped token from your third party application service user.
     """
 
