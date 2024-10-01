@@ -18,7 +18,9 @@ import decimal
 import inspect
 import typing
 
-from ..types import (
+from compute_modules.context.types import QueryContext
+
+from .types import (
     AllowedKeyTypes,
     Byte,
     ComputeModuleFunctionSchema,
@@ -27,6 +29,7 @@ from ..types import (
     FunctionInputType,
     FunctionOutputType,
     Long,
+    ParseFunctionSchemaResult,
     PythonClassNode,
     Short,
 )
@@ -38,17 +41,22 @@ RESERVED_KEYS = {CONTEXT_KEY, RETURN_KEY}
 
 def parse_function_schema(
     function_ref: typing.Callable[..., typing.Any], function_name: str
-) -> typing.Tuple[ComputeModuleFunctionSchema, typing.Optional[PythonClassNode]]:
+) -> ParseFunctionSchemaResult:
     """Convert function name, input(s) & output into ComputeModuleFunctionSchema"""
     type_hints = typing.get_type_hints(function_ref, globalns={})
     inputs, root_class_node = _extract_inputs(type_hints)
+    is_context_typed = _check_is_context_typed(type_hints)
     output = _extract_output(type_hints)
     function_schema = ComputeModuleFunctionSchema(
         functionName=function_name,
         inputs=inputs,
         output=output,
     )
-    return function_schema, root_class_node
+    return ParseFunctionSchemaResult(
+        function_schema=function_schema,
+        class_node=root_class_node,
+        is_context_typed=is_context_typed,
+    )
 
 
 def _extract_inputs(
@@ -92,6 +100,14 @@ def _default_unknown_output() -> FunctionOutputType:
             },
         },
     )
+
+
+def _check_is_context_typed(type_hints: typing.Dict[str, typing.Any]) -> bool:
+    if CONTEXT_KEY not in type_hints:
+        return False
+    if type_hints[CONTEXT_KEY] is not QueryContext:
+        raise ValueError("context can only be typed as compute_modules.context.QueryContext!")
+    return True
 
 
 def _extract_output(type_hints: typing.Dict[str, typing.Any]) -> FunctionOutputType:

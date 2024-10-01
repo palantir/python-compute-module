@@ -16,7 +16,7 @@
 import logging
 import typing
 
-from ..types import PythonClassNode
+from .types import PythonClassNode
 
 logger = logging.getLogger(__name__)
 

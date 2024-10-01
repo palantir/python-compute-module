@@ -16,11 +16,9 @@
 from ._version import __version__ as __version__
 from .function_registry.function_registry import add_function, add_functions
 from .startup import start_compute_module
-from .types import QueryContext
 
 __all__ = [
     "add_function",
     "add_functions",
     "start_compute_module",
-    "QueryContext",
 ]

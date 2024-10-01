@@ -18,6 +18,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, Optional, Set, Union
 
+from compute_modules.context import QueryContext
+
 
 @dataclass
 class ChildClass:
@@ -61,3 +63,8 @@ def dummy_func_1(context, event: DummyInput) -> DummyOutput:  # type: ignore[no-
 def dummy_func_2(context, event):  # type: ignore[no-untyped-def]
     """No type hints example"""
     return event["blah"]
+
+
+def dummy_func_3(context: QueryContext, event) -> int:  # type: ignore[no-untyped-def]
+    """Example function with type hint for context & return type only"""
+    return 1

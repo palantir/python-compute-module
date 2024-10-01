@@ -76,9 +76,9 @@ def test_convert_payload(
     expected_return_value: DummyInput,
 ) -> None:
     """Test the happy path for convert_payload"""
-    _, class_node = parse_function_schema(dummy_func_1, "dummy_func_1")
-    assert class_node
-    processed_payload: DummyInput = convert_payload(RAW_PAYLOAD, class_node)
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1")
+    assert parse_result.class_node
+    processed_payload: DummyInput = convert_payload(RAW_PAYLOAD, parse_result.class_node)
     assert processed_payload is not None
     assert processed_payload.parent_class.child.__dict__ == expected_return_value.parent_class.child.__dict__
     assert processed_payload.parent_class.some_flag == expected_return_value.parent_class.some_flag
@@ -93,9 +93,9 @@ def test_convert_payload_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the error path for convert_payload"""
-    _, class_node = parse_function_schema(dummy_func_1, "dummy_func_1")
-    assert class_node
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1")
+    assert parse_result.class_node
     with pytest.raises(ValueError) as exc_info:
-        convert_payload(BAD_RAW_PAYLOAD, class_node)
+        convert_payload(BAD_RAW_PAYLOAD, parse_result.class_node)
     assert str(exc_info.value) == "Invalid isoformat string: 'do'"
     assert "Error converting do to type <built-in method fromisoformat" in caplog.text

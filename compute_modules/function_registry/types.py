@@ -58,12 +58,11 @@ class ComputeModuleFunctionSchema(typing.TypedDict):
     output: FunctionOutputType
 
 
-# TODO: enable user to use this static type for the `context` param
 @dataclass
-class QueryContext:
-    authHeader: str
-    jobId: str
-    tempCredsAuthToken: typing.Optional[str]
+class ParseFunctionSchemaResult:
+    function_schema: ComputeModuleFunctionSchema
+    class_node: typing.Optional[PythonClassNode]
+    is_context_typed: bool
 
 
 Byte = typing.NewType("Byte", int)
