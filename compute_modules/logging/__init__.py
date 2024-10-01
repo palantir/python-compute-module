@@ -13,9 +13,10 @@
 #  limitations under the License.
 
 
-from .public import get_logger, set_compute_modules_log_level
+from .internal import set_internal_log_level
+from .public import get_logger
 
 __all__ = [
     "get_logger",
-    "set_compute_modules_log_level",
+    "set_internal_log_level",
 ]

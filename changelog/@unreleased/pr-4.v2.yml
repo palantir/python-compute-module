@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: Add static typing for QueryContext param
-  links:
-  - https://github.com/palantir/python-compute-module/pull/4

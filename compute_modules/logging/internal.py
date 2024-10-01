@@ -14,50 +14,30 @@
 
 
 import logging
-from typing import Optional, Union
+from typing import Union
+
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
+
+INTERNAL_LOGGER_ADAPTER = None
 
 
-def _create_logger(name: str, format: Optional[str] = None) -> logging.Logger:
-    """Creates a logger that can have its log level set ... and actually work.
-
-    See: https://stackoverflow.com/a/59705351
-    """
-    logger = logging.getLogger(name)
-    # TODO: need a way to inspect the selected container log source so we can modify here accordingly to use a FileHandler
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(format)
-    handler.setFormatter(formatter)
-    logger.handlers.clear()
-    logger.addHandler(handler)
-    return logger
+def set_internal_log_level(level: Union[str, int]) -> None:
+    """Set the log level of the compute_modules_internal logger"""
+    get_internal_logger().setLevel(level=level)
 
 
-def _set_log_level(level: Union[str, int]) -> None:
-    """Set the log level of the compute_modules logger"""
-    _ROOT_LOGGER.setLevel(level=level)
-
-
-def get_internal_logger(logger_name: str, parent: Optional[logging.Logger] = None) -> logging.Logger:
-    """Produces a Logger that is a child of the parent Logger provided.
-    If no parent logger is provided, then _ROOT_LOGGER is used as the parent.
-    This is useful because child loggers inherit configurations from their ancestors,
-    while also providing additional information about the source of a log in the log itself.
-
-    For internal (within compute_modules library) use only.
-    """
-    my_parent = parent or _ROOT_LOGGER
-    return my_parent.getChild(logger_name)
-
-
-# TODO: add instance/replica ID to root logger
-_ROOT_LOGGER = _create_logger(
-    name="compute_modules",
-    format="%(levelname)s:%(name)s:%(filename)s:%(lineno)d:%(message)s",
-)
-_set_log_level(logging.ERROR)
+def get_internal_logger() -> ComputeModulesLoggerAdapter:
+    """Provides the internal ComputeModulesLoggerAdapter singleton"""
+    global INTERNAL_LOGGER_ADAPTER
+    if not INTERNAL_LOGGER_ADAPTER:
+        INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(
+            "compute_modules_internal",
+            default_level=logging.ERROR,
+        )
+    return INTERNAL_LOGGER_ADAPTER
 
 
 __all__ = [
     "get_internal_logger",
-    "_set_log_level",
+    "set_internal_log_level",
 ]
