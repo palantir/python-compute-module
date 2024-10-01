@@ -33,16 +33,14 @@ class QueryContext:
     """A temporary token that is used with the Foundry data sidecar."""
 
     CLIENT_ID: Optional[str] = None
-    """Client ID of the third party application associated with this compute module.
-    Present if compute module is configured to have application's permissions 
-    (this is by default only allowed with function mode).
+    """Client ID of the third party application associated with this compute module. 
+    Present if compute module is configured to have application's permissions. 
     Use this to get a Foundry scoped token from your third party application service user.
     """
 
     CLIENT_SECRET: Optional[str] = None
-    """Client secret of the third party application associated with this compute module.
-    Present if compute module is configured to have application's permissions 
-    (this is by default only allowed with function mode).
+    """Client secret of the third party application associated with this compute module. 
+    Present if compute module is configured to have application's permissions. 
     Use this to get a Foundry scoped token from your third party application service user.
     """
 
