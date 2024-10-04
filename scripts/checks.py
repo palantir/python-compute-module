@@ -30,19 +30,23 @@ FILES_WITH_LICENSE_NEEDED_GLOB_EXPR = "*.py"
 
 def test() -> None:
     """Runs pytest on all tests in the tests/ directory"""
-    subprocess.run(["pytest", TESTS_DIR])
+    result = subprocess.run(["pytest", TESTS_DIR])
+    sys.exit(result.returncode)
 
 
 def check_format() -> None:
     """Runs linter 'checks'. Raises exception if any linting exceptions exist"""
-    subprocess.run(["black", "--check", "--diff", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
-    subprocess.run(["ruff", "check", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
-    subprocess.run(["isort", "--check", "--diff", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    black_result = subprocess.run(["black", "--check", "--diff", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    ruff_result = subprocess.run(["ruff", "check", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    isort_result = subprocess.run(["isort", "--check", "--diff", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    exit_code = 1 if black_result.returncode or ruff_result.returncode or isort_result.returncode else 0
+    sys.exit(exit_code)
 
 
 def check_mypy() -> None:
     """Runs mypy checks. Raises exception if any mypy exceptions exist"""
-    subprocess.run(["mypy", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    result = subprocess.run(["mypy", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    sys.exit(result.returncode)
 
 
 def format() -> None:

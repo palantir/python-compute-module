@@ -14,7 +14,18 @@
 
 
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+
+# logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
+# whether this should be generic or not.
+#
+# See: https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+#
+if TYPE_CHECKING:
+    _LoggerAdapter = logging.LoggerAdapter[logging.Logger]
+else:
+    _LoggerAdapter = logging.LoggerAdapter
+
 
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
@@ -47,7 +58,7 @@ def _create_logger(name: str) -> logging.Logger:
 # base class for this so intellisense shows up for normal Logger APIs (e.g., `info`, `debug`, etc.).
 #
 # See: https://docs.python.org/3/howto/logging-cookbook.html#using-loggeradapters-to-impart-contextual-information
-class ComputeModulesLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
+class ComputeModulesLoggerAdapter(_LoggerAdapter):
     """Wrapper around Python's `logging.LoggerAdapter` class.
     This can be used like a normal `logging.Logger` instance
     """
