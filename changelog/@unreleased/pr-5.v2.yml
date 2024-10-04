@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Handle Unknown output datatype with string as default
+  links:
+  - https://github.com/palantir/python-compute-module/pull/5

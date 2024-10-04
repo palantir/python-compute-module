@@ -91,12 +91,15 @@ def _extract_inputs(
 
 
 def _default_unknown_output() -> FunctionOutputType:
+    """
+    The UI for compute modules throws an error when registering a function without output, or with an output type that
+    it does not recognize. To align with the behavior of other services, we should default the output type to a string.
+    """
     return FunctionOutputType(
         type="single",
         single={
             "dataType": {
-                "type": "unknown",
-                "unknown": {},
+                "type": "string",
             },
         },
     )
