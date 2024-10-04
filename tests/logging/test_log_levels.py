@@ -38,6 +38,8 @@ def test_default_log_levels(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test default log level is ERROR"""
+    # Need to actually re-set it here since we're overriding in other tests
+    set_internal_log_level(logging.ERROR)
     emit_internal_logs()
     assert DEBUG_STR not in caplog.text
     assert INFO_STR not in caplog.text

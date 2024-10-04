@@ -58,13 +58,6 @@ def test_initial_log_format(
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=-1, job_id="") in log
-
-
-def test_updated_pid_log_format(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Verify state of logger context after updating process_id"""
-    internal_logger, logger_1, logger_2 = logger_fixtures()
     COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=2)
     internal_logger.info(INFO_STR)
     logger_1.info(CLIENT_INFO_STR)
@@ -74,13 +67,6 @@ def test_updated_pid_log_format(
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=2, job_id="") in log
-
-
-def test_updated_jobid_log_format(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Verify state of logger context after updating job_id"""
-    internal_logger, logger_1, logger_2 = logger_fixtures()
     job_id = str(uuid.uuid4())
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
     internal_logger.info(INFO_STR)
@@ -90,7 +76,7 @@ def test_updated_jobid_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=-1, job_id=job_id) in log
+        assert format_log_context(pid=2, job_id=job_id) in log
     # Test clearing now
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
     internal_logger.info(INFO_STR)
@@ -100,4 +86,4 @@ def test_updated_jobid_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=-1, job_id="") in log
+        assert format_log_context(pid=2, job_id="") in log
