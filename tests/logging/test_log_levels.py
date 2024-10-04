@@ -46,7 +46,6 @@ def test_default_log_levels(
     assert WARNING_STR not in caplog.text
     assert ERROR_STR in caplog.text
     assert CRITICAL_STR in caplog.text
-    assert 1 == 2
 
 
 def test_log_level_override(
