@@ -142,8 +142,7 @@ def test_function_schema_parser_no_type_hints() -> None:
             type="single",
             single={
                 "dataType": {
-                    "type": "unknown",
-                    "unknown": {},
+                    "type": "string",
                 },
             },
         ),

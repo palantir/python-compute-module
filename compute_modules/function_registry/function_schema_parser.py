@@ -95,8 +95,7 @@ def _default_unknown_output() -> FunctionOutputType:
         type="single",
         single={
             "dataType": {
-                "type": "unknown",
-                "unknown": {},
+                "type": "string",
             },
         },
     )
