@@ -198,8 +198,11 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "elementsType": element_type,
             },
         }, PythonClassNode(constructor=list, children={"list": element_class_node})
-    if typing.get_origin(type_hint) is dict:
-        key_type, value_type = typing.get_args(type_hint)
+    if type_hint is dict or typing.get_origin(type_hint) is dict:
+        dict_type_hints = typing.get_args(type_hint)
+        if not len(dict_type_hints):
+            raise ValueError("dict type hints must have type parameters provided")
+        key_type, value_type = dict_type_hints
         if not (
             key_type in typing.get_args(AllowedKeyTypes)
             or issubclass(key_type, tuple(cls for cls in typing.get_args(AllowedKeyTypes) if inspect.isclass(cls)))

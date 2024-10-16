@@ -19,7 +19,14 @@ import pytest
 
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema, FunctionOutputType
-from tests.function_registry.dummy_app import DummyInput, ParentClass, dummy_func_1, dummy_func_2, dummy_func_3
+from tests.function_registry.dummy_app import (
+    DummyInput,
+    ParentClass,
+    dummy_func_1,
+    dummy_func_2,
+    dummy_func_3,
+    dummy_func_4,
+)
 from tests.function_registry.dummy_app_with_issues import (
     dummy_args_init,
     dummy_kwargs_init,
@@ -159,6 +166,13 @@ def test_function_schema_parser_context_output_only() -> None:
     assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_3
 
 
+def test_function_schema_parser_dict_witout_params() -> None:
+    """Test 'happy' path for a function that uses type hints only for the context & return type"""
+    with pytest.raises(ValueError) as exc_info:
+        parse_function_schema(dummy_func_4, "dummy_func_4")
+    assert "dict type hints must have type parameters provided" in str(exc_info.value)
+
+
 def test_exception_no_type_hints() -> None:
     """CM function params should not have classes without type hints"""
     with pytest.raises(ValueError) as exc_info:
@@ -178,6 +192,13 @@ def test_exception_args_init() -> None:
     with pytest.raises(ValueError) as exc_info:
         parse_function_schema(dummy_args_init, "dummy_args_init")
     assert "The __init__ method should not use *args" in str(exc_info.value)
+
+
+def test_exception_kwargs_init() -> None:
+    """CM function params should not have constructors that use the `kwargs` keyword"""
+    with pytest.raises(ValueError) as exc_info:
+        parse_function_schema(dummy_kwargs_init, "dummy_kwargs_init")
+    assert "The __init__ method should not use **kwargs" in str(exc_info.value)
 
 
 def test_exception_kwargs_init() -> None:
