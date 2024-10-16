@@ -160,6 +160,18 @@ class BadClassKwargsInit:
         ...
 ```
 
+**❌ AVOID using dict/Dict with no type params**
+```python
+# These both will raise an exception
+@dataclass
+class MyPayload:
+    data: dict
+
+@dataclass
+class MyPayload:
+    data: typing.Dict
+```
+
 
 #### 3. Serialization/De-serialization of various types
 

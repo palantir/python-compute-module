@@ -54,6 +54,11 @@ class DummyOutput:
     res2: Dict[str, float]
 
 
+@dataclass
+class ClassWithBareDict:
+    dict_field: dict  # type: ignore[type-arg]
+
+
 def dummy_func_1(context, event: DummyInput) -> DummyOutput:  # type: ignore[no-untyped-def]
     """Example function with type hints"""
     key_value = event.optional_field or "default"
@@ -66,5 +71,10 @@ def dummy_func_2(context, event):  # type: ignore[no-untyped-def]
 
 
 def dummy_func_3(context: QueryContext, event) -> int:  # type: ignore[no-untyped-def]
+    """Example function with type hint for context & return type only"""
+    return 1
+
+
+def dummy_func_4(context: QueryContext, event: ClassWithBareDict) -> int:
     """Example function with type hint for context & return type only"""
     return 1
