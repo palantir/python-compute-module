@@ -199,10 +199,3 @@ def test_exception_kwargs_init() -> None:
     with pytest.raises(ValueError) as exc_info:
         parse_function_schema(dummy_kwargs_init, "dummy_kwargs_init")
     assert "The __init__ method should not use **kwargs" in str(exc_info.value)
-
-
-def test_exception_kwargs_init() -> None:
-    """CM function params should not have constructors that use the `kwargs` keyword"""
-    with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_kwargs_init, "dummy_kwargs_init")
-    assert "The __init__ method should not use **kwargs" in str(exc_info.value)
