@@ -13,7 +13,7 @@ An open-source python library for compute modules for performing tasks like serv
 
 
 ## Functions Mode
-Sources can be used to store secrets for use within a Compute Module, they prevent you from having to put secrets in your container or in plaintext in the job specification.
+Sources can be used to store secrets for use within a Compute Module, they prevent you from having to put secrets in your container or in plaintext in the job specification. 
 Retrieving a source credential using this library is simple, if you are in Functions Mode they are passed to the context
 
 ### Basic usage
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 This library includes functionality that will inspect the functions registered for the Compute Module, inspect the input/output types of those functions, and then convert those to FunctionSpecs that can be imported as a Foundry Function without any modifications needed. Below are some considerations to ensure this feature works as expected.
 
 #### 1. The Input class must be a complex type
-Foundry function specs require the input type of a Function to be a complex type. If your function takes only a single primitive type as input, make sure to wrap that param in a complex type to have your function schema inferred properly.
+Foundry function specs require the input type of a Function to be a complex type. If your function takes only a single primitive type as input, make sure to wrap that param in a complex type to have your function schema inferred properly. 
 
 #### 2. Input type definition
 
