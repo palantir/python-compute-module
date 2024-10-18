@@ -13,7 +13,7 @@ An open-source python library for compute modules for performing tasks like serv
 
 
 ## Functions Mode
-Sources can be used to store secrets for use within a Compute Module, they prevent you from having to put secrets in your container or in plaintext in the job specification. 
+Sources can be used to store secrets for use within a Compute Module, they prevent you from having to put secrets in your container or in plaintext in the job specification.
 Retrieving a source credential using this library is simple, if you are in Functions Mode they are passed to the context
 
 ### Basic usage
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 This library includes functionality that will inspect the functions registered for the Compute Module, inspect the input/output types of those functions, and then convert those to FunctionSpecs that can be imported as a Foundry Function without any modifications needed. Below are some considerations to ensure this feature works as expected.
 
 #### 1. The Input class must be a complex type
-Foundry function specs require the input type of a Function to be a complex type. If your function takes only a single primitive type as input, make sure to wrap that param in a complex type to have your function schema inferred properly. 
+Foundry function specs require the input type of a Function to be a complex type. If your function takes only a single primitive type as input, make sure to wrap that param in a complex type to have your function schema inferred properly.
 
 #### 2. Input type definition
 
@@ -74,11 +74,13 @@ Foundry function specs require the input type of a Function to be a complex type
 
 ```python
 from typing import TypedDict
+from compute_modules.annotations import function
 
 
 class HelloInput(TypedDict):
     planet: str
 
+@function
 def hello(context, event: HelloInput) -> str:
     return "Hello " + event["planet"] + "!"
 ```
@@ -86,6 +88,7 @@ def hello(context, event: HelloInput) -> str:
 **✅ dataclass as input type**
 ```python
 from dataclasses import dataclass
+from compute_modules.annotations import function
 
 
 @dataclass
@@ -100,6 +103,7 @@ class TypedInput:
     datetime_value: datetime.datetime
     other_date_value: datetime.datetime
 
+@function
 def typed_function(context, event: TypedInput) -> str:
     diff = event.other_date_value - event.datetime_value
     return f"The diff between dates provided is {diff}"
@@ -107,6 +111,9 @@ def typed_function(context, event: TypedInput) -> str:
 
 **✅ regular class with both class AND constructor type hints**
 ```python
+from compute_modules.annotations import function
+
+
 class GoodExample:
     some_flag: bool
     some_value: int
@@ -115,6 +122,7 @@ class GoodExample:
         self.some_flag = some_flag
         self.some_value = some_value
 
+@function
 def typed_function(context, event: GoodExample) -> int:
     return return event.some_value
 ```
@@ -198,12 +206,13 @@ You can annotate the `context` param in any function with the `QueryContext` typ
 from typing import TypedDict
 
 from compute_modules.context import QueryContext
+from compute_modules.annotations import function
 
 
 class HelloInput(TypedDict):
     x: str
 
-
+@function
 def hello(context: QueryContext, event: HelloInput) -> str:
     return f"Hello {event['x']}! Your job ID is: {context.jobId}"
 ```
