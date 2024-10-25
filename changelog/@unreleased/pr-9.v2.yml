@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Pypi package can be publish to conda-forge
+  links:
+  - https://github.com/palantir/python-compute-module/pull/9

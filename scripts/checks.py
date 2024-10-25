@@ -24,7 +24,7 @@ from typing import Iterator, List, Tuple
 SOURCE_DIR = "compute_modules"
 TESTS_DIR = "tests"
 SCRIPTS_DIR = "scripts"
-LICENSE_FILE = "LICENSE"
+LICENSE_FILE = "LICENSE.txt"
 FILES_WITH_LICENSE_NEEDED_GLOB_EXPR = "*.py"
 
 
