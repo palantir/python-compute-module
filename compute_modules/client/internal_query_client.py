@@ -80,7 +80,7 @@ class InternalQueryService:
 
     def _initialize_auth_token(self) -> None:
         try:
-            with open(os.environ["MODULE_AUTH_TOKEN"], "r") as f:
+            with open(os.environ["MODULE_AUTH_TOKEN"], "r", encoding='utf-8') as f:
                 self.moduleAuthToken = f.read()
         except Exception as e:
             self.logger.error(f"Failed to read auth token: {str(e)}")
