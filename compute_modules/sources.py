@@ -25,7 +25,7 @@ def get_sources() -> Any:
     if _source_credentials is None:
         creds_path = os.environ.get("SOURCE_CREDENTIALS")
         if creds_path:
-            with open(creds_path, "r", encoding='utf-8') as fr:
+            with open(creds_path, "r", encoding="utf-8") as fr:
                 data = json.load(fr)
             if isinstance(data, dict):
                 _source_credentials = data

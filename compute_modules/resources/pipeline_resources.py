@@ -32,6 +32,6 @@ def get_pipeline_resources() -> Dict[str, PipelineResource]:
     """
     if RESOURCE_ALIAS_MAP not in environ:
         raise RuntimeError(RESOURCE_ALIAS_NOT_FOUND)
-    with open(os.environ['RESOURCE_ALIAS_MAP'], encoding='utf-8') as f:
+    with open(os.environ['RESOURCE_ALIAS_MAP'], encoding="utf-8") as f:
         resource_alias_map_raw = json.load(f)
     return {key: PipelineResource(**value) for key, value in resource_alias_map_raw.items()}

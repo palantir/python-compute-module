@@ -57,7 +57,7 @@ def format() -> None:
 
 
 def _get_license_content() -> Tuple[str, int]:
-    with open(LICENSE_FILE, "r", encoding='utf-8') as f:
+    with open(LICENSE_FILE, "r", encoding="utf-8") as f:
         lines = []
         for line in f.readlines():
             # Empty lines should not have whitespace appended
@@ -70,7 +70,7 @@ def _get_license_content() -> Tuple[str, int]:
 
 
 def _get_n_lines_of_file(filename: str, num_lines: int) -> str:
-    with open(filename, "r", encoding='utf-8') as f:
+    with open(filename, "r", encoding="utf-8") as f:
         head = [next(f) for _ in range(num_lines)]
     return "".join(head)
 
@@ -109,9 +109,9 @@ def check_license() -> None:
 
 def _add_license_to_file(filepath: str, license_content: str) -> None:
     """Adds license header to top of a file"""
-    with open(filepath, "r", encoding='utf-8') as old:
+    with open(filepath, "r", encoding="utf-8") as old:
         unlink(filepath)
-        with open(filepath, "w", encoding='utf-8') as new:
+        with open(filepath, "w", encoding="utf-8") as new:
             new.write(license_content + "\n\n\n")
             shutil.copyfileobj(old, new)
 

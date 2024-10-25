@@ -26,12 +26,12 @@ def main() -> None:
     gitversion = _get_current_tag()
     print(f"Setting {VERSION_FILE_PATH} to {gitversion}...")
 
-    with open(VERSION_FILE_PATH, "r", encoding='utf-8') as f:
+    with open(VERSION_FILE_PATH, "r", encoding="utf-8") as f:
         content = f.read()
 
     content = content.replace('__version__ = "0.0.0"', f'__version__ = "{gitversion}"')
 
-    with open(VERSION_FILE_PATH, "w", encoding='utf-8') as f:
+    with open(VERSION_FILE_PATH, "w", encoding="utf-8") as f:
         f.write(content)
 
     subprocess.run(["poetry", "version", gitversion])

@@ -24,6 +24,6 @@ def retrieve_pipeline_token() -> str:
     """
     if BUILD2_TOKEN not in os.environ:
         raise RuntimeError("Pipeline token not available. Please make sure you are running in Pipeline mode.")
-    with open(os.environ["BUILD2_TOKEN"], encoding='utf-8') as f:
+    with open(os.environ["BUILD2_TOKEN"], encoding="utf-8") as f:
         bearer_token = f.read()
     return bearer_token
