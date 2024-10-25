@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: force encoding to be utf-8
+  links:
+  - https://github.com/palantir/python-compute-module/pull/10
