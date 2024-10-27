@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 
-
 import http.client
 import json
 import os
