@@ -25,15 +25,6 @@ pytest-html = "4.1.1"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-test = "scripts.checks:test"
-check_format = "scripts.checks:check_format"
-check_mypy = "scripts.checks:check_mypy"
-format = "scripts.checks:format"
-check_license = "scripts.checks:check_license"
-license = "scripts.checks:license"
-set_version = "scripts.set_version:main"
-
 [tool.black]
 line_length = 120
 
