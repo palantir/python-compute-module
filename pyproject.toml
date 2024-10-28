@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "foundry-compute-modules"
-version = "0.0.0"
+version = "0.6.0"
 description = "The official Python library for creating Compute Modules"
 authors = ["Palantir Technologies, Inc."]
 license = "Apache-2.0"
