@@ -124,6 +124,7 @@ def license() -> None:
         if not file_head.startswith(expected_license_content):
             _add_license_to_file(filepath=filename, license_content=expected_license_content)
             updated_files.append(filename)
+
     if updated_files:
         print(f"Added license to the following files:\n\n{_get_files_list_str(updated_files)}")
     else:
