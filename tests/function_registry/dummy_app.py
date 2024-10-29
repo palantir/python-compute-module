@@ -70,7 +70,7 @@ def dummy_func_2(context, event):  # type: ignore[no-untyped-def]
     return event["blah"]
 
 
-def dummy_func_3(context: QueryContext, event) -> int:
+def dummy_func_3(context: QueryContext, event) -> int:  # type: ignore[no-untyped-def]
     """Example function with type hint for context & return type only"""
     return 1
 
