@@ -26,6 +26,7 @@ from tests.function_registry.dummy_app import (
     dummy_func_2,
     dummy_func_3,
     dummy_func_4,
+    dummy_func_5,
 )
 from tests.function_registry.dummy_app_with_issues import (
     dummy_args_init,
@@ -60,6 +61,18 @@ EXPECTED_OUTPUT_3 = {
         "dataType": {
             "integer": {},
             "type": "integer",
+        }
+    },
+    "type": "single",
+}
+
+EXPECTED_OUTPUT_4 = {
+    "single": {
+        "dataType": {
+            "list":  {
+                "elementsType": {"string": {}, "type": "string"},
+            },
+            "type": "list",
         }
     },
     "type": "single",
@@ -171,6 +184,14 @@ def test_function_schema_parser_dict_witout_params() -> None:
     with pytest.raises(ValueError) as exc_info:
         parse_function_schema(dummy_func_4, "dummy_func_4")
     assert "dict type hints must have type parameters provided" in str(exc_info.value)
+
+
+def test_function_schema_parser_generator_output() -> None:
+    """Test 'happy' path for a function that uses type hints for generator return type"""
+    parse_result = parse_function_schema(dummy_func_5, "dummy_func_5")
+    assert parse_result.function_schema["functionName"] == "dummy_func_5"
+    assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_4
+
 
 
 def test_exception_no_type_hints() -> None:

@@ -16,7 +16,8 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, Optional, Set, Union
+import time
+from typing import Dict, Optional, Set, Union, Generator
 
 from compute_modules.context import QueryContext
 
@@ -78,3 +79,9 @@ def dummy_func_3(context: QueryContext, event) -> int:  # type: ignore[no-untype
 def dummy_func_4(context: QueryContext, event: ClassWithBareDict) -> int:
     """Example function with type hint for context & return type only"""
     return 1
+
+def dummy_func_5(context, event) -> Generator[str, None, None]:
+    """Example function with type hint for generator return type"""
+    for i in range(10):
+        yield f"string {i}"
+        time.sleep(0.5)
