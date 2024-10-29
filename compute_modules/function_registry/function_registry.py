@@ -22,6 +22,7 @@ REGISTERED_FUNCTIONS: Dict[str, Callable[..., Any]] = {}
 FUNCTION_SCHEMAS: List[ComputeModuleFunctionSchema] = []
 FUNCTION_SCHEMA_CONVERSIONS: Dict[str, PythonClassNode] = {}
 IS_FUNCTION_CONTEXT_TYPED: Dict[str, bool] = {}
+IS_GENERATOR_FUNCTIONS: Dict[str, bool] = {}
 
 
 def add_functions(*args: Callable[..., Any]) -> None:
@@ -39,19 +40,22 @@ def add_function(function_ref: Callable[..., Any]) -> None:
         function_schema=parse_result.function_schema,
         function_schema_conversion=parse_result.class_node,
         is_context_typed=parse_result.is_context_typed,
+        is_generator_function=parse_result.is_generator_function
     )
 
 
 def _register_parsed_function(
-    function_name: str,
-    function_ref: Callable[..., Any],
-    function_schema: ComputeModuleFunctionSchema,
-    function_schema_conversion: Optional[PythonClassNode],
-    is_context_typed: bool,
+        function_name: str,
+        function_ref: Callable[..., Any],
+        function_schema: ComputeModuleFunctionSchema,
+        function_schema_conversion: Optional[PythonClassNode],
+        is_context_typed: bool,
+        is_generator_function: bool,
 ) -> None:
     """Registers a Compute Module function"""
     REGISTERED_FUNCTIONS[function_name] = function_ref
     FUNCTION_SCHEMAS.append(function_schema)
     IS_FUNCTION_CONTEXT_TYPED[function_name] = is_context_typed
+    IS_GENERATOR_FUNCTIONS[function_name] = is_generator_function
     if function_schema_conversion is not None:
         FUNCTION_SCHEMA_CONVERSIONS[function_name] = function_schema_conversion

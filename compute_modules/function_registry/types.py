@@ -63,6 +63,7 @@ class ParseFunctionSchemaResult:
     function_schema: ComputeModuleFunctionSchema
     class_node: typing.Optional[PythonClassNode]
     is_context_typed: bool
+    is_generator_function: bool
 
 
 Byte = typing.NewType("Byte", int)
@@ -80,8 +81,8 @@ AllowedKeyTypes = typing.Union[
     float,
     int,
     Long,
-    # TODO: handle ontology types?
-    # OntologyObject
+        # TODO: handle ontology types?
+        # OntologyObject
     Short,
     str,
     datetime.datetime,

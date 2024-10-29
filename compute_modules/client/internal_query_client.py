@@ -24,6 +24,8 @@ from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlparse
 
+import requests
+
 from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema, PythonClassNode
@@ -43,16 +45,18 @@ def _extract_path_from_url(url: str) -> str:
 
 class InternalQueryService:
     def __init__(
-        self,
-        registered_functions: Dict[str, Callable[..., Any]],
-        function_schemas: List[ComputeModuleFunctionSchema],
-        function_schema_conversions: Dict[str, PythonClassNode],
-        is_function_context_typed: Dict[str, bool],
+            self,
+            registered_functions: Dict[str, Callable[..., Any]],
+            function_schemas: List[ComputeModuleFunctionSchema],
+            function_schema_conversions: Dict[str, PythonClassNode],
+            is_function_context_typed: Dict[str, bool],
+            is_generator_functions: Dict[str, bool],
     ):
         self.registered_functions = registered_functions
         self.function_schemas = function_schemas
         self.function_schema_conversions = function_schema_conversions
         self.is_function_context_typed = is_function_context_typed
+        self.is_generator_functions = is_generator_functions
         self.host = os.environ["RUNTIME_HOST"]
         self.port = int(os.environ["RUNTIME_PORT"])
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
@@ -96,11 +100,11 @@ class InternalQueryService:
 
     @contextmanager
     def request(
-        self,
-        method: str,
-        url: str,
-        headers: Dict[str, Any],
-        body: Optional[Any] = None,
+            self,
+            method: str,
+            url: str,
+            headers: Dict[str, Any],
+            body: Optional[Any] = None,
     ) -> Generator[http.client.HTTPResponse, Any, None]:
         """Wrapper for using https connection for requests"""
         response: Optional[http.client.HTTPResponse] = None
@@ -122,6 +126,16 @@ class InternalQueryService:
         finally:
             connection.close()
 
+    @contextmanager
+    def post_streaming(
+            self,
+            url: str,
+            headers: Dict[str, Any],
+            body: Optional[Any] = None,
+    ) -> Generator[requests.Response, Any, None]:
+        response = requests.post(url, data=body, headers=headers, verify=self.certPath)
+        yield response
+
     def post_query_schemas(self) -> None:
         """Post the function schemas of the Compute Module"""
         body = json.dumps(self.function_schemas)
@@ -129,16 +143,16 @@ class InternalQueryService:
         for i in range(POST_SCHEMAS_MAX_ATTEMPTS):
             try:
                 with self.request(
-                    method="POST",
-                    url=self.post_schema_path,
-                    body=body,
-                    headers=self.post_schema_headers,
+                        method="POST",
+                        url=self.post_schema_path,
+                        body=body,
+                        headers=self.post_schema_headers,
                 ) as response:
                     self.logger.debug(f"POST /schemas response status: {response.status} reason: {response.reason}")
                 return
             except ConnectionRefusedError:
-                self.logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
-                time.sleep(2**i)
+                self.logger.warning(f"POST /schemas attempt #{i + 1} Connection refused. Sleeping for {2 ** i}s")
+                time.sleep(2 ** i)
             except Exception as e:
                 self.logger.error(f"Unknown error posting function schemas: {str(e)}")
                 self.logger.error(traceback.format_exc())
@@ -160,7 +174,7 @@ class InternalQueryService:
                 return result
         except ConnectionRefusedError:
             self.logger.warning(f"Connection refused. Sleeping for {2 ** self.connection_refused_count}s")
-            time.sleep(2**self.connection_refused_count)
+            time.sleep(2 ** self.connection_refused_count)
             self.connection_refused_count += 1
             return None
         except Exception as e:
@@ -168,23 +182,32 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, result: Any) -> None:
+    def report_job_result(self, job_id: str, result: Any, is_generator_function: bool) -> None:
         body = json.dumps(result).encode("utf-8")
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
-                with self.request(
-                    method="POST",
-                    url=post_result_path,
-                    headers=self.post_result_headers,
-                    body=body,
-                ) as response:
-                    if response.status == 204:
-                        self.logger.debug("Successfully reported job result")
-                        return
-                    else:
-                        self.logger.error(f"Failed to post result: {response.status} {response.reason}")
+                if is_generator_function:
+                    with requests.post(post_result_path, data=body, headers=self.post_result_headers,
+                                       verify=self.certPath) as response:
+                        if response.status_code == 204:
+                            self.logger.debug("Successfully streamed job result")
+                            return
+                        else:
+                            self.logger.error(f"Failed to stream result: {response.status_code} {response.reason}")
+                else:
+                    with self.request(
+                            method="POST",
+                            url=post_result_path,
+                            headers=self.post_result_headers,
+                            body=body,
+                    ) as response:
+                        if response.status == 204:
+                            self.logger.debug("Successfully reported job result")
+                            return
+                        else:
+                            self.logger.error(f"Failed to post result: {response.status} {response.reason}")
             except Exception as e:
                 self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
                 self.logger.error(traceback.format_exc())
@@ -222,14 +245,15 @@ class InternalQueryService:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
         self.logger.debug("Reporting result for job")
-        self.report_job_result(job_id, result)
+        is_generator_function = self.is_generator_functions[query_type]
+        self.report_job_result(job_id, result, is_generator_function)
         self._clear_logger_job_id()
 
     def get_result(
-        self,
-        query_type: str,
-        query: Dict[str, Any],
-        query_context: Dict[str, Any],
+            self,
+            query_type: str,
+            query: Dict[str, Any],
+            query_context: Dict[str, Any],
     ) -> Any:
         registered_fn_keys = self.registered_functions.keys()
         if query_type in self.registered_functions:

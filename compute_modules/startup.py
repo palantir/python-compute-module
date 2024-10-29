@@ -18,6 +18,7 @@ from compute_modules.function_registry.function_registry import (
     FUNCTION_SCHEMA_CONVERSIONS,
     FUNCTION_SCHEMAS,
     IS_FUNCTION_CONTEXT_TYPED,
+    IS_GENERATOR_FUNCTIONS,
     REGISTERED_FUNCTIONS,
 )
 
@@ -29,5 +30,6 @@ def start_compute_module() -> None:
         function_schemas=FUNCTION_SCHEMAS,
         function_schema_conversions=FUNCTION_SCHEMA_CONVERSIONS,
         is_function_context_typed=IS_FUNCTION_CONTEXT_TYPED,
+        is_generator_functions=IS_GENERATOR_FUNCTIONS
     )
     query_client.start()

@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 
+import collections
 import datetime
 import decimal
 import inspect
@@ -40,13 +41,14 @@ RESERVED_KEYS = {CONTEXT_KEY, RETURN_KEY}
 
 
 def parse_function_schema(
-    function_ref: typing.Callable[..., typing.Any], function_name: str
+        function_ref: typing.Callable[..., typing.Any], function_name: str
 ) -> ParseFunctionSchemaResult:
     """Convert function name, input(s) & output into ComputeModuleFunctionSchema"""
     type_hints = typing.get_type_hints(function_ref, globalns={})
     inputs, root_class_node = _extract_inputs(type_hints)
     is_context_typed = _check_is_context_typed(type_hints)
     output = _extract_output(type_hints)
+    is_generator_function = _check_is_generator_function(function_ref)
     function_schema = ComputeModuleFunctionSchema(
         functionName=function_name,
         inputs=inputs,
@@ -56,11 +58,12 @@ def parse_function_schema(
         function_schema=function_schema,
         class_node=root_class_node,
         is_context_typed=is_context_typed,
+        is_generator_function=is_generator_function
     )
 
 
 def _extract_inputs(
-    type_hints: typing.Dict[str, typing.Any],
+        type_hints: typing.Dict[str, typing.Any],
 ) -> typing.Tuple[typing.List[FunctionInputType], typing.Optional[PythonClassNode]]:
     non_reserved_keys = iter([key for key in type_hints.keys() if key not in RESERVED_KEYS])
     payload_key = next(non_reserved_keys, None)
@@ -111,6 +114,10 @@ def _check_is_context_typed(type_hints: typing.Dict[str, typing.Any]) -> bool:
     if type_hints[CONTEXT_KEY] is not QueryContext:
         raise ValueError("context can only be typed as compute_modules.context.QueryContext!")
     return True
+
+
+def _check_is_generator_function(function_ref: typing.Callable[..., typing.Any]) -> bool:
+    return inspect.isgenerator(function_ref())
 
 
 def _extract_output(type_hints: typing.Dict[str, typing.Any]) -> FunctionOutputType:
@@ -189,7 +196,7 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "type": "timestamp",
             "timestamp": {},
         }, PythonClassNode(constructor=lambda d: datetime.datetime.utcfromtimestamp(d / 1e3), children=None)
-    if typing.get_origin(type_hint) is list:
+    if typing.get_origin(type_hint) is list or typing.get_origin(type_hint) is collections.abc.Generator:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
         return {
@@ -204,8 +211,8 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             raise ValueError("dict type hints must have type parameters provided (e.g. dict[str, str])")
         key_type, value_type = dict_type_hints
         if not (
-            key_type in typing.get_args(AllowedKeyTypes)
-            or issubclass(key_type, tuple(cls for cls in typing.get_args(AllowedKeyTypes) if inspect.isclass(cls)))
+                key_type in typing.get_args(AllowedKeyTypes)
+                or issubclass(key_type, tuple(cls for cls in typing.get_args(AllowedKeyTypes) if inspect.isclass(cls)))
         ):
             raise ValueError(
                 "Map key must be of type: ",
