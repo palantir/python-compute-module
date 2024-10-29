@@ -100,7 +100,7 @@ def check_license() -> None:
         print(
             "Some files did not have the license header included!\n\n"
             + _get_files_list_str(failed_files)
-            + "\n\nRun `poetry run license` and commit to fix the issue"
+            + "\n\nRun `poe license` and commit to fix the issue"
         )
     else:
         print(f"All {FILES_WITH_LICENSE_NEEDED_GLOB_EXPR} have license header")
