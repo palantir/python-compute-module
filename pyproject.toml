@@ -20,10 +20,20 @@ mypy = "1.9.0"
 ruff = "0.2.1"
 pytest = "8.0.0"
 pytest-html = "4.1.1"
+poethepoet = "^0.29.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+test = "python -c 'from scripts.checks import test; test()'"
+check_format = "python -c 'from scripts.checks import check_format; check_format()'"
+check_mypy = "python -c 'from scripts.checks import check_mypy; check_mypy()'"
+format = "python -c 'from scripts.checks import format; format()'"
+check_license = "python -c 'from scripts.checks import check_license; check_license()'"
+license = "python -c 'from scripts.checks import license; license()'"
+set_version = "python -c 'from scripts.set_version import main; main()'"
 
 [tool.black]
 line_length = 120
