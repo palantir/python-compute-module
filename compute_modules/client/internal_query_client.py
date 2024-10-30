@@ -96,7 +96,7 @@ class InternalQueryService:
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
 
-    def _iterable_json_generator(iterable: Iterable) -> Iterable[str]:
+    def _iterable_json_generator(self, iterable: Iterable) -> Iterable[str]:
         for i in iterable:
             yield json.dumps(i)
 
@@ -230,7 +230,7 @@ class InternalQueryService:
                 serialized_result = json.dumps(result).encode("utf-8")
         except Exception as e:
             self.logger.error(f"Failed to serialize result to json: {str(e)}")
-            serialized_result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
+            serialized_result = json.dumps(self.get_failed_query(f"{str(e)}: {traceback.format_exc()}"))
         self.logger.debug("Reporting result for job")
         self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
