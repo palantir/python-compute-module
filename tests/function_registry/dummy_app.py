@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 
-import time
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -85,4 +84,3 @@ def dummy_func_5(context, event) -> Iterable[str]:  # type: ignore[no-untyped-de
     """Example function with type hint for generator return type"""
     for i in range(10):
         yield f"string {i}"
-        time.sleep(0.5)
