@@ -17,13 +17,14 @@ import http.client
 import json
 import multiprocessing
 import os
-import requests
 import ssl
 import time
 import traceback
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, Iterable, List, Optional
 from urllib.parse import urlparse
+
+import requests
 
 from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
@@ -94,12 +95,10 @@ class InternalQueryService:
             "Module-Auth-Token": self.moduleAuthToken,
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
-    
-        
+
     def _iterable_json_generator(iterable: Iterable) -> Iterable[str]:
         for i in iterable:
             yield json.dumps(i)
-
 
     @contextmanager
     def request(
@@ -181,10 +180,7 @@ class InternalQueryService:
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
                 with requests.post(
-                    post_result_path,
-                    data=serialized_result,
-                    headers=self.post_result_headers,
-                    verify=self.certPath
+                    post_result_path, data=serialized_result, headers=self.post_result_headers, verify=self.certPath
                 ) as response:
                     if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
