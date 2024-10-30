@@ -96,9 +96,20 @@ class InternalQueryService:
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
 
-    def _iterable_json_generator(self, iterable: Iterable) -> Iterable[str]:
+    def _json_dumps(self, result: Any) -> Iterable[bytes] | bytes:
+        if isinstance(result, Iterable) and not isinstance(result, dict):
+            return self._iterable_to_json_generator(result)
+        else:
+            try:
+                serialized_result = json.dumps(result).encode("utf-8")
+            except Exception as e:
+                self.logger.error(f"Failed to serialize result to json: {str(e)}")
+                serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
+            return serialized_result
+
+    def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
         for i in iterable:
-            yield json.dumps(i)
+            yield json.dumps(i).encode("utf-8")
 
     @contextmanager
     def request(
@@ -187,6 +198,10 @@ class InternalQueryService:
                         return
                     else:
                         self.logger.error(f"Failed to post result: {response.status_code} {response.reason}")
+            except TypeError as e:
+                self.logger.error(f"Failed to serialize result to json: {str(e)}")
+                self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
+                return
             except Exception as e:
                 self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
                 self.logger.error(traceback.format_exc())
@@ -222,15 +237,8 @@ class InternalQueryService:
             self.logger.debug("Successfully executed job")
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
-            result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
-        try:
-            if isinstance(result, Iterable) and not isinstance(result, dict):
-                serialized_result = self._iterable_json_generator(result)
-            else:
-                serialized_result = json.dumps(result).encode("utf-8")
-        except Exception as e:
-            self.logger.error(f"Failed to serialize result to json: {str(e)}")
-            serialized_result = json.dumps(self.get_failed_query(f"{str(e)}: {traceback.format_exc()}"))
+            result = self.get_failed_query(e)
+        serialized_result = self._json_dumps(result)
         self.logger.debug("Reporting result for job")
         self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
@@ -256,8 +264,8 @@ class InternalQueryService:
             return {"error": "Unknown query type"}
 
     @staticmethod
-    def get_failed_query(message: str) -> Dict[str, str]:
-        return {"exception": message}
+    def get_failed_query(exception: Exception) -> Dict[str, str]:
+        return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
 
     def start(self) -> None:
         self.post_query_schemas()
