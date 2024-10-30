@@ -101,6 +101,7 @@ def _default_unknown_output() -> FunctionOutputType:
         single={
             "dataType": {
                 "type": "string",
+                "string": {}
             },
         },
     )
