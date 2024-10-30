@@ -96,17 +96,6 @@ class InternalQueryService:
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
 
-    def _json_dumps(self, result: Any) -> Iterable[bytes] | bytes:
-        if isinstance(result, Iterable) and not isinstance(result, dict):
-            return self._iterable_to_json_generator(result)
-        else:
-            try:
-                serialized_result = json.dumps(result).encode("utf-8")
-            except Exception as e:
-                self.logger.error(f"Failed to serialize result to json: {str(e)}")
-                serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
-            return serialized_result
-
     def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
         for i in iterable:
             yield json.dumps(i).encode("utf-8")
@@ -185,13 +174,13 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, serialized_result: Any) -> None:
+    def report_job_result(self, job_id: str, data: Iterable[bytes] | bytes) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
                 with requests.post(
-                    post_result_path, data=serialized_result, headers=self.post_result_headers, verify=self.certPath
+                    post_result_path, data=data, headers=self.post_result_headers, verify=self.certPath
                 ) as response:
                     if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
@@ -238,9 +227,16 @@ class InternalQueryService:
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(e)
-        serialized_result = self._json_dumps(result)
         self.logger.debug("Reporting result for job")
-        self.report_job_result(job_id, serialized_result)
+        if isinstance(result, Iterable) and not isinstance(result, dict):
+            self.report_job_result(job_id, self._iterable_to_json_generator(result))
+        else:
+            try:
+                serialized_result = json.dumps(result).encode("utf-8")
+            except Exception as e:
+                self.logger.error(f"Failed to serialize result to json: {str(e)}")
+                serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
+            self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
 
     def get_result(
