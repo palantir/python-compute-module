@@ -224,7 +224,7 @@ class InternalQueryService:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
         try:
-            if isinstance(result, Iterable):
+            if isinstance(result, Iterable) and not isinstance(result, dict):
                 serialized_result = self._iterable_json_generator(result)
             else:
                 serialized_result = json.dumps(result).encode("utf-8")

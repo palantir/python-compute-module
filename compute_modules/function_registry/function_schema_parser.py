@@ -189,11 +189,7 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "type": "timestamp",
             "timestamp": {},
         }, PythonClassNode(constructor=lambda d: datetime.datetime.utcfromtimestamp(d / 1e3), children=None)
-    if (
-        typing.get_origin(type_hint) is list
-        or type_hint is typing.Iterable
-        or typing.get_origin(type_hint) is typing.Iterable
-    ):
+    if typing.get_origin(type_hint) is list:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
         return {
@@ -248,6 +244,15 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "elementsType": element_type,
             },
         }, PythonClassNode(constructor=set, children={"set": element_class_node})
+    if type_hint is typing.Iterable:
+        element_hint = typing.get_args(type_hint)[0]
+        element_type, element_class_node = _extract_data_type(element_hint)
+        return {
+            "type": "list",
+            "list": {
+                "elementsType": element_type,
+            },
+        }, PythonClassNode(constructor=list, children={"list": element_class_node})
     # will throw error if it is not valid
     _assert_is_valid_custom_type(type_hint)
     custom_type_fields = {}
