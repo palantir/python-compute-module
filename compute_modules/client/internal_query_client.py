@@ -17,11 +17,12 @@ import http.client
 import json
 import multiprocessing
 import os
+import requests
 import ssl
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Generator, List, Optional
+from typing import Any, Callable, Dict, Generator, Iterable, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.context.types import QueryContext
@@ -93,6 +94,12 @@ class InternalQueryService:
             "Module-Auth-Token": self.moduleAuthToken,
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
+    
+        
+    def _iterable_json_generator(iterable: Iterable) -> Iterable[str]:
+        for i in iterable:
+            yield json.dumps(i)
+
 
     @contextmanager
     def request(
@@ -168,23 +175,22 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, result: Any) -> None:
-        body = json.dumps(result).encode("utf-8")
+    def report_job_result(self, job_id: str, serialized_result: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
-                with self.request(
-                    method="POST",
-                    url=post_result_path,
+                with requests.post(
+                    post_result_path,
+                    data=serialized_result,
                     headers=self.post_result_headers,
-                    body=body,
+                    verify=self.certPath
                 ) as response:
-                    if response.status == 204:
+                    if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        self.logger.error(f"Failed to post result: {response.status} {response.reason}")
+                        self.logger.error(f"Failed to post result: {response.status_code} {response.reason}")
             except Exception as e:
                 self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
                 self.logger.error(traceback.format_exc())
@@ -221,8 +227,16 @@ class InternalQueryService:
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
+        try:
+            if isinstance(result, Iterable):
+                serialized_result = self._iterable_json_generator(result)
+            else:
+                serialized_result = json.dumps(result).encode("utf-8")
+        except Exception as e:
+            self.logger.error(f"Failed to serialize result to json: {str(e)}")
+            serialized_result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
         self.logger.debug("Reporting result for job")
-        self.report_job_result(job_id, result)
+        self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
 
     def get_result(
