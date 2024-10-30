@@ -24,8 +24,6 @@ from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, Iterable, List, Optional
 from urllib.parse import urlparse
 
-import requests
-
 from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema, PythonClassNode
@@ -174,19 +172,22 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, data: Any) -> None:
+    def report_job_result(self, job_id: str, body: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
-                with requests.post(
-                    post_result_path, data=data, headers=self.post_result_headers, verify=self.certPath
+                with self.request(
+                    method="POST",
+                    url=post_result_path,
+                    headers=self.post_result_headers,
+                    body=body,
                 ) as response:
-                    if response.status_code == 204:
+                    if response.status == 204:
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        self.logger.error(f"Failed to post result: {response.status_code} {response.reason}")
+                        self.logger.error(f"Failed to post result: {response.status} {response.reason}")
             except TypeError as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
                 self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
