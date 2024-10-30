@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 
+import collections
 import datetime
 import decimal
 import inspect
@@ -244,7 +245,7 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "elementsType": element_type,
             },
         }, PythonClassNode(constructor=set, children={"set": element_class_node})
-    if type_hint is typing.Iterable:
+    if typing.get_origin(type_hint) is collections.abc.Iterable:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
         return {
