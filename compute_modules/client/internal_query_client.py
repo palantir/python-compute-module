@@ -48,11 +48,13 @@ class InternalQueryService:
         function_schemas: List[ComputeModuleFunctionSchema],
         function_schema_conversions: Dict[str, PythonClassNode],
         is_function_context_typed: Dict[str, bool],
+        streaming: Dict[str, bool],
     ):
         self.registered_functions = registered_functions
         self.function_schemas = function_schemas
         self.function_schema_conversions = function_schema_conversions
         self.is_function_context_typed = is_function_context_typed
+        self.streaming = streaming
         self.host = os.environ["RUNTIME_HOST"]
         self.port = int(os.environ["RUNTIME_PORT"])
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
@@ -229,7 +231,7 @@ class InternalQueryService:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(e)
         self.logger.debug("Reporting result for job")
-        if isinstance(result, Iterable) and not isinstance(result, dict):
+        if self.streaming[query_type] and isinstance(result, Iterable) and not isinstance(result, dict):
             self.report_job_result(job_id, self._iterable_to_json_generator(result))
         else:
             try:
