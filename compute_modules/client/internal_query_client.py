@@ -174,7 +174,7 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, data: Iterable[bytes] | bytes) -> None:
+    def report_job_result(self, job_id: str, data: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
