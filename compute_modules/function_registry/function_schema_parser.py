@@ -189,7 +189,11 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "type": "timestamp",
             "timestamp": {},
         }, PythonClassNode(constructor=lambda d: datetime.datetime.utcfromtimestamp(d / 1e3), children=None)
-    if typing.get_origin(type_hint) is list:
+    if (
+        typing.get_origin(type_hint) is list
+        or type_hint is typing.Iterable
+        or typing.get_origin(type_hint) is typing.Iterable
+    ):
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
         return {
