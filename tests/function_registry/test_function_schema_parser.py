@@ -161,9 +161,7 @@ def test_function_schema_parser_no_type_hints() -> None:
         output=FunctionOutputType(
             type="single",
             single={
-                "dataType": {
-                    "type": "string",
-                },
+                "dataType": {"type": "string", "string": {}},
             },
         ),
     )
