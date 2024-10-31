@@ -63,15 +63,32 @@ if __name__ == "__main__":
 ```
 
 ### Advanced Usage 1 - streaming result
-This library includes functionality that will stream the result back when a function is called. If the result is an `Iterable` type, users may pass `streaming=True` to `@function` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
+This library includes functionality that will stream result back when a function is called. If the function return type is `Iterable`, users may pass `streaming=True` to `@function` or `add_function` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
 
+#### Use `@function`
 ```python
 # app.py
 from compute_modules.annotations import function
 
 @function(streaming=True)
-def get_sources(context, event) -> list[str]:
-    return context["sources"].keys()
+def get_strings(context, event) -> list[str]:
+    return [f'string {i}' for i in range(10)]
+```
+
+#### Use `add_function`
+```python
+# functions/get_strings.py
+def get_strings(context, event) -> list[str]:
+    return [f'string {i}' for i in range(10)]
+
+# app.py
+from compute_modules import add_functions, start_compute_module
+
+from functions.get_strings import get_strings
+
+if __name__ == "__main__":
+    add_function(get_strings, streaming=True)
+    start_compute_module()
 ```
 
 ### Advanced Usage 2 - automatic function discovery
