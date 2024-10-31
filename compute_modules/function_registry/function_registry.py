@@ -25,12 +25,12 @@ IS_FUNCTION_CONTEXT_TYPED: Dict[str, bool] = {}
 STREAMING: Dict[str, bool] = {}
 
 
-def add_functions(*args: tuple[Callable[..., Any], bool]) -> None:
-    for function_ref, streaming in args:
-        add_function(function_ref=function_ref, streaming=streaming)
+def add_functions(*args: Callable[..., Any]) -> None:
+    for function_ref in args:
+        add_function(function_ref=function_ref)
 
 
-def add_function(function_ref: Callable[..., Any], streaming: bool) -> None:
+def add_function(function_ref: Callable[..., Any], streaming: bool = False) -> None:
     """Parse & register a Compute Module function"""
     function_name = function_ref.__name__
     parse_result = parse_function_schema(function_ref, function_name)
