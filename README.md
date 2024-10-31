@@ -62,7 +62,36 @@ if __name__ == "__main__":
 
 ```
 
-### Advanced Usage - automatic function discovery
+### Advanced Usage 1 - streaming result
+This library includes functionality that will stream result back when a function is called. If the function return type is `Iterable`, users may pass `streaming=True` to `@function` or `add_function` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
+
+#### Use `@function`
+```python
+# app.py
+from compute_modules.annotations import function
+
+@function(streaming=True)
+def get_strings(context, event) -> list[str]:
+    return [f'string {i}' for i in range(10)]
+```
+
+#### Use `add_function`
+```python
+# functions/get_strings.py
+def get_strings(context, event) -> list[str]:
+    return [f'string {i}' for i in range(10)]
+
+# app.py
+from compute_modules import add_functions, start_compute_module
+
+from functions.get_strings import get_strings
+
+if __name__ == "__main__":
+    add_function(get_strings, streaming=True)
+    start_compute_module()
+```
+
+### Advanced Usage 2 - automatic function discovery
 This library includes functionality that will inspect the functions registered for the Compute Module, inspect the input/output types of those functions, and then convert those to FunctionSpecs that can be imported as a Foundry Function without any modifications needed. Below are some considerations to ensure this feature works as expected.
 
 #### 1. The Input class must be a complex type
@@ -183,20 +212,21 @@ class MyPayload:
 
 #### 3. Serialization/De-serialization of various types
 
-| Python Type         | Foundry Type | Serialized over HTTP as |
-| -----------         | ------------ | ----------------------- |
-| int                 | Integer      | int                     |
-| str                 | Byte         | string                  |
-| bool                | Boolean      | boolean                 |
-| bytes               | Binary       | string                  |
-| datetime.date       | Date         | string                  |
-| datetime.datetime   | Timestamp    | int (Unix timestamp)    |
-| decimal.Decimal     | Decimal      | string                  |
-| float               | Float        | float                   |
-| list                | Array        | array                   |
-| set                 | Array        | array                   |
-| dict                | Map          | JSON                    |
-| class/TypedDict     | Struct       | JSON                    |
+| Python Type             | Foundry Type | Serialized over HTTP as |
+| ----------------------- | ------------ | ----------------------- |
+| int                     | Integer      | int                     |
+| str                     | Byte         | string                  |
+| bool                    | Boolean      | boolean                 |
+| bytes                   | Binary       | string                  |
+| datetime.date           | Date         | string                  |
+| datetime.datetime       | Timestamp    | int (Unix timestamp)    |
+| decimal.Decimal         | Decimal      | string                  |
+| float                   | Float        | float                   |
+| list                    | Array        | array                   |
+| set                     | Array        | array                   |
+| dict                    | Map          | JSON                    |
+| class/TypedDict         | Struct       | JSON                    |
+| Iterable (w/ streaming) | Array        | stream of JSON          |
 
 
 ### `QueryContext` typing

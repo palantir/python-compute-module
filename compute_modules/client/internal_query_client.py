@@ -21,7 +21,7 @@ import ssl
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Generator, List, Optional
+from typing import Any, Callable, Dict, Generator, Iterable, List, Optional
 from urllib.parse import urlparse
 
 from compute_modules.context.types import QueryContext
@@ -48,11 +48,13 @@ class InternalQueryService:
         function_schemas: List[ComputeModuleFunctionSchema],
         function_schema_conversions: Dict[str, PythonClassNode],
         is_function_context_typed: Dict[str, bool],
+        streaming: Dict[str, bool],
     ):
         self.registered_functions = registered_functions
         self.function_schemas = function_schemas
         self.function_schema_conversions = function_schema_conversions
         self.is_function_context_typed = is_function_context_typed
+        self.streaming = streaming
         self.host = os.environ["RUNTIME_HOST"]
         self.port = int(os.environ["RUNTIME_PORT"])
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
@@ -93,6 +95,10 @@ class InternalQueryService:
             "Module-Auth-Token": self.moduleAuthToken,
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
+
+    def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
+        for i in iterable:
+            yield json.dumps(i).encode("utf-8")
 
     @contextmanager
     def request(
@@ -168,8 +174,7 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result(self, job_id: str, result: Any) -> None:
-        body = json.dumps(result).encode("utf-8")
+    def report_job_result(self, job_id: str, body: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_path}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
@@ -185,6 +190,10 @@ class InternalQueryService:
                         return
                     else:
                         self.logger.error(f"Failed to post result: {response.status} {response.reason}")
+            except TypeError as e:
+                self.logger.error(f"Failed to serialize result to json: {str(e)}")
+                self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
+                return
             except Exception as e:
                 self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
                 self.logger.error(traceback.format_exc())
@@ -220,9 +229,17 @@ class InternalQueryService:
             self.logger.debug("Successfully executed job")
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
-            result = self.get_failed_query(f"{str(e)}: {traceback.format_exc()}")
+            result = self.get_failed_query(e)
         self.logger.debug("Reporting result for job")
-        self.report_job_result(job_id, result)
+        if self.streaming[query_type] and isinstance(result, Iterable) and not isinstance(result, dict):
+            self.report_job_result(job_id, self._iterable_to_json_generator(result))
+        else:
+            try:
+                serialized_result = json.dumps(result).encode("utf-8")
+            except Exception as e:
+                self.logger.error(f"Failed to serialize result to json: {str(e)}")
+                serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
+            self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
 
     def get_result(
@@ -246,8 +263,8 @@ class InternalQueryService:
             return {"error": "Unknown query type"}
 
     @staticmethod
-    def get_failed_query(message: str) -> Dict[str, str]:
-        return {"exception": message}
+    def get_failed_query(exception: Exception) -> Dict[str, str]:
+        return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
 
     def start(self) -> None:
         self.post_query_schemas()

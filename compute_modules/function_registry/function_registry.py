@@ -22,6 +22,7 @@ REGISTERED_FUNCTIONS: Dict[str, Callable[..., Any]] = {}
 FUNCTION_SCHEMAS: List[ComputeModuleFunctionSchema] = []
 FUNCTION_SCHEMA_CONVERSIONS: Dict[str, PythonClassNode] = {}
 IS_FUNCTION_CONTEXT_TYPED: Dict[str, bool] = {}
+STREAMING: Dict[str, bool] = {}
 
 
 def add_functions(*args: Callable[..., Any]) -> None:
@@ -29,7 +30,7 @@ def add_functions(*args: Callable[..., Any]) -> None:
         add_function(function_ref=function_ref)
 
 
-def add_function(function_ref: Callable[..., Any]) -> None:
+def add_function(function_ref: Callable[..., Any], streaming: bool = False) -> None:
     """Parse & register a Compute Module function"""
     function_name = function_ref.__name__
     parse_result = parse_function_schema(function_ref, function_name)
@@ -39,6 +40,7 @@ def add_function(function_ref: Callable[..., Any]) -> None:
         function_schema=parse_result.function_schema,
         function_schema_conversion=parse_result.class_node,
         is_context_typed=parse_result.is_context_typed,
+        streaming=streaming,
     )
 
 
@@ -48,10 +50,12 @@ def _register_parsed_function(
     function_schema: ComputeModuleFunctionSchema,
     function_schema_conversion: Optional[PythonClassNode],
     is_context_typed: bool,
+    streaming: bool,
 ) -> None:
     """Registers a Compute Module function"""
     REGISTERED_FUNCTIONS[function_name] = function_ref
     FUNCTION_SCHEMAS.append(function_schema)
     IS_FUNCTION_CONTEXT_TYPED[function_name] = is_context_typed
+    STREAMING[function_name] = streaming
     if function_schema_conversion is not None:
         FUNCTION_SCHEMA_CONVERSIONS[function_name] = function_schema_conversion
