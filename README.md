@@ -24,11 +24,11 @@ Retrieving a source credential using this library is simple, if you are in Funct
 # app.py
 from compute_modules.annotations import function
 
-@function
+@function()
 def add(context, event) -> int:
     return event["x"] + event["y"]
 
-@function
+@function()
 def get_sources(context, event) -> List[str]:
     return context["sources"].keys()
 ```
@@ -62,7 +62,19 @@ if __name__ == "__main__":
 
 ```
 
-### Advanced Usage - automatic function discovery
+### Advanced Usage 1 - streaming result
+This library includes functionality that will stream the result back when a function is called. If the result is an `Iterable` type, users may pass `streaming=True` to `@function` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
+
+```python
+# app.py
+from compute_modules.annotations import function
+
+@function(streaming=True)
+def get_sources(context, event) -> list[str]:
+    return context["sources"].keys()
+```
+
+### Advanced Usage 2 - automatic function discovery
 This library includes functionality that will inspect the functions registered for the Compute Module, inspect the input/output types of those functions, and then convert those to FunctionSpecs that can be imported as a Foundry Function without any modifications needed. Below are some considerations to ensure this feature works as expected.
 
 #### 1. The Input class must be a complex type
@@ -80,7 +92,7 @@ from compute_modules.annotations import function
 class HelloInput(TypedDict):
     planet: str
 
-@function
+@function()
 def hello(context, event: HelloInput) -> str:
     return "Hello " + event["planet"] + "!"
 ```
@@ -122,7 +134,7 @@ class GoodExample:
         self.some_flag = some_flag
         self.some_value = some_value
 
-@function
+@function()
 def typed_function(context, event: GoodExample) -> int:
     return return event.some_value
 ```
@@ -183,20 +195,21 @@ class MyPayload:
 
 #### 3. Serialization/De-serialization of various types
 
-| Python Type         | Foundry Type | Serialized over HTTP as |
-| -----------         | ------------ | ----------------------- |
-| int                 | Integer      | int                     |
-| str                 | Byte         | string                  |
-| bool                | Boolean      | boolean                 |
-| bytes               | Binary       | string                  |
-| datetime.date       | Date         | string                  |
-| datetime.datetime   | Timestamp    | int (Unix timestamp)    |
-| decimal.Decimal     | Decimal      | string                  |
-| float               | Float        | float                   |
-| list                | Array        | array                   |
-| set                 | Array        | array                   |
-| dict                | Map          | JSON                    |
-| class/TypedDict     | Struct       | JSON                    |
+| Python Type             | Foundry Type | Serialized over HTTP as |
+| ----------------------- | ------------ | ----------------------- |
+| int                     | Integer      | int                     |
+| str                     | Byte         | string                  |
+| bool                    | Boolean      | boolean                 |
+| bytes                   | Binary       | string                  |
+| datetime.date           | Date         | string                  |
+| datetime.datetime       | Timestamp    | int (Unix timestamp)    |
+| decimal.Decimal         | Decimal      | string                  |
+| float                   | Float        | float                   |
+| list                    | Array        | array                   |
+| set                     | Array        | array                   |
+| dict                    | Map          | JSON                    |
+| class/TypedDict         | Struct       | JSON                    |
+| Iterable (w/ streaming) | Array        | stream of JSON          |
 
 
 ### `QueryContext` typing
@@ -212,7 +225,7 @@ from compute_modules.annotations import function
 class HelloInput(TypedDict):
     x: str
 
-@function
+@function()
 def hello(context: QueryContext, event: HelloInput) -> str:
     return f"Hello {event['x']}! Your job ID is: {context.jobId}"
 ```
@@ -290,7 +303,7 @@ from compute_modules.arguments import get_raw_arguments, get_parsed_arguments
 
 log.basicConfig(level=log.INFO)
 
-@function
+@function()
 def hello(context, event) -> str:
     raw_args = get_raw_arguments()
     parsed_args = get_parsed_arguments()
