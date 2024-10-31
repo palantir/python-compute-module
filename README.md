@@ -18,17 +18,17 @@ Retrieving a source credential using this library is simple, if you are in Funct
 
 ### Basic usage
 
-#### Option 1 - `@function()` annotation on each endpoint
+#### Option 1 - `@function` annotation on each endpoint
 
 ```python
 # app.py
 from compute_modules.annotations import function
 
-@function()
+@function
 def add(context, event) -> int:
     return event["x"] + event["y"]
 
-@function()
+@function
 def get_sources(context, event) -> List[str]:
     return context["sources"].keys()
 ```
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 ```
 
 ### Advanced Usage 1 - streaming result
-This library includes functionality that will stream the result back when a function is called. If the result is an `Iterable` type, users may pass `streaming=True` to `@function()` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
+This library includes functionality that will stream the result back when a function is called. If the result is an `Iterable` type, users may pass `streaming=True` to `@function` to enable result streaming. The result will be posted as a stream of JSON dumps. Users need to make sure the elements in the `Iterable` result are JSON serializable.
 
 ```python
 # app.py
@@ -92,7 +92,7 @@ from compute_modules.annotations import function
 class HelloInput(TypedDict):
     planet: str
 
-@function()
+@function
 def hello(context, event: HelloInput) -> str:
     return "Hello " + event["planet"] + "!"
 ```
@@ -115,7 +115,7 @@ class TypedInput:
     datetime_value: datetime.datetime
     other_date_value: datetime.datetime
 
-@function()
+@function
 def typed_function(context, event: TypedInput) -> str:
     diff = event.other_date_value - event.datetime_value
     return f"The diff between dates provided is {diff}"
@@ -134,7 +134,7 @@ class GoodExample:
         self.some_flag = some_flag
         self.some_value = some_value
 
-@function()
+@function
 def typed_function(context, event: GoodExample) -> int:
     return return event.some_value
 ```
@@ -225,7 +225,7 @@ from compute_modules.annotations import function
 class HelloInput(TypedDict):
     x: str
 
-@function()
+@function
 def hello(context: QueryContext, event: HelloInput) -> str:
     return f"Hello {event['x']}! Your job ID is: {context.jobId}"
 ```
@@ -303,7 +303,7 @@ from compute_modules.arguments import get_raw_arguments, get_parsed_arguments
 
 log.basicConfig(level=log.INFO)
 
-@function()
+@function
 def hello(context, event) -> str:
     raw_args = get_raw_arguments()
     parsed_args = get_parsed_arguments()
