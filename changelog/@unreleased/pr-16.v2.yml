@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Request jobs from main process and delegate work to process pool
+  links:
+  - https://github.com/palantir/python-compute-module/pull/16
