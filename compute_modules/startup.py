@@ -13,6 +13,10 @@
 #  limitations under the License.
 
 
+import os
+from multiprocessing.pool import Pool
+from typing import Any, Dict, Optional
+
 from compute_modules.client.internal_query_client import InternalQueryService
 from compute_modules.function_registry.function_registry import (
     FUNCTION_SCHEMA_CONVERSIONS,
@@ -22,14 +26,46 @@ from compute_modules.function_registry.function_registry import (
     STREAMING,
 )
 
+QUERY_CLIENT: Optional[InternalQueryService] = None
+
+
+def _handle_job(job: Dict[str, Any]) -> None:
+    """Helper function to be called by pool.apply_async since python can't serialize methods"""
+    global QUERY_CLIENT
+    assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
+    QUERY_CLIENT.logger.info("Inside the worker process")
+    QUERY_CLIENT._set_logger_process_id(process_id=os.getpid())
+    QUERY_CLIENT.logger.info(f"trying to handle the job... {job}")
+    QUERY_CLIENT.handle_job(job=job)
+
+
+def _get_and_schedule_job(pool: Pool) -> None:
+    """Try to get a job and schedule to the process pool"""
+    global QUERY_CLIENT
+    assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
+    job = None
+    try:
+        job = QUERY_CLIENT.get_job_or_none()
+    except Exception as e:
+        QUERY_CLIENT.logger.warning(f"Exception occurred while fetching job: {str(e)}")
+    if job:
+        QUERY_CLIENT.logger.debug(f"Got a job: {job}")
+        pool.apply_async(_handle_job, (job,))
+
 
 def start_compute_module() -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
-    query_client = InternalQueryService(
+    global QUERY_CLIENT
+    QUERY_CLIENT = InternalQueryService(
         registered_functions=REGISTERED_FUNCTIONS,
         function_schemas=FUNCTION_SCHEMAS,
         function_schema_conversions=FUNCTION_SCHEMA_CONVERSIONS,
         is_function_context_typed=IS_FUNCTION_CONTEXT_TYPED,
         streaming=STREAMING,
     )
-    query_client.start()
+    QUERY_CLIENT.post_query_schemas()
+    QUERY_CLIENT.logger.info(f"Starting to poll for jobs with concurrency {QUERY_CLIENT.concurrency}")
+    with Pool(QUERY_CLIENT.concurrency) as pool:
+        while True:
+            QUERY_CLIENT.logger.info("Polling for new jobs...")
+            _get_and_schedule_job(pool)

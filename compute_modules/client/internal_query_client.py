@@ -15,7 +15,6 @@
 
 import http.client
 import json
-import multiprocessing
 import os
 import ssl
 import time
@@ -199,16 +198,8 @@ class InternalQueryService:
                 self.logger.error(traceback.format_exc())
         raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
 
-    def handle_query(self) -> None:
-        job = None
-        try:
-            job = self.get_job_or_none()
-        except Exception as e:
-            self.logger.warning(f"Exception occurred while fetching job: {str(e)}")
-        if job:
-            self.handle_job(job)
-
     def handle_job(self, job: Dict[str, Any]) -> None:
+        self.logger.info("handling job")
         v1 = job.get("computeModuleJobV1", {})
         job_id = v1.get("jobId")
         query_type = v1.get("queryType")
@@ -265,18 +256,3 @@ class InternalQueryService:
     @staticmethod
     def get_failed_query(exception: Exception) -> Dict[str, str]:
         return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
-
-    def start(self) -> None:
-        self.post_query_schemas()
-        self.logger.info(f"Starting to poll for jobs with concurrency {self.concurrency}")
-        processes = [multiprocessing.Process(target=self.poll_forever, args=(i,)) for i in range(self.concurrency)]
-        for p in processes:
-            p.start()
-        for p in processes:
-            p.join()
-
-    def poll_forever(self, process_id: int) -> None:
-        self._set_logger_process_id(process_id=process_id)
-        while True:
-            self.logger.info("Polling for new jobs...")
-            self.handle_query()
