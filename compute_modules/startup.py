@@ -33,9 +33,6 @@ def _handle_job(job: Dict[str, Any]) -> None:
     """Helper function to be called by pool.apply_async since python can't serialize methods"""
     global QUERY_CLIENT
     assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
-    QUERY_CLIENT.logger.info("Inside the worker process")
-    QUERY_CLIENT._set_logger_process_id(process_id=os.getpid())
-    QUERY_CLIENT.logger.info(f"trying to handle the job... {job}")
     QUERY_CLIENT.handle_job(job=job)
 
 
@@ -53,6 +50,14 @@ def _get_and_schedule_job(pool: Pool) -> None:
         pool.apply_async(_handle_job, (job,))
 
 
+def _worker_init() -> None:
+    """Create a new session for each worker"""
+    global QUERY_CLIENT
+    assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
+    QUERY_CLIENT.init_session()
+    QUERY_CLIENT._set_logger_process_id(os.getpid())
+
+
 def start_compute_module() -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
     global QUERY_CLIENT
@@ -65,7 +70,7 @@ def start_compute_module() -> None:
     )
     QUERY_CLIENT.post_query_schemas()
     QUERY_CLIENT.logger.info(f"Starting to poll for jobs with concurrency {QUERY_CLIENT.concurrency}")
-    with Pool(QUERY_CLIENT.concurrency) as pool:
+    with Pool(QUERY_CLIENT.concurrency, initializer=_worker_init) as pool:
         while True:
             QUERY_CLIENT.logger.info("Polling for new jobs...")
             _get_and_schedule_job(pool)

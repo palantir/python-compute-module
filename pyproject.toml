@@ -11,6 +11,7 @@ packages = [{ include = "compute_modules" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+requests = "^2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]
