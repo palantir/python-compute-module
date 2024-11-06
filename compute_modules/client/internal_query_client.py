@@ -22,7 +22,6 @@ from typing import Any, Callable, Dict, Iterable, List
 from urllib.parse import urlparse
 
 import requests
-from requests.adapters import HTTPAdapter
 
 from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
@@ -39,17 +38,6 @@ POST_SCHEMAS_MAX_ATTEMPTS = 5
 def _extract_path_from_url(url: str) -> str:
     parsed_url = urlparse(url)
     return parsed_url.path
-
-
-class SSLContextAdapter(HTTPAdapter):  # type: ignore[misc]
-    # TODO: do we need this or can we use verify=self.certPath
-    def __init__(self, ssl_context: ssl.SSLContext, **kwargs):  # type: ignore[no-untyped-def]
-        self.ssl_context = ssl_context
-        super().__init__(**kwargs)
-
-    def init_poolmanager(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-        kwargs["ssl_context"] = self.ssl_context
-        return super().init_poolmanager(*args, **kwargs)
 
 
 class InternalQueryService:
@@ -115,8 +103,6 @@ class InternalQueryService:
     def init_session(self) -> None:
         """Initialize requests.Session"""
         self.session = requests.Session()
-        adapter = SSLContextAdapter(ssl_context=self.context)
-        self.session.mount("https://", adapter)
 
     def build_url(self, path: str) -> str:
         return f"https://{self.host}:{self.port}{path}"
@@ -131,6 +117,7 @@ class InternalQueryService:
                     url=self.build_url(self.post_schema_path),
                     json=self.function_schemas,
                     headers=self.post_schema_headers,
+                    verify=self.certPath,
                 ) as response:
                     self.logger.debug(
                         f"POST /schemas response status: {response.status_code} reason: {response.reason}"
@@ -151,6 +138,7 @@ class InternalQueryService:
                 method="GET",
                 url=self.build_url(self.get_job_path),
                 headers=self.get_job_headers,
+                verify=self.certPath,
             ) as response:
                 result = None
                 if response.status_code == 200:
@@ -182,6 +170,7 @@ class InternalQueryService:
                     url=post_result_url,
                     headers=self.post_result_headers,
                     data=body,
+                    verify=self.certPath,
                 ) as response:
                     if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
