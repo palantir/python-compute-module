@@ -28,6 +28,18 @@ from compute_modules.function_registry.function_registry import (
 
 QUERY_CLIENT: Optional[InternalQueryService] = None
 
+# The main process creates the initial InternalQueryService instance,
+# which is used to post the function schema and poll for jobs.
+#
+# We then spin up a Pool of worker processes that all create their own sessions.
+# When a job is received by the main process, that job is delegated to a worker.
+# The worker then processes that job and posts the result back to the runtime using its own session.
+#
+# This library supports streaming responses via generators.
+# Python passes data between processes by using `pickle` to serialize the data.
+# Generators cannot be pickled, so we cannot pass the result of streaming functions back to the parent process.
+# As a workaround, the worker process is given a session only for posting job results back to the runtime.
+
 
 def _handle_job(job: Dict[str, Any]) -> None:
     """Helper function to be called by pool.apply_async since python can't serialize methods"""
