@@ -189,7 +189,8 @@ class InternalQueryService:
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        self.logger.error(f"Failed to post result: {response.status} {response.reason}")
+                        error_body = response.read().decode()
+                        self.logger.error(f"Failed to post result: {response.status} {response.reason} {error_body}")
             except TypeError as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
                 self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
