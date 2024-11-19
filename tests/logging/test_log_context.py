@@ -29,6 +29,8 @@ from .logging_test_utils import CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
 
 logging.basicConfig(format=DEFAULT_LOG_FORMAT)
 
+PROCESS_ID = 12345
+
 
 def logger_fixtures() -> tuple[ComputeModulesLoggerAdapter, ComputeModulesLoggerAdapter, ComputeModulesLoggerAdapter]:
     """Initializes & configures loggers"""
@@ -42,7 +44,7 @@ def logger_fixtures() -> tuple[ComputeModulesLoggerAdapter, ComputeModulesLogger
 
 
 def format_log_context(pid: int, job_id: str) -> str:
-    return f"PID: {pid:<2} JOB: {job_id:<37}"
+    return f"PID: {pid:<6} JOB: {job_id:<37}"
 
 
 def test_initial_log_format(
@@ -58,7 +60,7 @@ def test_initial_log_format(
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=-1, job_id="") in log
-    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=2)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=PROCESS_ID)
     internal_logger.info(INFO_STR)
     logger_1.info(CLIENT_INFO_STR)
     logger_2.info(CLIENT_WARNING_STR)
@@ -66,7 +68,7 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id="") in log
+        assert format_log_context(pid=PROCESS_ID, job_id="") in log
     job_id = str(uuid.uuid4())
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
     internal_logger.info(INFO_STR)
@@ -76,7 +78,7 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id=job_id) in log
+        assert format_log_context(pid=PROCESS_ID, job_id=job_id) in log
     # Test clearing now
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
     internal_logger.info(INFO_STR)
@@ -86,4 +88,4 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id="") in log
+        assert format_log_context(pid=PROCESS_ID, job_id="") in log

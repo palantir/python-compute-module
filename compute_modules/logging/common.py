@@ -29,7 +29,7 @@ else:
 
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
-    "%(levelname)-8s PID: %(process_id)-2s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
+    "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
 )
 
 

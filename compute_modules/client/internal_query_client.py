@@ -13,16 +13,15 @@
 #  limitations under the License.
 
 
-import http.client
 import json
-import multiprocessing
 import os
 import ssl
 import time
 import traceback
-from contextlib import contextmanager
-from typing import Any, Callable, Dict, Generator, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List
 from urllib.parse import urlparse
+
+import requests
 
 from compute_modules.context.types import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
@@ -67,6 +66,7 @@ class InternalQueryService:
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
         self.logger = get_internal_logger()
+        self.init_session()
 
     def _clear_logger_job_id(self) -> None:
         """Clear the _job_logger until we receive another job"""
@@ -100,49 +100,30 @@ class InternalQueryService:
         for i in iterable:
             yield json.dumps(i).encode("utf-8")
 
-    @contextmanager
-    def request(
-        self,
-        method: str,
-        url: str,
-        headers: Dict[str, Any],
-        body: Optional[Any] = None,
-    ) -> Generator[http.client.HTTPResponse, Any, None]:
-        """Wrapper for using https connection for requests"""
-        response: Optional[http.client.HTTPResponse] = None
-        connection = http.client.HTTPSConnection(
-            host=self.host,
-            port=self.port,
-            context=self.context,
-            timeout=(60 * 5),  # 5 minutes
-        )
-        try:
-            connection.request(
-                method=method,
-                url=url,
-                body=body,
-                headers=headers,
-            )
-            response = connection.getresponse()
-            yield response
-        finally:
-            connection.close()
+    def init_session(self) -> None:
+        """Initialize requests.Session"""
+        self.session = requests.Session()
+
+    def build_url(self, path: str) -> str:
+        return f"https://{self.host}:{self.port}{path}"
 
     def post_query_schemas(self) -> None:
         """Post the function schemas of the Compute Module"""
-        body = json.dumps(self.function_schemas)
-        self.logger.debug(f"Posting function schemas: {body}")
+        self.logger.debug(f"Posting function schemas: {self.function_schemas}")
         for i in range(POST_SCHEMAS_MAX_ATTEMPTS):
             try:
-                with self.request(
+                with self.session.request(
                     method="POST",
-                    url=self.post_schema_path,
-                    body=body,
+                    url=self.build_url(self.post_schema_path),
+                    json=self.function_schemas,
                     headers=self.post_schema_headers,
+                    verify=self.certPath,
                 ) as response:
-                    self.logger.debug(f"POST /schemas response status: {response.status} reason: {response.reason}")
+                    self.logger.debug(
+                        f"POST /schemas response status: {response.status_code} reason: {response.reason}"
+                    )
                 return
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, requests.exceptions.ConnectionError):
                 self.logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
                 time.sleep(2**i)
             except Exception as e:
@@ -153,18 +134,22 @@ class InternalQueryService:
 
     def get_job_or_none(self) -> Any:
         try:
-            with self.request(method="GET", url=self.get_job_path, headers=self.get_job_headers) as response:
-                response_data = response.read().decode()
+            with self.session.request(
+                method="GET",
+                url=self.build_url(self.get_job_path),
+                headers=self.get_job_headers,
+                verify=self.certPath,
+            ) as response:
                 result = None
-                if response.status == 200:
-                    result = json.loads(response_data)
-                elif response.status == 204:
+                if response.status_code == 200:
+                    result = response.json()
+                elif response.status_code == 204:
                     self.logger.info("No job found, retrying...")
                 else:
-                    self.logger.error(f"Unexpected response status: {response.status}")
+                    self.logger.error(f"Unexpected response status: {response.status_code}")
                 self.connection_refused_count = 0
                 return result
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, requests.exceptions.ConnectionError):
             self.logger.warning(f"Connection refused. Sleeping for {2 ** self.connection_refused_count}s")
             time.sleep(2**self.connection_refused_count)
             self.connection_refused_count += 1
@@ -176,21 +161,24 @@ class InternalQueryService:
 
     def report_job_result(self, job_id: str, body: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
-        self.logger.debug(f"Posting result to {post_result_path}")
+        post_result_url = self.build_url(post_result_path)
+        self.logger.debug(f"Posting result to {post_result_url}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
-                with self.request(
+                with self.session.request(
                     method="POST",
-                    url=post_result_path,
+                    url=post_result_url,
                     headers=self.post_result_headers,
-                    body=body,
+                    data=body,
+                    verify=self.certPath,
                 ) as response:
-                    if response.status == 204:
+                    if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        error_body = response.read().decode()
-                        self.logger.error(f"Failed to post result: {response.status} {response.reason} {error_body}")
+                        self.logger.error(
+                            f"Failed to post result: {response.status_code} {response.reason} {response.text}"
+                        )
             except TypeError as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
                 self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
@@ -200,16 +188,8 @@ class InternalQueryService:
                 self.logger.error(traceback.format_exc())
         raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
 
-    def handle_query(self) -> None:
-        job = None
-        try:
-            job = self.get_job_or_none()
-        except Exception as e:
-            self.logger.warning(f"Exception occurred while fetching job: {str(e)}")
-        if job:
-            self.handle_job(job)
-
     def handle_job(self, job: Dict[str, Any]) -> None:
+        self.logger.info("handling job")
         v1 = job.get("computeModuleJobV1", {})
         job_id = v1.get("jobId")
         query_type = v1.get("queryType")
@@ -266,18 +246,3 @@ class InternalQueryService:
     @staticmethod
     def get_failed_query(exception: Exception) -> Dict[str, str]:
         return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
-
-    def start(self) -> None:
-        self.post_query_schemas()
-        self.logger.info(f"Starting to poll for jobs with concurrency {self.concurrency}")
-        processes = [multiprocessing.Process(target=self.poll_forever, args=(i,)) for i in range(self.concurrency)]
-        for p in processes:
-            p.start()
-        for p in processes:
-            p.join()
-
-    def poll_forever(self, process_id: int) -> None:
-        self._set_logger_process_id(process_id=process_id)
-        while True:
-            self.logger.info("Polling for new jobs...")
-            self.handle_query()
