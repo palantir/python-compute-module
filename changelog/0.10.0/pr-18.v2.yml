@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: log error_body when post result fails
+  links:
+  - https://github.com/palantir/python-compute-module/pull/18
