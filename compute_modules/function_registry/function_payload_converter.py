@@ -52,7 +52,7 @@ def convert_payload(
         for child_key, child_class_tree in class_tree["children"].items():
             # if child is optional and no value provided, skip the convertion
             if child_class_tree["constructor"] is typing.Optional and child_key not in raw_payload:
-                continue
+                raw_payload[child_key] = None
             converted_children[child_key] = convert_payload(raw_payload[child_key], child_class_tree)
         return type_constructor(**converted_children)
     except Exception as e:
