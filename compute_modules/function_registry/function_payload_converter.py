@@ -50,7 +50,7 @@ def convert_payload(
         # Complex class
         converted_children = {}
         for child_key, child_class_tree in class_tree["children"].items():
-            # if child is optional and no value provided, skip the convertion
+            # if child is optional and no value provided, default to None
             if child_class_tree["constructor"] is typing.Optional and child_key not in raw_payload:
                 raw_payload[child_key] = None
             converted_children[child_key] = convert_payload(raw_payload[child_key], child_class_tree)
