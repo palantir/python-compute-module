@@ -128,6 +128,12 @@ EXPECTED_INPUTS = [
         "constraints": [],
     },
     {"name": "some_flag", "dataType": {"boolean": {}, "type": "boolean"}, "required": True, "constraints": []},
+    {
+        "name": "another_optional_field",
+        "dataType": {"optionalType": {"wrappedType": {"string": {}, "type": "string"}}, "type": "optionalType"},
+        "required": False,
+        "constraints": [],
+    },
 ]
 
 

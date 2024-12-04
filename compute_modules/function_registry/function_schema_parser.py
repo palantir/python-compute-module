@@ -76,10 +76,13 @@ def _extract_inputs(
         # TODO: self-referencing classes??
         value_data_type, value_class_node = _extract_data_type(value_type_hint)
         root_node_children[field_name] = value_class_node
+        required = True
+        if field_name in payload.__dict__:
+            required = False
         inputs.append(
             FunctionInputType(
                 name=field_name,
-                required=True,
+                required=required,
                 constraints=[],
                 dataType=value_data_type,
             )
