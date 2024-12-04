@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Support default values for function inputs
+  links:
+  - https://github.com/palantir/python-compute-module/pull/19
