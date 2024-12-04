@@ -129,15 +129,9 @@ EXPECTED_INPUTS = [
     },
     {"name": "some_flag", "dataType": {"boolean": {}, "type": "boolean"}, "required": True, "constraints": []},
     {
-        "name": "default_value_field",
-        "dataType": {"string": {}, "type": "string"},
-        "required": False,
-        "constraints": [],
-    },
-    {
         "name": "optional_default_value_field",
         "dataType": {"optionalType": {"wrappedType": {"string": {}, "type": "string"}}, "type": "optionalType"},
-        "required": False,
+        "required": True,
         "constraints": [],
     },
 ]
@@ -159,7 +153,6 @@ def test_function_schema_parser() -> None:
     assert parse_result.class_node["children"]["map_field"]["constructor"] is dict
     assert parse_result.class_node["children"]["some_flag"]["constructor"] is bool
     assert parse_result.class_node["children"]["some_flag"]["children"] is None
-    assert parse_result.class_node["children"]["default_value_field"]["constructor"] is str
     assert parse_result.class_node["children"]["optional_default_value_field"]["constructor"] is Optional
     assert parse_result.is_context_typed is False
 
