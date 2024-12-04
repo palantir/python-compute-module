@@ -46,6 +46,7 @@ class DummyInput:
     set_field: Set[date]
     map_field: Dict[bytes, Decimal]
     some_flag: bool
+    optional_default_value_field: Optional[str] = None
 
 
 @dataclass
