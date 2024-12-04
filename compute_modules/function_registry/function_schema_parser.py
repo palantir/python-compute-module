@@ -79,6 +79,7 @@ def _extract_inputs(
         required = True
         if field_name in payload.__dict__:
             required = False
+        value_class_node["required"] = required
         inputs.append(
             FunctionInputType(
                 name=field_name,

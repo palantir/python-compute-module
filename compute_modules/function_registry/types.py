@@ -32,13 +32,14 @@ class PythonClassNode(typing.TypedDict):
 
     constructor: typing.Any
     children: typing.Optional[typing.Dict[str, "PythonClassNode"]]
+    required: bool
 
 
 class FunctionInputType(DataType):
     """Function input schema"""
 
     name: str
-    required: typing.Literal[True]
+    required: bool
     constraints: typing.List[typing.Any]
 
 

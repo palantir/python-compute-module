@@ -50,7 +50,9 @@ def convert_payload(
         # Complex class
         converted_children = {}
         for child_key, child_class_tree in class_tree["children"].items():
-            converted_children[child_key] = convert_payload(raw_payload.get(child_key, None), child_class_tree)
+            if child_class_tree.get("required", True) is False and raw_payload.get(child_key, None) is None:
+                continue
+            converted_children[child_key] = convert_payload(raw_payload[child_key], child_class_tree)
         return type_constructor(**converted_children)
     except Exception as e:
         logger.error(f"Error converting {raw_payload} to type {class_tree['constructor']}")
