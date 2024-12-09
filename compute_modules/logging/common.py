@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 # logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
 # whether this should be generic or not.
@@ -27,31 +27,41 @@ else:
     _LoggerAdapter = logging.LoggerAdapter
 
 
+LOG_FORMATTER = None
+LOG_HANDLERS = None
+
+
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
     "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
 )
 
 
+def _setup_logger(
+    handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]], formatter: Optional[logging.Formatter]
+):
+    global LOG_FORMATTER
+    LOG_FORMATTER = formatter
+    global LOG_HANDLERS
+    LOG_HANDLERS = handlers
+
+
 # TODO: support for log file output (need access to selected log output location)
 def _create_logger(
     name: str,
-    handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]],
-    formatter: Optional[logging.Formatter],
 ) -> logging.Logger:
     """Creates a logger that can have its log level set ... and actually work.
 
     See: https://stackoverflow.com/a/59705351
     """
     logger = logging.getLogger(name)
-    handlers = handlers if handlers else (logging.StreamHandler(),)
-    formatter = formatter if formatter else logging.Formatter(DEFAULT_LOG_FORMAT)
-    
-    logger.handlers.clear()
+    handlers = LOG_HANDLERS if LOG_HANDLERS else (logging.StreamHandler(),)
+    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
+
     for handler in handlers:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-    
+
     return logger
 
 
@@ -73,12 +83,10 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
     def __init__(
         self,
         logger_name: str,
-        handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]],
-        formatter: Optional[logging.Formatter],
         process_id: int = -1,
         job_id: str = "",
     ) -> None:
-        self._p_logger = _create_logger(logger_name, handlers, formatter)
+        self._p_logger = _create_logger(logger_name)
         self._p_process_id = process_id
         self._p_job_id = job_id
         self._p_set_log_adapter()
@@ -112,13 +120,11 @@ class ComputeModulesAdapterManager(object):
     def get_logger(
         self,
         name: str,
-        handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]],
-        formatter: Optional[logging.Formatter],
         default_level: Optional[Union[str, int]] = None,
     ) -> ComputeModulesLoggerAdapter:
         """Get a logger by name. If it does not already exist, creates it first"""
         if name not in self.adapters:
-            self.adapters[name] = ComputeModulesLoggerAdapter(name, handlers, formatter)
+            self.adapters[name] = ComputeModulesLoggerAdapter(name)
             if default_level:
                 self.adapters[name].setLevel(default_level)
         return self.adapters[name]

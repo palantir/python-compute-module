@@ -12,17 +12,30 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from logging import Handler, Formatter
+from logging import Formatter, Handler
 from typing import Optional, Tuple, Union
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter, _setup_logger
+from .internal import refresh_internal_logger
 
-from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
+
+def setup_logger(handlers: Optional[Union[Handler, Tuple[Handler, ...]]] = None, formatter: Optional[Formatter] = None)->None:
+
+    _setup_logger(handlers, formatter)
+    
+    # Make sure internal logger matches format of external
+    refresh_internal_logger()
+    
+    
+
+    
+
 
 
 def get_logger(
-    name: str, handlers: Optional[Union[Handler, Tuple[Handler, ...]]] = None, formatter: Optional[Formatter] = None
+    name: str
 ) -> ComputeModulesLoggerAdapter:
     """Creates a logger instance for use within a compute module"""
-    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name, handlers, formatter)
+    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name)
 
 
 __all__ = [
