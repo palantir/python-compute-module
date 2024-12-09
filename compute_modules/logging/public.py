@@ -12,13 +12,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from logging import Handler, Formatter
+from typing import Optional, Tuple, Union
 
 from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 
 
-def get_logger(name: str) -> ComputeModulesLoggerAdapter:
+def get_logger(
+    name: str, handlers: Optional[Union[Handler, Tuple[Handler, ...]]] = None, formatter: Optional[Formatter] = None
+) -> ComputeModulesLoggerAdapter:
     """Creates a logger instance for use within a compute module"""
-    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name)
+    return COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(name, handlers, formatter)
 
 
 __all__ = [
