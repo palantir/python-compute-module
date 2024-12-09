@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 # logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
 # whether this should be generic or not.
@@ -32,6 +32,20 @@ DEFAULT_LOG_FORMAT = (
     "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
 )
 
+LOG_FORMATTER = None
+
+
+def _setup_logger_formatter(
+    formatter: logging.Formatter,
+):
+    if formatter:
+        global LOG_FORMATTER
+        LOG_FORMATTER = formatter
+
+    for adapter in COMPUTE_MODULES_ADAPTER_MANAGER.adapters.values():
+        for handler in adapter.logger.handlers:
+            handler.setFormatter(LOG_FORMATTER)
+
 
 # TODO: support for log file output (need access to selected log output location)
 def _create_logger(name: str) -> logging.Logger:
@@ -41,10 +55,11 @@ def _create_logger(name: str) -> logging.Logger:
     """
     logger = logging.getLogger(name)
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(DEFAULT_LOG_FORMAT)
+    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
     handler.setFormatter(formatter)
     logger.handlers.clear()
     logger.addHandler(handler)
+
     return logger
 
 
