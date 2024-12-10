@@ -35,7 +35,7 @@ def oauth(hostname: str, scope: List[str]) -> Any:
                 "grant_type": "client_credentials",
                 "client_id": CLIENT_ID,
                 "client_secret": CLIENT_SECRET,
-                "scope": scope,
+                "scope": " ".join(scope),
             }
         )
         headers = {
