@@ -12,7 +12,7 @@ def test_log_custom_format(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """
-    TODO
+    Test if SlsServiceFormatter is correctly setup
     """
 
     setup_logger(None, SlsServiceFormatter())
