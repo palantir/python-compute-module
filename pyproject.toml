@@ -22,6 +22,13 @@ ruff = "0.2.1"
 pytest = "8.0.0"
 pytest-html = "4.1.1"
 types-requests = "^2.32.0.20241016"
+slslogging = {version = "^0.22.0", source = "palantir_internal"}
+
+
+[[tool.poetry.source]]
+name = "palantir_internal"
+url = "https://artifactory.palantir.build/artifactory/api/pypi/internal-python-release/simple/"
+priority= "supplemental"
 
 [build-system]
 requires = ["poetry-core"]

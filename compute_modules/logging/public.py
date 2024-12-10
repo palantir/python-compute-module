@@ -19,16 +19,10 @@ from .internal import refresh_internal_logger
 
 
 def setup_logger(handlers: Optional[Union[Handler, Tuple[Handler, ...]]] = None, formatter: Optional[Formatter] = None)->None:
-
     _setup_logger(handlers, formatter)
     
     # Make sure internal logger matches format of external
     refresh_internal_logger()
-    
-    
-
-    
-
 
 
 def get_logger(
@@ -39,5 +33,5 @@ def get_logger(
 
 
 __all__ = [
-    "get_logger",
+    "get_logger","setup_logger",
 ]

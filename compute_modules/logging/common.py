@@ -55,8 +55,9 @@ def _create_logger(
     See: https://stackoverflow.com/a/59705351
     """
     logger = logging.getLogger(name)
-    handlers = LOG_HANDLERS if LOG_HANDLERS else (logging.StreamHandler(),)
-    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
+    handlers : Tuple[logging.Handler,...]= LOG_HANDLERS if LOG_HANDLERS else (logging.StreamHandler(),)
+    formatter : logging.Formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
+   
 
     for handler in handlers:
         handler.setFormatter(formatter)

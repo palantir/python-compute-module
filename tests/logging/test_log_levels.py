@@ -17,7 +17,8 @@ import logging
 
 import pytest
 
-from compute_modules.logging import get_logger, set_internal_log_level
+from compute_modules.logging import get_logger, set_internal_log_level, setup_logger
+from slslogging import SlsServiceFormatter
 
 from .logging_test_utils import (
     CLIENT_CRITICAL_STR,
@@ -135,3 +136,20 @@ def test_log_level_override_with_client_level_higher(
     assert CLIENT_ERROR_STR in caplog.text
     assert CLIENT_CRITICAL_STR in caplog.text
     assert CLIENT_CRITICAL_STR in caplog.text
+
+def test_log_custom_format(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """
+    TODO
+    """
+
+    setup_logger(None, SlsServiceFormatter())
+    client_logger = get_logger("twinkle")
+
+    client_logger.setLevel(logging.INFO)
+    client_logger.debug(CLIENT_DEBUG_STR)
+    client_logger.info(CLIENT_INFO_STR)
+    
+    assert "TOOD"
+
