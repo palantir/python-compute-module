@@ -28,20 +28,14 @@ def set_internal_log_level(level: Union[str, int]) -> None:
 
 def get_internal_logger() -> ComputeModulesLoggerAdapter:
     """Provides the internal ComputeModulesLoggerAdapter singleton"""
-    if not INTERNAL_LOGGER_ADAPTER:
-        refresh_internal_logger()
-
-    return INTERNAL_LOGGER_ADAPTER
-
-
-def refresh_internal_logger():
     global INTERNAL_LOGGER_ADAPTER
-    # Refresh the internal logger to match the format/handlers currently globally specified
-    COMPUTE_MODULES_ADAPTER_MANAGER.adapters.pop("compute_modules_internal", None)
-    INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(
+    if not INTERNAL_LOGGER_ADAPTER:
+        INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(
         "compute_modules_internal",
         default_level=logging.ERROR,
     )
+
+    return INTERNAL_LOGGER_ADAPTER
 
 
 __all__ = [

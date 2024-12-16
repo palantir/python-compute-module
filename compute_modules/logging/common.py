@@ -27,23 +27,37 @@ else:
     _LoggerAdapter = logging.LoggerAdapter
 
 
-LOG_FORMATTER = None
-LOG_HANDLERS = None
-
-
 # TODO: add replica ID to default log format
 DEFAULT_LOG_FORMAT = (
     "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
 )
 
 
+LOG_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
+LOG_HANDLERS = (logging.StreamHandler(),)
+
+
+def _add_handlers(logger, handlers: Tuple[logging.Handler, ...], formatter: logging.Formatter) -> logging.Logger:
+    for handler in handlers:
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    return logger
+
+
 def _setup_logger(
-    handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]], formatter: Optional[logging.Formatter]
+    formatter: Optional[logging.Formatter],
+    handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]],
 ):
-    global LOG_FORMATTER
-    LOG_FORMATTER = formatter
-    global LOG_HANDLERS
-    LOG_HANDLERS = handlers
+    if formatter:
+        global LOG_FORMATTER
+        LOG_FORMATTER = formatter
+    if handlers:
+        global LOG_HANDLERS
+        LOG_HANDLERS = handlers
+
+    for adapter in COMPUTE_MODULES_ADAPTER_MANAGER.adapters.values():
+        adapter.logger.handlers.clear()
+        _add_handlers(adapter.logger, LOG_HANDLERS, LOG_FORMATTER)
 
 
 # TODO: support for log file output (need access to selected log output location)
@@ -55,15 +69,8 @@ def _create_logger(
     See: https://stackoverflow.com/a/59705351
     """
     logger = logging.getLogger(name)
-    handlers : Tuple[logging.Handler,...]= LOG_HANDLERS if LOG_HANDLERS else (logging.StreamHandler(),)
-    formatter : logging.Formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
-   
 
-    for handler in handlers:
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-    return logger
+    return _add_handlers(logger, LOG_HANDLERS, LOG_FORMATTER)
 
 
 # Wrapper around a logging.LoggerAdapter instance.
