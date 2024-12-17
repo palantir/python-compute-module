@@ -48,15 +48,12 @@ def _setup_logger_formatter(
 
 
 # TODO: support for log file output (need access to selected log output location)
-def _create_logger(
-    name: str,
-) -> logging.Logger:
+def _create_logger(name: str) -> logging.Logger:
     """Creates a logger that can have its log level set ... and actually work.
 
     See: https://stackoverflow.com/a/59705351
     """
     logger = logging.getLogger(name)
-
     handler = logging.StreamHandler()
     formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
     handler.setFormatter(formatter)
@@ -118,11 +115,7 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
 class ComputeModulesAdapterManager(object):
     adapters: Dict[str, ComputeModulesLoggerAdapter] = {}
 
-    def get_logger(
-        self,
-        name: str,
-        default_level: Optional[Union[str, int]] = None,
-    ) -> ComputeModulesLoggerAdapter:
+    def get_logger(self, name: str, default_level: Optional[Union[str, int]] = None) -> ComputeModulesLoggerAdapter:
         """Get a logger by name. If it does not already exist, creates it first"""
         if name not in self.adapters:
             self.adapters[name] = ComputeModulesLoggerAdapter(name)

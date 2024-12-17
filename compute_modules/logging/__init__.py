@@ -16,4 +16,8 @@
 from .internal import set_internal_log_level
 from .public import get_logger, setup_logger_formatter
 
-__all__ = ["get_logger", "set_internal_log_level", "setup_logger_formatter"]
+__all__ = [
+    "get_logger",
+    "set_internal_log_level",
+    "setup_logger_formatter"
+]

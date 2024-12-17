@@ -34,7 +34,6 @@ def get_internal_logger() -> ComputeModulesLoggerAdapter:
             "compute_modules_internal",
             default_level=logging.ERROR,
         )
-
     return INTERNAL_LOGGER_ADAPTER
 
 
