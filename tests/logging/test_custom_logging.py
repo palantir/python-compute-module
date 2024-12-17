@@ -10,6 +10,7 @@ from slslogging import SlsServiceFormatter, SafeArg, UnsafeArg
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR
 
+
 class CustomSls(SlsServiceFormatter):
     def formatted_fields(self) -> Dict[str, str]:
         return {
@@ -35,7 +36,7 @@ def test_log_custom_format(
 
     job_id = str(uuid4())
     process_id = 5
-    
+
     COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id)
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id)
 
@@ -49,7 +50,6 @@ def test_log_custom_format(
     except ValueError:
         valid_json = False
 
-
     # Test external logger
     assert valid_json, "SLS Formatted logs should be json"
     assert log_js["level"] == "INFO", "SLS Log has wrong level"
@@ -59,7 +59,6 @@ def test_log_custom_format(
     assert log_js["processId"] == str(process_id)
     assert log_js["params"] == {"safe-arg": "green"}
     assert log_js["unsafeParams"] == {"unsafe-arg": "oliver"}
-
 
     internal_logger = internal.get_internal_logger()
     internal_logger.error(CLIENT_ERROR_STR)
@@ -72,7 +71,6 @@ def test_log_custom_format(
     except ValueError:
         internal_valid_json = False
 
-
     # Test internal logger
     assert internal_valid_json, "Internal logs should be SLS formatted json"
     assert interal_log_js["level"] == "ERROR", "Internal Log has wrong level"
@@ -80,4 +78,3 @@ def test_log_custom_format(
     assert interal_log_js["origin"] == "python:compute_modules_internal", "Internal Log has wrong origin"
     assert interal_log_js["jobId"] == job_id
     assert interal_log_js["processId"] == str(process_id)
-

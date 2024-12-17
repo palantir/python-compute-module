@@ -31,9 +31,9 @@ def get_internal_logger() -> ComputeModulesLoggerAdapter:
     global INTERNAL_LOGGER_ADAPTER
     if not INTERNAL_LOGGER_ADAPTER:
         INTERNAL_LOGGER_ADAPTER = COMPUTE_MODULES_ADAPTER_MANAGER.get_logger(
-        "compute_modules_internal",
-        default_level=logging.ERROR,
-    )
+            "compute_modules_internal",
+            default_level=logging.ERROR,
+        )
 
     return INTERNAL_LOGGER_ADAPTER
 

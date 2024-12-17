@@ -34,6 +34,7 @@ DEFAULT_LOG_FORMAT = (
 
 LOG_FORMATTER = None
 
+
 def _setup_logger_formatter(
     formatter: logging.Formatter,
 ):
@@ -57,12 +58,13 @@ def _create_logger(
     logger = logging.getLogger(name)
 
     handler = logging.StreamHandler()
-    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT) 
+    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
     handler.setFormatter(formatter)
     logger.handlers.clear()
     logger.addHandler(handler)
-    
+
     return logger
+
 
 # Wrapper around a logging.LoggerAdapter instance.
 # This allows us to obtain a ComputeModulesLoggerAdapter instance just once,

@@ -16,9 +16,7 @@ from logging import Formatter
 from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter, _setup_logger_formatter
 
 
-def setup_logger_formatter(
-  formatter: Formatter
-) -> None:
+def setup_logger_formatter(formatter: Formatter) -> None:
     _setup_logger_formatter(formatter)
 
 
