@@ -32,32 +32,18 @@ DEFAULT_LOG_FORMAT = (
     "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
 )
 
+LOG_FORMATTER = None
 
-LOG_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
-LOG_HANDLERS = (logging.StreamHandler(),)
-
-
-def _add_handlers(logger, handlers: Tuple[logging.Handler, ...], formatter: logging.Formatter) -> logging.Logger:
-    for handler in handlers:
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    return logger
-
-
-def _setup_logger(
-    formatter: Optional[logging.Formatter],
-    handlers: Optional[Union[logging.Handler, Tuple[logging.Handler, ...]]],
+def _setup_logger_formatter(
+    formatter: logging.Formatter,
 ):
     if formatter:
         global LOG_FORMATTER
         LOG_FORMATTER = formatter
-    if handlers:
-        global LOG_HANDLERS
-        LOG_HANDLERS = handlers
 
     for adapter in COMPUTE_MODULES_ADAPTER_MANAGER.adapters.values():
-        adapter.logger.handlers.clear()
-        _add_handlers(adapter.logger, LOG_HANDLERS, LOG_FORMATTER)
+        for handler in adapter.logger.handlers:
+            handler.setFormatter(LOG_FORMATTER)
 
 
 # TODO: support for log file output (need access to selected log output location)
@@ -70,8 +56,13 @@ def _create_logger(
     """
     logger = logging.getLogger(name)
 
-    return _add_handlers(logger, LOG_HANDLERS, LOG_FORMATTER)
-
+    handler = logging.StreamHandler()
+    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT) 
+    handler.setFormatter(formatter)
+    logger.handlers.clear()
+    logger.addHandler(handler)
+    
+    return logger
 
 # Wrapper around a logging.LoggerAdapter instance.
 # This allows us to obtain a ComputeModulesLoggerAdapter instance just once,
