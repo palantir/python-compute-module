@@ -26,6 +26,7 @@ from compute_modules.logging.common import (
     ComputeModulesLoggerAdapter,
 )
 from compute_modules.logging.public import setup_logger_formatter
+from tests.conftest import JsonFormatter
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
 
@@ -50,7 +51,7 @@ def format_log_context(pid: int, job_id: str) -> str:
     return f"PID: {pid:<6} JOB: {job_id:<37}"
 
 
-def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter) -> None:
+def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFormatter) -> None:
     """Verify initial state of logger context"""
     internal_logger, logger_1, logger_2 = logger_fixtures()
     internal_logger.info(INFO_STR)

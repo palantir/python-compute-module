@@ -5,7 +5,7 @@ import pytest
 
 
 class JsonFormatter(logging.Formatter):
-    def format(self, record):
+    def format(self, record) -> str:
         log_record = {
             "level": record.levelname,
             "process_id": record.process_id,
@@ -18,5 +18,5 @@ class JsonFormatter(logging.Formatter):
 
 
 @pytest.fixture
-def custom_formatter():
+def custom_formatter() -> JsonFormatter:
     return JsonFormatter()
