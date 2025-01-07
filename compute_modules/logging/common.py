@@ -37,7 +37,7 @@ LOG_FORMATTER = None
 
 def _setup_logger_formatter(
     formatter: logging.Formatter,
-):
+) -> None:
     if formatter:
         global LOG_FORMATTER
         LOG_FORMATTER = formatter
