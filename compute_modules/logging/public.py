@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 from logging import Formatter
+
 from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter, _setup_logger_formatter
 
 
