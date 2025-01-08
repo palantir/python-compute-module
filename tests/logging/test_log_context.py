@@ -117,7 +117,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     # Test external logger
     assert valid_json, "Logs should be json"
     assert log_js["level"] == "INFO", "Log has wrong level"
-    assert log_js["message"] == CLIENT_INFO_STR, "SLS Log has wrong message"
+    assert log_js["message"] == CLIENT_INFO_STR, "Log has wrong message"
     assert log_js["job_id"] == job_id
     assert log_js["process_id"] == str(process_id)
 
