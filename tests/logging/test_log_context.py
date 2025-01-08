@@ -19,13 +19,12 @@ import uuid
 
 import pytest
 
-from compute_modules.logging import get_logger, internal
+from compute_modules.logging import get_logger, internal, setup_logger_formatter
 from compute_modules.logging.common import (
     COMPUTE_MODULES_ADAPTER_MANAGER,
     DEFAULT_LOG_FORMAT,
     ComputeModulesLoggerAdapter,
 )
-from compute_modules.logging import setup_logger_formatter
 from tests.conftest import JsonFormatter
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
