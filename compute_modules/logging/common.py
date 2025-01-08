@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 # logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
 # whether this should be generic or not.

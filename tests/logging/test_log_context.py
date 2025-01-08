@@ -93,6 +93,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
         assert format_log_context(pid=PROCESS_ID, job_id="") in log
 
     # Test Custom Formatting
+    # TODO split out into custom test once ComputeModuleLoggingAdapter made fixture to avoid capsys errors
 
     client_logger = get_logger("twinkle")
     client_logger.setLevel(logging.INFO)
