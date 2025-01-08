@@ -352,6 +352,33 @@ logger.error("Peekaboo!")
 logger.critical("Peekaboo!")
 ```
 
+### Applying your own custom log formatter via the SDK
+
+If you would like to use the SDK logging but apply your own formatter, you can use the utility function provided. 
+This enables you to automatically capture compute module specific details in your logs like the process and job ids.
+
+
+```python
+import logging
+from compute_modules.logging import setup_logger_formatter
+
+# Write our a custom formatter that makes a JSON log string line
+class JsonFormatter(logging.Formatter):
+    def format(self, record: Any) -> str:
+        log_record = {
+            "level": record.levelname,
+            "process_id": record.process_id,
+            "job_id": record.job_id,
+            "location": f"{record.filename}:{record.lineno}",
+            "message": record.getMessage(),
+        }
+        return json.dumps(log_record)
+
+setup_logger_formatter(JsonFormatter())
+```
+
+
+
 ### Surfacing logs from the `compute_modules` library
 By default, the logs emitted from within the `compute_modules` library have a level of `ERROR`, meaning only error- or critical-level logs will be emitted. If for any reason you want to see other logs being emitted from within `compute_modules` you can use the `set_internal_log_level` function.
 

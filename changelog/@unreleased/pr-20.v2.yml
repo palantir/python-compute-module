@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Adding custom logging formatting support to native Compute Module Logging
+  links:
+  - https://github.com/palantir/python-compute-module/pull/20

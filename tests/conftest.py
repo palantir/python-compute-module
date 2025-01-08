@@ -12,8 +12,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import json
+import logging
+from typing import Any
 
-from .internal import set_internal_log_level
-from .public import get_logger, setup_logger_formatter
+import pytest
 
-__all__ = ["get_logger", "set_internal_log_level", "setup_logger_formatter"]
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: Any) -> str:
+        log_record = {
+            "level": record.levelname,
+            "process_id": record.process_id,
+            "job_id": record.job_id,
+            "location": f"{record.filename}:{record.lineno}",
+            "message": record.getMessage(),
+            "custom_text": "custom-message",
+        }
+        return json.dumps(log_record)
+
+
+@pytest.fixture
+def custom_formatter() -> JsonFormatter:
+    return JsonFormatter()
