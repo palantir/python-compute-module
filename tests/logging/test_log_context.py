@@ -25,7 +25,7 @@ from compute_modules.logging.common import (
     DEFAULT_LOG_FORMAT,
     ComputeModulesLoggerAdapter,
 )
-from compute_modules.logging.public import setup_logger_formatter
+from compute_modules.logging import setup_logger_formatter
 from tests.conftest import JsonFormatter
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
