@@ -14,7 +14,8 @@
 
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+import threading
+from typing import TYPE_CHECKING, Any, Dict, MutableMapping, Optional, Tuple, Union
 
 # logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
 # whether this should be generic or not.
@@ -63,6 +64,17 @@ def _create_logger(name: str) -> logging.Logger:
     return logger
 
 
+THREAD_LOCAL = threading.local()
+
+
+def set_thread_local_data(key: str, value: str) -> None:
+    setattr(THREAD_LOCAL, key, value)
+
+
+def get_thread_local_data(key: str, default: str) -> str:
+    return getattr(THREAD_LOCAL, key, default)
+
+
 # Wrapper around a logging.LoggerAdapter instance.
 # This allows us to obtain a ComputeModulesLoggerAdapter instance just once,
 # while having the flexibility to swap out the underlying `logging.LoggerAdapter` being used.
@@ -84,32 +96,24 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         process_id: int = -1,
         job_id: str = "",
     ) -> None:
-        self._p_logger = _create_logger(logger_name)
-        self._p_process_id = process_id
-        self._p_job_id = job_id
-        self._p_set_log_adapter()
+        self.update_process_id(process_id)
+        self.update_job_id(job_id)
+        super().__init__(_create_logger(logger_name))
 
-    def _p_set_log_adapter(self) -> None:
-        self.adapter = logging.LoggerAdapter(
-            logger=self._p_logger,
-            extra=dict(
-                process_id=str(self._p_process_id),
-                job_id=self._p_job_id,
-            ),
-        )
+    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
+        custom_data = {
+            "process_id": str(get_thread_local_data("process_id", "-1")),
+            "job_id": str(get_thread_local_data("job_id", "")),
+        }
+        kwargs["extra"] = kwargs.get("extra", {})
+        kwargs["extra"].update(custom_data)
+        return msg, kwargs
 
-    def _p_update_process_id(self, process_id: int) -> None:
-        self._p_process_id = process_id
-        self._p_set_log_adapter()
+    def update_process_id(self, process_id: int) -> None:
+        set_thread_local_data("process_id", str(process_id))
 
-    def _p_update_job_id(self, job_id: str) -> None:
-        self._p_job_id = job_id
-        self._p_set_log_adapter()
-
-    def __getattr__(self, name: str) -> Any:
-        if name.startswith("_p_"):
-            return getattr(self, name)
-        return getattr(self.adapter, name)
+    def update_job_id(self, job_id: str) -> None:
+        set_thread_local_data("job_id", str(job_id))
 
 
 class ComputeModulesAdapterManager(object):
@@ -126,12 +130,12 @@ class ComputeModulesAdapterManager(object):
     def update_process_id(self, process_id: int) -> None:
         """Update process_id for all registered adapters"""
         for adapter in self.adapters.values():
-            adapter._p_update_process_id(process_id=process_id)
+            adapter.update_process_id(process_id=process_id)
 
     def update_job_id(self, job_id: str) -> None:
         """Update job_id for all registered adapters"""
         for adapter in self.adapters.values():
-            adapter._p_update_job_id(job_id=job_id)
+            adapter.update_job_id(job_id=job_id)
 
 
 COMPUTE_MODULES_ADAPTER_MANAGER = ComputeModulesAdapterManager()
