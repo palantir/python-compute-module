@@ -87,7 +87,8 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         self,
         logger_name: str,
     ) -> None:
-        super().__init__(_create_logger(logger_name))
+        # Need to pass empty dict as `extra` param for 3.9 support
+        super().__init__(_create_logger(logger_name), dict())
 
     def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
         custom_data = {
