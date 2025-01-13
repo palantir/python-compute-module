@@ -49,12 +49,10 @@ class ConcurrencyType(str, Enum):
 # As a workaround, the worker process is given a session only for posting job results back to the runtime.
 
 
-def _handle_job(job: Dict[str, Any], update_process_id: bool) -> None:
+def _handle_job(job: Dict[str, Any]) -> None:
     """Helper function to be called by pool.apply_async since python can't serialize methods"""
     global QUERY_CLIENT
     assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
-    if update_process_id:
-        QUERY_CLIENT._set_logger_process_id(threading.get_ident())
     QUERY_CLIENT.handle_job(job=job)
 
 
@@ -69,8 +67,7 @@ def _get_and_schedule_job(pool: Union[Pool, ThreadPool]) -> None:
         QUERY_CLIENT.logger.warning(f"Exception occurred while fetching job: {str(e)}")
     if job:
         QUERY_CLIENT.logger.debug(f"Got a job: {job}")
-        update_process_id = isinstance(pool, ThreadPool)
-        pool.apply_async(_handle_job, (job, update_process_id))
+        pool.apply_async(_handle_job, (job,))
 
 
 def _worker_process_init() -> None:
@@ -79,6 +76,13 @@ def _worker_process_init() -> None:
     assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
     QUERY_CLIENT.init_session()
     QUERY_CLIENT._set_logger_process_id(os.getpid())
+
+
+def _worker_thread_init() -> None:
+    """Create a new session for each worker thread"""
+    global QUERY_CLIENT
+    assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
+    QUERY_CLIENT._set_logger_process_id(threading.get_ident())
 
 
 def start_compute_module(
@@ -101,7 +105,7 @@ def start_compute_module(
                 QUERY_CLIENT.logger.info("Polling for new jobs...")
                 _get_and_schedule_job(pool)
     else:
-        with ThreadPool(QUERY_CLIENT.concurrency) as pool:
+        with ThreadPool(QUERY_CLIENT.concurrency, initializer=_worker_thread_init) as pool:
             while True:
                 QUERY_CLIENT.logger.info("Polling for new jobs...")
                 _get_and_schedule_job(pool)
