@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: ThreadPool concurrency support
+  links:
+  - https://github.com/palantir/python-compute-module/pull/23
