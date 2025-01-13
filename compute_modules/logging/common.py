@@ -93,11 +93,7 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
     def __init__(
         self,
         logger_name: str,
-        process_id: int = -1,
-        job_id: str = "",
     ) -> None:
-        self.update_process_id(process_id)
-        self.update_job_id(job_id)
         super().__init__(_create_logger(logger_name))
 
     def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
@@ -108,12 +104,6 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         kwargs["extra"] = kwargs.get("extra", {})
         kwargs["extra"].update(custom_data)
         return msg, kwargs
-
-    def update_process_id(self, process_id: int) -> None:
-        set_thread_local_data("process_id", str(process_id))
-
-    def update_job_id(self, job_id: str) -> None:
-        set_thread_local_data("job_id", str(job_id))
 
 
 class ComputeModulesAdapterManager(object):
@@ -129,13 +119,11 @@ class ComputeModulesAdapterManager(object):
 
     def update_process_id(self, process_id: int) -> None:
         """Update process_id for all registered adapters"""
-        for adapter in self.adapters.values():
-            adapter.update_process_id(process_id=process_id)
+        set_thread_local_data("process_id", str(process_id))
 
     def update_job_id(self, job_id: str) -> None:
         """Update job_id for all registered adapters"""
-        for adapter in self.adapters.values():
-            adapter.update_job_id(job_id=job_id)
+        set_thread_local_data("job_id", str(job_id))
 
 
 COMPUTE_MODULES_ADAPTER_MANAGER = ComputeModulesAdapterManager()
@@ -144,4 +132,5 @@ COMPUTE_MODULES_ADAPTER_MANAGER = ComputeModulesAdapterManager()
 __all__ = [
     "COMPUTE_MODULES_ADAPTER_MANAGER",
     "ComputeModulesLoggerAdapter",
+    "_setup_logger_formatter",
 ]
