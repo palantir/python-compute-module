@@ -32,8 +32,8 @@ QUERY_CLIENT: Optional[InternalQueryService] = None
 
 
 class ConcurrencyType(str, Enum):
-    PROCESSING = "PROCESSING"
-    THREADING = "THREADING"
+    PROCESS_POOL = "PROCESS_POOL"
+    THREAD_POOL = "THREAD_POOL"
 
 
 # The main process creates the initial InternalQueryService instance,
@@ -86,7 +86,7 @@ def _worker_thread_init() -> None:
 
 
 def start_compute_module(
-    concurrency_type: ConcurrencyType = ConcurrencyType.PROCESSING,
+    concurrency_type: ConcurrencyType = ConcurrencyType.PROCESS_POOL,
 ) -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
     global QUERY_CLIENT
@@ -99,7 +99,7 @@ def start_compute_module(
     )
     QUERY_CLIENT.post_query_schemas()
     QUERY_CLIENT.logger.info(f"Starting to poll for jobs with concurrency {QUERY_CLIENT.concurrency}")
-    if concurrency_type == ConcurrencyType.PROCESSING:
+    if concurrency_type == ConcurrencyType.PROCESS_POOL:
         with Pool(QUERY_CLIENT.concurrency, initializer=_worker_process_init) as pool:
             while True:
                 QUERY_CLIENT.logger.info("Polling for new jobs...")
