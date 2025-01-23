@@ -14,8 +14,10 @@
 
 
 import os
-from multiprocessing.pool import Pool
-from typing import Any, Dict, Optional
+import threading
+from enum import Enum
+from multiprocessing.pool import Pool, ThreadPool
+from typing import Any, Dict, Optional, Union
 
 from compute_modules.client.internal_query_client import InternalQueryService
 from compute_modules.function_registry.function_registry import (
@@ -27,6 +29,12 @@ from compute_modules.function_registry.function_registry import (
 )
 
 QUERY_CLIENT: Optional[InternalQueryService] = None
+
+
+class ConcurrencyType(str, Enum):
+    PROCESS_POOL = "PROCESS_POOL"
+    THREAD_POOL = "THREAD_POOL"
+
 
 # The main process creates the initial InternalQueryService instance,
 # which is used to post the function schema and poll for jobs.
@@ -48,7 +56,7 @@ def _handle_job(job: Dict[str, Any]) -> None:
     QUERY_CLIENT.handle_job(job=job)
 
 
-def _get_and_schedule_job(pool: Pool) -> None:
+def _get_and_schedule_job(pool: Union[Pool, ThreadPool]) -> None:
     """Try to get a job and schedule to the process pool"""
     global QUERY_CLIENT
     assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
@@ -62,15 +70,24 @@ def _get_and_schedule_job(pool: Pool) -> None:
         pool.apply_async(_handle_job, (job,))
 
 
-def _worker_init() -> None:
-    """Create a new session for each worker"""
+def _worker_process_init() -> None:
+    """Create a new session for each worker process"""
     global QUERY_CLIENT
     assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
     QUERY_CLIENT.init_session()
     QUERY_CLIENT._set_logger_process_id(os.getpid())
 
 
-def start_compute_module() -> None:
+def _worker_thread_init() -> None:
+    """Create a new session for each worker thread"""
+    global QUERY_CLIENT
+    assert QUERY_CLIENT, "QUERY_CLIENT is uninitialized"
+    QUERY_CLIENT._set_logger_process_id(threading.get_ident())
+
+
+def start_compute_module(
+    concurrency_type: ConcurrencyType = ConcurrencyType.PROCESS_POOL,
+) -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
     global QUERY_CLIENT
     QUERY_CLIENT = InternalQueryService(
@@ -82,7 +99,19 @@ def start_compute_module() -> None:
     )
     QUERY_CLIENT.post_query_schemas()
     QUERY_CLIENT.logger.info(f"Starting to poll for jobs with concurrency {QUERY_CLIENT.concurrency}")
-    with Pool(QUERY_CLIENT.concurrency, initializer=_worker_init) as pool:
-        while True:
-            QUERY_CLIENT.logger.info("Polling for new jobs...")
-            _get_and_schedule_job(pool)
+    if concurrency_type == ConcurrencyType.PROCESS_POOL:
+        with Pool(QUERY_CLIENT.concurrency, initializer=_worker_process_init) as pool:
+            while True:
+                QUERY_CLIENT.logger.info("Polling for new jobs...")
+                _get_and_schedule_job(pool)
+    else:
+        with ThreadPool(QUERY_CLIENT.concurrency, initializer=_worker_thread_init) as pool:
+            while True:
+                QUERY_CLIENT.logger.info("Polling for new jobs...")
+                _get_and_schedule_job(pool)
+
+
+__all__ = [
+    "ConcurrencyType",
+    "start_compute_module",
+]
