@@ -12,14 +12,35 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import sys
+import argparse
 
 from compute_modules.bin.serialise import serialise
 
 
 def main() -> None:
-    path = sys.argv[1]
-    print(serialise(path))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source")
+    parser.add_argument(
+        "--object-type-rid",
+        required=False,
+        nargs="*",
+        dest="object_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "--link-type-rid",
+        required=False,
+        nargs="*",
+        dest="link_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "-t",
+        "--token",
+        required=False,
+    )
+    arguments = parser.parse_args()
+    print(serialise(src_dir=arguments.source))
 
 
 if __name__ == "__main__":
