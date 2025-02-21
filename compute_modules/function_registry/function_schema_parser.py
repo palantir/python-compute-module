@@ -223,6 +223,14 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
         }, PythonClassNode(constructor=dict, children={"key": key_class_node, "value": value_class_node})
     if typing.get_origin(type_hint) is typing.Union:
         type_args = typing.get_args(type_hint)
+        # ontology edits will only work as return types since
+        # the OntologyEdit type_hint is not a valid constructor
+        if _is_ontology_edit(type_args):
+            return {
+                "ontologyEdit": {},
+                "type": "ontologyEdit",
+            }, PythonClassNode(constructor=type_hint, children=None)
+
         if len(type_args) == 2 and type(None) in type_args:
             optional_type = next(arg for arg in type_args if arg is not type(None))
             optional_data_type, optional_class_node = _extract_data_type(optional_type)
@@ -266,6 +274,12 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "fields": custom_type_fields,
         },
     }, PythonClassNode(constructor=type_hint, children=child_class_nodes)
+
+
+def _is_ontology_edit(type_args: typing.Iterable[typing.Any]) -> bool:
+    type_arg_names = set(map(lambda type_arg: getattr(type_arg, "__name__", None), type_args))
+    ontology_edit_sub_types = {"AddObject", "ModifyObject", "DeleteObject", "AddLink", "RemoveLink"}
+    return ontology_edit_sub_types.issubset(type_arg_names)
 
 
 def _assert_is_valid_custom_type(item: typing.Any) -> None:
