@@ -12,11 +12,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import sys
 
-from .context import get_extra_context_parameters
-from .types import QueryContext
+from compute_modules.bin.serialise import serialise
 
-__all__ = [
-    "get_extra_context_parameters",
-    "QueryContext",
-]
+
+def main() -> None:
+    path = sys.argv[1]
+    print(serialise(path))
+
+
+if __name__ == "__main__":
+    main()

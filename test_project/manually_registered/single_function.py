@@ -12,11 +12,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from dataclasses import dataclass
+from compute_modules.context import QueryContext
+from compute_modules.function_registry.function_registry import add_function
+from compute_modules.startup import start_compute_module
 
-from .context import get_extra_context_parameters
-from .types import QueryContext
+@dataclass
+class UndecoratedIntegerWrapper:
+    value: int
 
-__all__ = [
-    "get_extra_context_parameters",
-    "QueryContext",
-]
+def return_integer_in_main(context: QueryContext, wrapper: UndecoratedIntegerWrapper) -> int:
+    return wrapper.value
+
+if __name__ == "__main__":
+    add_function(return_integer_in_main)
+    start_compute_module()

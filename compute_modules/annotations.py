@@ -1,4 +1,4 @@
-#  Copyright 2024 Palantir Technologies, Inc.
+#  Copyright 2025 Palantir Technologies, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import atexit
 from typing import Any, Callable
 
+from .function_registry.function import Function
 from .function_registry.function_registry import add_function
 from .startup import start_compute_module
 
@@ -24,13 +25,13 @@ def function(
     *,
     streaming: bool = False,
 ) -> Callable[..., Any]:
-    def function_without_params(func: Callable[..., Any]) -> Callable[..., Any]:
+    def function_wrapper(func: Callable[..., Any]) -> Callable[..., Any]:
         add_function(func, streaming)
-        return func
+        return Function(func)
 
     if callable(maybe_func):
-        return function_without_params(maybe_func)
-    return function_without_params
+        return function_wrapper(maybe_func)
+    return function_wrapper
 
 
 # Register the on_exit function to be called when the interpreter exits

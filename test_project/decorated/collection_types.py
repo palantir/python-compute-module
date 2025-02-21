@@ -12,11 +12,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from compute_modules.context import QueryContext
+from compute_modules.annotations import function
+from typing import List, Set, Dict
 
-from .context import get_extra_context_parameters
-from .types import QueryContext
 
-__all__ = [
-    "get_extra_context_parameters",
-    "QueryContext",
-]
+@function
+def return_list(context: QueryContext, event) -> List[str]:
+    return ["Hello", "World"]
+
+@function
+def return_set(context: QueryContext, event) -> Set[str]:
+    return {"Hello", "World"}
+
+@function
+def return_dict(context: QueryContext, event) -> Dict[str, str]:
+    return {"Hello": "World"}
