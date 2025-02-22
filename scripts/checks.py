@@ -70,8 +70,14 @@ def _get_license_content() -> Tuple[str, int]:
 
 
 def _get_n_lines_of_file(filename: str, num_lines: int) -> str:
-    with open(filename, "r", encoding="utf-8") as f:
-        head = [next(f) for _ in range(num_lines)]
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            head = []
+            for _ in range(num_lines):
+                head.append(next(f))
+    except StopIteration:
+        # File doesn't have as many lines as license file
+        pass
     return "".join(head)
 
 
