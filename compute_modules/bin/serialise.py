@@ -45,7 +45,7 @@ def serialise(
     if src_dir not in sys.path:
         sys.path.append(src_dir)
 
-    onntology_metadata = _maybe_load_metadata(
+    _onntology_metadata = _maybe_load_metadata(
         foundry_url=foundry_url,
         token=token,
         object_type_rids=object_type_rids,
