@@ -20,26 +20,61 @@ import logging
 import pkgutil
 import sys
 import types
-from typing import Iterator, List, Set
+from typing import Dict, Iterator, List, Optional, Set
 
 import compute_modules.startup
 from compute_modules.function_registry.function import Function
 from compute_modules.function_registry.function_registry import add_function, add_functions
 
+from .ontology._types import ObjectTypeMetadata
+from .ontology.metadata_loader import load_object_type_metadata
+
 LOGGER = logging.getLogger(__name__)
 
 
-def serialise(src_dir: str) -> str:
+def serialise(
+    src_dir: str,
+    foundry_url: Optional[str],
+    token: Optional[str],
+    object_type_rids: List[str],
+    link_type_rids: List[str],
+) -> str:
     # Disables automatically starting compute module upon importing function annotations
     compute_modules.startup.DISABLE_STARTUP = True
 
     if src_dir not in sys.path:
         sys.path.append(src_dir)
 
+    onntology_metadata = _maybe_load_metadata(
+        foundry_url=foundry_url,
+        token=token,
+        object_type_rids=object_type_rids,
+        link_type_rids=link_type_rids,
+    )
     py_modules: Set[types.ModuleType] = set(_import_python_modules(src_dir))
     cm_functions: List[Function] = list(_discover_functions(py_modules))
     _validate_functions(cm_functions)
     return _serialise_functions(cm_functions)
+
+
+def _maybe_load_metadata(
+    foundry_url: Optional[str],
+    token: Optional[str],
+    object_type_rids: List[str],
+    link_type_rids: List[str],
+) -> Dict[str, ObjectTypeMetadata]:
+    if not (object_type_rids or link_type_rids):
+        return {}
+    if not foundry_url:
+        raise RuntimeError("Missing foundry_url param; cannot load ontology metadata")
+    if not token:
+        raise RuntimeError("Missing token param; cannot load ontology metadata")
+    return load_object_type_metadata(
+        foundry_url=foundry_url,
+        token=token,
+        object_type_rids=object_type_rids,
+        link_type_rids=link_type_rids,
+    )
 
 
 def _import_python_modules(directory: str) -> Iterator[types.ModuleType]:
@@ -113,4 +148,5 @@ def _serialise_functions(functions: List[Function]) -> str:
     for function in functions:
         LOGGER.debug(f"Serialising function {function.__name__}")
         parsed_schemas.append(function.get_function_schema())
+    return json.dumps(parsed_schemas)
     return json.dumps(parsed_schemas)

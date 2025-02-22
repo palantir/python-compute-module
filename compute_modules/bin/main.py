@@ -38,9 +38,23 @@ def main() -> None:
         "-t",
         "--token",
         required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--foundry-url",
+        required=False,
+        default=None,
     )
     arguments = parser.parse_args()
-    print(serialise(src_dir=arguments.source))
+    print(
+        serialise(
+            src_dir=arguments.source,
+            foundry_url=arguments.foundry_url,
+            token=arguments.token,
+            object_type_rids=arguments.object_type_rids,
+            link_type_rids=arguments.link_type_rids,
+        )
+    )
 
 
 if __name__ == "__main__":
