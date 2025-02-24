@@ -32,6 +32,7 @@ def add_functions(*args: Callable[..., Any]) -> None:
 
 def add_function(
     function_ref: Callable[..., Any],
+    *,
     streaming: bool = False,
     edits: Optional[Collection[Any]] = None,
 ) -> None:

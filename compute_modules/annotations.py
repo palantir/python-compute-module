@@ -27,7 +27,7 @@ def function(
     edits: Optional[Collection[Any]] = None,
 ) -> Callable[..., Any]:
     def function_wrapper(func: Callable[..., Any]) -> Callable[..., Any]:
-        add_function(func, streaming, edits)
+        add_function(func, streaming=streaming, edits=edits)
         return Function(func, set() if edits is None else edits)
 
     if callable(maybe_func):

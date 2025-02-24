@@ -12,19 +12,31 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from compute_modules.context import QueryContext
+from typing import Dict, List, Set
+
 from compute_modules.annotations import function
-from typing import List, Set, Dict
+from compute_modules.context import QueryContext
+from test_project._types import DummyOntologyType, OntologyEdit
 
 
 @function
 def return_list(context: QueryContext, event) -> List[str]:
     return ["Hello", "World"]
 
+
 @function
 def return_set(context: QueryContext, event) -> Set[str]:
     return {"Hello", "World"}
 
+
 @function
 def return_dict(context: QueryContext, event) -> Dict[str, str]:
     return {"Hello": "World"}
+
+
+@function(edits=[DummyOntologyType])
+def ontology_add_function(
+    context: QueryContext,
+    event,
+) -> list[OntologyEdit]:
+    return []

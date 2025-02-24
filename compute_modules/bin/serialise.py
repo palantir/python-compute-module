@@ -45,6 +45,7 @@ def serialise(
     if src_dir not in sys.path:
         sys.path.append(src_dir)
 
+    # TODO: use ontology_metadata to write ... something. Initially thought add to each function schema but now not sure since it'll be the same for every function in a CM
     onntology_metadata = _maybe_load_metadata(
         foundry_url=foundry_url,
         token=token,
@@ -140,8 +141,17 @@ def _discover_manually_registered_functions(py_module: types.ModuleType) -> Iter
                 continue
 
             LOGGER.debug(f"Located function {fn.__name__} in module {py_module.__name__}")
-            # TODO
-            yield Function(fn, [])
+            # Extracting ontology types if `edits=[...]` was provided
+            edits_arg = next(filter(lambda k: k.arg == "edits", node.keywords), None)
+            parsed_edits = set()
+            if edits_arg and isinstance(edits_arg, ast.keyword) and isinstance(edits_arg.value, ast.List):
+                for edit in edits_arg.value.elts:
+                    if not isinstance(edit, ast.Name):
+                        continue
+                    parsed_edit = getattr(py_module, edit.id, None)
+                    if parsed_edit and hasattr(parsed_edit, "api_name") and callable(parsed_edit.api_name):
+                        parsed_edits.add(parsed_edit)
+            yield Function(fn, parsed_edits)
 
 
 def _validate_functions(functions: List[Function]) -> None:
