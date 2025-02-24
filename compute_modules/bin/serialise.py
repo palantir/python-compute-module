@@ -45,16 +45,28 @@ def serialise(
     if src_dir not in sys.path:
         sys.path.append(src_dir)
 
-    _onntology_metadata = _maybe_load_metadata(
+    onntology_metadata = _maybe_load_metadata(
         foundry_url=foundry_url,
         token=token,
         object_type_rids=object_type_rids,
         link_type_rids=link_type_rids,
     )
+    api_name_type_id_mapping = _get_api_name_type_id_mapping(onntology_metadata)
     py_modules: Set[types.ModuleType] = set(_import_python_modules(src_dir))
     cm_functions: List[Function] = list(_discover_functions(py_modules))
     _validate_functions(cm_functions)
-    return _serialise_functions(cm_functions)
+    return _serialise_functions(cm_functions, api_name_type_id_mapping)
+
+
+def _get_api_name_type_id_mapping(
+    ontology_metadata: Dict[str, ObjectTypeMetadata],
+) -> Dict[str, str]:
+    res = {}
+    for metadata in ontology_metadata.values():
+        if metadata.api_name in res:
+            raise ValueError(f"Duplicate api name found in ontology metadata: {metadata.api_name}")
+        res[metadata.api_name] = metadata.type_id
+    return res
 
 
 def _maybe_load_metadata(
@@ -85,7 +97,9 @@ def _import_python_modules(directory: str) -> Iterator[types.ModuleType]:
             yield importlib.import_module(module.name)
 
 
-def _discover_functions(py_modules: Set[types.ModuleType]) -> Iterator[Function]:
+def _discover_functions(
+    py_modules: Set[types.ModuleType],
+) -> Iterator[Function]:
     for module in py_modules:
         yield from _discover_decorated_functions(module)
         yield from _discover_manually_registered_functions(module)
@@ -126,7 +140,8 @@ def _discover_manually_registered_functions(py_module: types.ModuleType) -> Iter
                 continue
 
             LOGGER.debug(f"Located function {fn.__name__} in module {py_module.__name__}")
-            yield Function(fn)
+            # TODO
+            yield Function(fn, [])
 
 
 def _validate_functions(functions: List[Function]) -> None:
@@ -143,10 +158,12 @@ def _validate_functions(functions: List[Function]) -> None:
         raise ValueError(f"Duplicate function(s) found: {duplicate_functions}")
 
 
-def _serialise_functions(functions: List[Function]) -> str:
+def _serialise_functions(
+    functions: List[Function],
+    api_name_type_id_mapping: Dict[str, str],
+) -> str:
     parsed_schemas = []
     for function in functions:
         LOGGER.debug(f"Serialising function {function.__name__}")
-        parsed_schemas.append(function.get_function_schema())
-    return json.dumps(parsed_schemas)
+        parsed_schemas.append(function.get_function_schema(api_name_type_id_mapping))
     return json.dumps(parsed_schemas)

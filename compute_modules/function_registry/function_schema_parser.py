@@ -28,6 +28,7 @@ from .types import (
     DataTypeDict,
     Double,
     FunctionInputType,
+    FunctionOntologyProvenance,
     FunctionOutputType,
     Long,
     ParseFunctionSchemaResult,
@@ -41,7 +42,11 @@ RESERVED_KEYS = {CONTEXT_KEY, RETURN_KEY}
 
 
 def parse_function_schema(
-    function_ref: typing.Callable[..., typing.Any], function_name: str
+    function_ref: typing.Callable[..., typing.Any],
+    function_name: str,
+    edits: typing.Collection[typing.Any],
+    api_name_type_id_mapping: typing.Dict[str, str],
+    throw_on_missing_type_id: bool = False,
 ) -> ParseFunctionSchemaResult:
     """Convert function name, input(s) & output into ComputeModuleFunctionSchema"""
     type_hints = typing.get_type_hints(function_ref, globalns={})
@@ -52,12 +57,38 @@ def parse_function_schema(
         functionName=function_name,
         inputs=inputs,
         output=output,
+        ontologyProvenance=_get_ontology_provenance(
+            edits=edits,
+            api_name_type_id_mapping=api_name_type_id_mapping,
+            throw_on_missing_type_id=throw_on_missing_type_id,
+        ),
     )
     return ParseFunctionSchemaResult(
         function_schema=function_schema,
         class_node=root_class_node,
         is_context_typed=is_context_typed,
     )
+
+
+def _get_ontology_provenance(
+    edits: typing.Collection[typing.Any],
+    api_name_type_id_mapping: typing.Dict[str, str],
+    throw_on_missing_type_id: bool,
+) -> typing.Optional[FunctionOntologyProvenance]:
+    if not edits:
+        return None
+    ontology_provenance: FunctionOntologyProvenance = {
+        "editedObjects": {},
+        "editedLinks": {},
+    }
+    for edit in edits:
+        if hasattr(edit, "api_name") and callable(edit.api_name):
+            type_id = api_name_type_id_mapping.get(edit.api_name())
+            if type_id:
+                ontology_provenance["editedObjects"][type_id] = {}
+            elif throw_on_missing_type_id:
+                raise ValueError(f"Missing corresponding type_id for object api name: {edit.api_name()}")
+    return ontology_provenance
 
 
 def _extract_inputs(
