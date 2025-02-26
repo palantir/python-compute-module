@@ -17,7 +17,7 @@ from typing import List, Tuple
 
 import requests
 
-from scripts.ontology._types import OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
+from ._types import OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
 
 
 class OntologyMetadataClient:

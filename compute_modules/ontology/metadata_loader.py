@@ -16,8 +16,8 @@
 from collections import defaultdict
 from typing import Dict, List
 
-from scripts.ontology._types import ObjectTypeMetadata, OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
-from scripts.ontology.metadata_client import OntologyMetadataClient
+from ._types import ObjectTypeMetadata, OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
+from .metadata_client import OntologyMetadataClient
 
 
 def load_object_type_metadata(
