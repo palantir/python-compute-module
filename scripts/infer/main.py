@@ -33,9 +33,11 @@ def main() -> None:
     config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
     api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path)
     print(
-        infer(
-            src_dir=arguments.source,
-            api_name_type_id_mapping=api_name_type_id_mapping,
+        json.dumps(
+            infer(
+                src_dir=arguments.source,
+                api_name_type_id_mapping=api_name_type_id_mapping,
+            )
         )
     )
 
@@ -49,5 +51,4 @@ def _get_api_name_type_id_mapping(config_file_path: str) -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    main()
     main()

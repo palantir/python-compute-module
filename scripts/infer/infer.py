@@ -15,7 +15,6 @@
 import ast
 import importlib
 import inspect
-import json
 import logging
 import pkgutil
 import sys
@@ -25,6 +24,7 @@ from typing import Dict, Iterator, List, Set
 import compute_modules.startup
 from compute_modules.function_registry.function import Function
 from compute_modules.function_registry.function_registry import add_function, add_functions
+from compute_modules.function_registry.types import ComputeModuleFunctionSchema
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ LOGGER = logging.getLogger(__name__)
 def infer(
     src_dir: str,
     api_name_type_id_mapping: Dict[str, str],
-) -> str:
+) -> List[ComputeModuleFunctionSchema]:
     # Disables automatically starting compute module upon importing function annotations
     compute_modules.startup.DISABLE_STARTUP = True
 
@@ -126,9 +126,9 @@ def _validate_functions(functions: List[Function]) -> None:
 def _serialise_functions(
     functions: List[Function],
     api_name_type_id_mapping: Dict[str, str],
-) -> str:
+) -> List[ComputeModuleFunctionSchema]:
     parsed_schemas = []
     for function in functions:
         LOGGER.debug(f"Serialising function {function.__name__}")
         parsed_schemas.append(function.get_function_schema(api_name_type_id_mapping))
-    return json.dumps(parsed_schemas)
+    return parsed_schemas

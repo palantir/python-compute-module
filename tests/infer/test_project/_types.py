@@ -4,7 +4,7 @@ from typing import Any, NamedTuple, Optional, Union
 class DummyOntologyType:
     @staticmethod
     def api_name() -> str:
-        return "SkruyswykPokemon"
+        return "DummyOntologyType"
 
 
 class ObjectLocator(NamedTuple):
