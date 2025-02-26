@@ -13,48 +13,42 @@
 #  limitations under the License.
 
 import argparse
+import json
+import os
+from typing import Optional
 
 from compute_modules.bin.serialise import serialise
+
+DEFAULT_ONTOLOGY_METADATA_CONFIG_FILENAME = "ontology_metadata_config.json"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("source")
     parser.add_argument(
-        "--object-type-rid",
+        "--ontology-metadata-config",
         required=False,
-        nargs="*",
-        dest="object_type_rids",
-        default=[],
-    )
-    parser.add_argument(
-        "--link-type-rid",
-        required=False,
-        nargs="*",
-        dest="link_type_rids",
-        default=[],
-    )
-    parser.add_argument(
-        "-t",
-        "--token",
-        required=False,
-        default=None,
-    )
-    parser.add_argument(
-        "--foundry-url",
-        required=False,
+        dest="ontology_metadata_config_file",
         default=None,
     )
     arguments = parser.parse_args()
+    api_name_type_id_mapping = _get_api_name_type_id_mapping(arguments.ontology_metadata_config_file)
     print(
         serialise(
             src_dir=arguments.source,
-            foundry_url=arguments.foundry_url,
-            token=arguments.token,
-            object_type_rids=arguments.object_type_rids,
-            link_type_rids=arguments.link_type_rids,
+            api_name_type_id_mapping=api_name_type_id_mapping,
         )
     )
+
+
+def _get_api_name_type_id_mapping(ontology_metadata_config_file: Optional[str]) -> dict[str, str]:
+    if not ontology_metadata_config_file:
+        ontology_metadata_config_file = os.path.join(os.getcwd(), DEFAULT_ONTOLOGY_METADATA_CONFIG_FILENAME)
+    if not os.path.isfile(ontology_metadata_config_file):
+        return {}
+    with open(ontology_metadata_config_file) as f:
+        config_data = json.load(f)
+    return config_data.get("apiNameToTypeId", {})  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":

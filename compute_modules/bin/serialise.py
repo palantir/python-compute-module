@@ -20,24 +20,18 @@ import logging
 import pkgutil
 import sys
 import types
-from typing import Dict, Iterator, List, Optional, Set
+from typing import Dict, Iterator, List, Set
 
 import compute_modules.startup
 from compute_modules.function_registry.function import Function
 from compute_modules.function_registry.function_registry import add_function, add_functions
-
-from .ontology._types import ObjectTypeMetadata
-from .ontology.metadata_loader import load_object_type_metadata
 
 LOGGER = logging.getLogger(__name__)
 
 
 def serialise(
     src_dir: str,
-    foundry_url: Optional[str],
-    token: Optional[str],
-    object_type_rids: List[str],
-    link_type_rids: List[str],
+    api_name_type_id_mapping: Dict[str, str],
 ) -> str:
     # Disables automatically starting compute module upon importing function annotations
     compute_modules.startup.DISABLE_STARTUP = True
@@ -45,49 +39,10 @@ def serialise(
     if src_dir not in sys.path:
         sys.path.append(src_dir)
 
-    # TODO: use ontology_metadata to write ... something. Initially thought add to each function schema but now not sure since it'll be the same for every function in a CM
-    onntology_metadata = _maybe_load_metadata(
-        foundry_url=foundry_url,
-        token=token,
-        object_type_rids=object_type_rids,
-        link_type_rids=link_type_rids,
-    )
-    api_name_type_id_mapping = _get_api_name_type_id_mapping(onntology_metadata)
     py_modules: Set[types.ModuleType] = set(_import_python_modules(src_dir))
     cm_functions: List[Function] = list(_discover_functions(py_modules))
     _validate_functions(cm_functions)
     return _serialise_functions(cm_functions, api_name_type_id_mapping)
-
-
-def _get_api_name_type_id_mapping(
-    ontology_metadata: Dict[str, ObjectTypeMetadata],
-) -> Dict[str, str]:
-    res = {}
-    for metadata in ontology_metadata.values():
-        if metadata.api_name in res:
-            raise ValueError(f"Duplicate api name found in ontology metadata: {metadata.api_name}")
-        res[metadata.api_name] = metadata.type_id
-    return res
-
-
-def _maybe_load_metadata(
-    foundry_url: Optional[str],
-    token: Optional[str],
-    object_type_rids: List[str],
-    link_type_rids: List[str],
-) -> Dict[str, ObjectTypeMetadata]:
-    if not (object_type_rids or link_type_rids):
-        return {}
-    if not foundry_url:
-        raise RuntimeError("Missing foundry_url param; cannot load ontology metadata")
-    if not token:
-        raise RuntimeError("Missing token param; cannot load ontology metadata")
-    return load_object_type_metadata(
-        foundry_url=foundry_url,
-        token=token,
-        object_type_rids=object_type_rids,
-        link_type_rids=link_type_rids,
-    )
 
 
 def _import_python_modules(directory: str) -> Iterator[types.ModuleType]:
