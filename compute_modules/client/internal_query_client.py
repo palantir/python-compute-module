@@ -196,10 +196,12 @@ class InternalQueryService:
         query = v1.get("query")
         tempCredsAuthToken = v1.get("temporaryCredentialsAuthToken", "")
         authHeader = v1.get("authHeader", "")
+        userId = v1.get("userId", "")
         query_context = {
             "jobId": job_id,
             "tempCredsAuthToken": tempCredsAuthToken,
             "authHeader": authHeader,
+            "userId": userId,
             **get_extra_context_parameters(),
         }
         self._update_logger_job_id(job_id=job_id)
