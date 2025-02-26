@@ -52,7 +52,7 @@ def check_mypy() -> None:
 def format() -> None:
     """Formats all files to fix any linter issues that can be automatically fixed"""
     subprocess.run(["black", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
-    subprocess.run(["ruff", "--fix", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
+    subprocess.run(["ruff", "format", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
     subprocess.run(["isort", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
 
 

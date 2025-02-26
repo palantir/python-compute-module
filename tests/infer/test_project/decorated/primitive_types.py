@@ -14,15 +14,16 @@
 
 import datetime
 import decimal
-
 from dataclasses import dataclass
-from compute_modules.context import QueryContext
+
 from compute_modules.annotations import function
+from compute_modules.context import QueryContext
 
 
 @dataclass
 class BytesWrapper:
     value: bytes
+
 
 @function
 def return_bytes(context: QueryContext, wrapper: BytesWrapper) -> bytes:
@@ -33,6 +34,7 @@ def return_bytes(context: QueryContext, wrapper: BytesWrapper) -> bytes:
 class BoolWrapper:
     value: bool
 
+
 @function
 def return_bool(context: QueryContext, wrapper: BoolWrapper) -> bool:
     return wrapper.value
@@ -41,6 +43,7 @@ def return_bool(context: QueryContext, wrapper: BoolWrapper) -> bool:
 @dataclass
 class DateWrapper:
     value: datetime.date
+
 
 @function
 def return_date(context: QueryContext, wrapper: DateWrapper) -> datetime.date:
@@ -51,6 +54,7 @@ def return_date(context: QueryContext, wrapper: DateWrapper) -> datetime.date:
 class DecimalWrapper:
     value: decimal.Decimal
 
+
 @function
 def return_decimal(context: QueryContext, wrapper: DecimalWrapper) -> decimal.Decimal:
     return wrapper.value
@@ -59,6 +63,7 @@ def return_decimal(context: QueryContext, wrapper: DecimalWrapper) -> decimal.De
 @dataclass
 class FloatWrapper:
     value: float
+
 
 @function
 def return_float(context: QueryContext, wrapper: FloatWrapper) -> float:
@@ -69,6 +74,7 @@ def return_float(context: QueryContext, wrapper: FloatWrapper) -> float:
 class IntWrapper:
     value: int
 
+
 @function
 def return_int(context: QueryContext, wrapper: IntWrapper) -> int:
     return wrapper.value
@@ -78,6 +84,7 @@ def return_int(context: QueryContext, wrapper: IntWrapper) -> int:
 class StrWrapper:
     value: str
 
+
 @function
 def return_str(context: QueryContext, wrapper: StrWrapper) -> str:
     return wrapper.value
@@ -86,6 +93,7 @@ def return_str(context: QueryContext, wrapper: StrWrapper) -> str:
 @dataclass
 class DatetimeWrapper:
     value: datetime.datetime
+
 
 @function
 def return_datetime(context: QueryContext, wrapper: DatetimeWrapper) -> datetime.datetime:

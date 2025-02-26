@@ -13,16 +13,20 @@
 #  limitations under the License.
 
 from dataclasses import dataclass
+
 from compute_modules.context import QueryContext
 from compute_modules.function_registry.function_registry import add_function
 from compute_modules.startup import start_compute_module
+
 
 @dataclass
 class UndecoratedIntegerWrapper:
     value: int
 
+
 def return_integer_in_main(context: QueryContext, wrapper: UndecoratedIntegerWrapper) -> int:
     return wrapper.value
+
 
 if __name__ == "__main__":
     add_function(return_integer_in_main)

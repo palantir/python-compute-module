@@ -124,7 +124,7 @@ class InternalQueryService:
                     )
                 return
             except (ConnectionRefusedError, requests.exceptions.ConnectionError):
-                self.logger.warning(f"POST /schemas attempt #{i+1} Connection refused. Sleeping for {2 ** i}s")
+                self.logger.warning(f"POST /schemas attempt #{i + 1} Connection refused. Sleeping for {2**i}s")
                 time.sleep(2**i)
             except Exception as e:
                 self.logger.error(f"Unknown error posting function schemas: {str(e)}")
@@ -150,7 +150,7 @@ class InternalQueryService:
                 self.connection_refused_count = 0
                 return result
         except (ConnectionRefusedError, requests.exceptions.ConnectionError):
-            self.logger.warning(f"Connection refused. Sleeping for {2 ** self.connection_refused_count}s")
+            self.logger.warning(f"Connection refused. Sleeping for {2**self.connection_refused_count}s")
             time.sleep(2**self.connection_refused_count)
             self.connection_refused_count += 1
             return None

@@ -12,15 +12,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Dict
 from dataclasses import dataclass
+from typing import Dict
+
 from compute_modules.context import QueryContext
 from compute_modules.function_registry.function_registry import add_function
 from compute_modules.startup import start_compute_module
 
+
 @dataclass
 class DictWrapper:
     value: Dict[str, str]
+
 
 def return_dict_length_in_main(context: QueryContext, wrapper: DictWrapper) -> int:
     return len(wrapper.value)

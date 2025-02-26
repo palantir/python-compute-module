@@ -336,8 +336,7 @@ def _check_restrictions_on__init__(init_spec: inspect.FullArgSpec, item: typing.
     # Check that the init args have type annotations that match the fields
     if typing.get_type_hints(item, globalns={}) != annotations:
         raise ValueError(
-            "Custom Type {} should have init args type annotations {}"
-            " that match the fields type annotations {}".format(
+            "Custom Type {} should have init args type annotations {} that match the fields type annotations {}".format(
                 item.__name__, typing.get_type_hints(item, globalns={}), annotations
             )
         )
