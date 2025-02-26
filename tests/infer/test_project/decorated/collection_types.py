@@ -20,23 +20,20 @@ from tests.infer.test_project._types import DummyOntologyType, OntologyEdit
 
 
 @function
-def return_list(context: QueryContext, event) -> List[str]:
+def return_list(context: QueryContext, event) -> List[str]:  # type: ignore[no-untyped-def]
     return ["Hello", "World"]
 
 
 @function
-def return_set(context: QueryContext, event) -> Set[str]:
+def return_set(context: QueryContext, event) -> Set[str]:  # type: ignore[no-untyped-def]
     return {"Hello", "World"}
 
 
 @function
-def return_dict(context: QueryContext, event) -> Dict[str, str]:
+def return_dict(context: QueryContext, event) -> Dict[str, str]:  # type: ignore[no-untyped-def]
     return {"Hello": "World"}
 
 
 @function(edits=[DummyOntologyType])
-def ontology_add_function(
-    context: QueryContext,
-    event,
-) -> list[OntologyEdit]:
+def ontology_add_function(context: QueryContext, event) -> list[OntologyEdit]:  # type: ignore[no-untyped-def]
     return []

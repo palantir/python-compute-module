@@ -58,7 +58,7 @@ def return_complex_in_main(context: QueryContext, event: MultipleEventWrapper) -
 
 
 def return_number_in_main(context: QueryContext, number: Number) -> Number:
-    return number.value
+    return number.value  # type: ignore[return-value]
 
 
 @dataclass
