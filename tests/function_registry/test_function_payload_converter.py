@@ -76,7 +76,7 @@ def test_convert_payload(
     expected_return_value: DummyInput,
 ) -> None:
     """Test the happy path for convert_payload"""
-    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1", set(), {})
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1")
     assert parse_result.class_node
     processed_payload: DummyInput = convert_payload(RAW_PAYLOAD, parse_result.class_node)
     assert processed_payload is not None
@@ -94,7 +94,7 @@ def test_convert_payload_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the error path for convert_payload"""
-    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1", set(), {})
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1")
     assert parse_result.class_node
     with pytest.raises(ValueError) as exc_info:
         convert_payload(BAD_RAW_PAYLOAD, parse_result.class_node)

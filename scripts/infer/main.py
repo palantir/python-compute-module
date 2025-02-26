@@ -14,10 +14,8 @@
 
 import argparse
 import json
-import os
 
 from scripts.infer.infer import infer
-from scripts.ontology._config_path import get_ontology_config_file
 
 
 def main() -> None:
@@ -30,24 +28,13 @@ def main() -> None:
         default=None,
     )
     arguments = parser.parse_args()
-    config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
-    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path)
     print(
         json.dumps(
             infer(
                 src_dir=arguments.source,
-                api_name_type_id_mapping=api_name_type_id_mapping,
             )
         )
     )
-
-
-def _get_api_name_type_id_mapping(config_file_path: str) -> dict[str, str]:
-    if not os.path.isfile(config_file_path):
-        return {}
-    with open(config_file_path) as f:
-        config_data = json.load(f)
-    return config_data.get("apiNameToTypeId", {})  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":
