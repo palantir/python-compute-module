@@ -29,7 +29,7 @@ from compute_modules.function_registry.function_registry import add_function, ad
 LOGGER = logging.getLogger(__name__)
 
 
-def serialise(
+def infer(
     src_dir: str,
     api_name_type_id_mapping: Dict[str, str],
 ) -> str:

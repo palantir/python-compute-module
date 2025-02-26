@@ -15,11 +15,9 @@
 import argparse
 import json
 import os
-from typing import Optional
 
-from compute_modules.bin.serialise import serialise
-
-DEFAULT_ONTOLOGY_METADATA_CONFIG_FILENAME = "ontology_metadata_config.json"
+from scripts.infer.infer import infer
+from scripts.ontology._config_path import get_ontology_config_file
 
 
 def main() -> None:
@@ -32,24 +30,24 @@ def main() -> None:
         default=None,
     )
     arguments = parser.parse_args()
-    api_name_type_id_mapping = _get_api_name_type_id_mapping(arguments.ontology_metadata_config_file)
+    config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
+    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path)
     print(
-        serialise(
+        infer(
             src_dir=arguments.source,
             api_name_type_id_mapping=api_name_type_id_mapping,
         )
     )
 
 
-def _get_api_name_type_id_mapping(ontology_metadata_config_file: Optional[str]) -> dict[str, str]:
-    if not ontology_metadata_config_file:
-        ontology_metadata_config_file = os.path.join(os.getcwd(), DEFAULT_ONTOLOGY_METADATA_CONFIG_FILENAME)
-    if not os.path.isfile(ontology_metadata_config_file):
+def _get_api_name_type_id_mapping(config_file_path: str) -> dict[str, str]:
+    if not os.path.isfile(config_file_path):
         return {}
-    with open(ontology_metadata_config_file) as f:
+    with open(config_file_path) as f:
         config_data = json.load(f)
     return config_data.get("apiNameToTypeId", {})  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":
+    main()
     main()
