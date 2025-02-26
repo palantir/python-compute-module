@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Collection, Dict, List, Optional
 
 from .function_schema_parser import parse_function_schema
 from .types import ComputeModuleFunctionSchema, PythonClassNode
@@ -34,12 +34,15 @@ def add_function(
     function_ref: Callable[..., Any],
     *,
     streaming: bool = False,
+    edits: Optional[Collection[Any]] = None,
 ) -> None:
     """Parse & register a Compute Module function"""
     function_name = function_ref.__name__
     parse_result = parse_function_schema(
         function_ref,
         function_name,
+        edits=edits if edits is not None else set(),
+        api_name_type_id_mapping={},
     )
     _register_parsed_function(
         function_name=function_name,

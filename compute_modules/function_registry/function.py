@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 import functools
-from typing import Any, Callable
+from typing import Any, Callable, Collection, Dict
 
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema
@@ -23,8 +23,10 @@ class Function(Callable[..., Any]):  # type: ignore[misc]
     def __init__(
         self,
         function: Callable[..., Any],
+        edits: Collection[Any],
     ):
         self.function = function
+        self.edits = edits
         functools.update_wrapper(self, function)
 
     def __call__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
@@ -32,8 +34,12 @@ class Function(Callable[..., Any]):  # type: ignore[misc]
 
     def get_function_schema(
         self,
+        api_name_type_id_mapping: Dict[str, str],
     ) -> ComputeModuleFunctionSchema:
         return parse_function_schema(
             function_ref=self.function,
             function_name=self.function.__name__,
+            edits=self.edits,
+            api_name_type_id_mapping=api_name_type_id_mapping,
+            throw_on_missing_type_id=True,
         ).function_schema

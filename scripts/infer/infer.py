@@ -19,7 +19,7 @@ import logging
 import pkgutil
 import sys
 import types
-from typing import Iterator, List, Set
+from typing import Dict, Iterator, List, Set
 
 import compute_modules.startup
 from compute_modules.function_registry.function import Function
@@ -31,6 +31,7 @@ LOGGER = logging.getLogger(__name__)
 
 def infer(
     src_dir: str,
+    api_name_type_id_mapping: Dict[str, str],
 ) -> List[ComputeModuleFunctionSchema]:
     # Disables automatically starting compute module upon importing function annotations
     compute_modules.startup.DISABLE_STARTUP = True
@@ -41,7 +42,7 @@ def infer(
     py_modules: Set[types.ModuleType] = set(_import_python_modules(src_dir))
     cm_functions: List[Function] = list(_discover_functions(py_modules))
     _validate_functions(cm_functions)
-    return _serialise_functions(cm_functions)
+    return _serialise_functions(cm_functions, api_name_type_id_mapping)
 
 
 def _import_python_modules(directory: str) -> Iterator[types.ModuleType]:
@@ -95,7 +96,17 @@ def _discover_manually_registered_functions(py_module: types.ModuleType) -> Iter
                 continue
 
             LOGGER.debug(f"Located function {fn.__name__} in module {py_module.__name__}")
-            yield Function(fn)
+            # Extracting ontology types if `edits=[...]` was provided
+            edits_arg = next(filter(lambda k: k.arg == "edits", node.keywords), None)
+            parsed_edits = set()
+            if edits_arg and isinstance(edits_arg, ast.keyword) and isinstance(edits_arg.value, ast.List):
+                for edit in edits_arg.value.elts:
+                    if not isinstance(edit, ast.Name):
+                        continue
+                    parsed_edit = getattr(py_module, edit.id, None)
+                    if parsed_edit and hasattr(parsed_edit, "api_name") and callable(parsed_edit.api_name):
+                        parsed_edits.add(parsed_edit)
+            yield Function(fn, parsed_edits)
 
 
 def _validate_functions(functions: List[Function]) -> None:
@@ -114,9 +125,10 @@ def _validate_functions(functions: List[Function]) -> None:
 
 def _serialise_functions(
     functions: List[Function],
+    api_name_type_id_mapping: Dict[str, str],
 ) -> List[ComputeModuleFunctionSchema]:
     parsed_schemas = []
     for function in functions:
         LOGGER.debug(f"Serialising function {function.__name__}")
-        parsed_schemas.append(function.get_function_schema())
+        parsed_schemas.append(function.get_function_schema(api_name_type_id_mapping))
     return parsed_schemas
