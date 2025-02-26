@@ -16,7 +16,7 @@ from typing import Dict, List, Set
 
 from compute_modules.annotations import function
 from compute_modules.context import QueryContext
-from test_project._types import DummyOntologyType, OntologyEdit
+from tests.infer.test_project._types import DummyOntologyType, OntologyEdit
 
 
 @function

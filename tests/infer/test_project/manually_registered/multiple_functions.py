@@ -19,7 +19,7 @@ from typing import List
 from compute_modules.context import QueryContext
 from compute_modules.function_registry.function_registry import add_function, add_functions
 from compute_modules.startup import start_compute_module
-from test_project._types import DummyOntologyType, OntologyEdit
+from tests.infer.test_project._types import DummyOntologyType, OntologyEdit
 
 
 @dataclass
