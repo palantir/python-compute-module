@@ -16,8 +16,8 @@ import argparse
 import json
 import os
 
-from scripts.infer.infer import infer
-from scripts.ontology._config_path import get_ontology_config_file
+from compute_modules.ontology._config_path import get_ontology_config_file
+from compute_modules.static_inference.infer import infer
 
 
 def main() -> None:

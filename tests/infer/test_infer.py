@@ -18,8 +18,8 @@ from typing import List
 
 import pytest
 
+from compute_modules.bin.static_inference.infer import infer
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema
-from scripts.infer.infer import infer
 
 API_NAME_TYPE_ID_MAPPING = {"DummyOntologyType": "dummy-ontology"}
 CURRENT_FILE_PATH = os.path.abspath(__file__)
