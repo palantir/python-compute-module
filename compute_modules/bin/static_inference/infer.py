@@ -158,10 +158,16 @@ def _parse_function_schemas(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("source")
+    parser.add_argument(
+        "source",
+        required=True,
+        help="Path to the source directory of your compute module",
+    )
     parser.add_argument(
         "--ontology-metadata-config",
         required=False,
+        help="Path to a configuration file that is used to determine type information for OSDK types. "
+        + "Only needed if ontology edits are returned by any functions.",
         dest="ontology_metadata_config_file",
         default=None,
     )

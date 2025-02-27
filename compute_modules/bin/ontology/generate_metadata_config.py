@@ -56,6 +56,7 @@ def main() -> None:
     parser.add_argument(
         "--object-type-rid",
         required=False,
+        help="Object type rid of ontology objects to import the metadata for",
         nargs="*",
         dest="object_type_rids",
         default=[],
@@ -63,6 +64,7 @@ def main() -> None:
     parser.add_argument(
         "--link-type-rid",
         required=False,
+        help="Link type rid of ontology links to import the metadata for",
         nargs="*",
         dest="link_type_rids",
         default=[],
@@ -71,16 +73,19 @@ def main() -> None:
         "-t",
         "--token",
         required=True,
+        help="Foundry token",
         default=None,
     )
     parser.add_argument(
         "--foundry-url",
         required=True,
+        help="Foundry stack url",
         default=None,
     )
     parser.add_argument(
         "--ontology-metadata-config",
         required=False,
+        help="Path to file for where to write the output configuration",
         dest="ontology_metadata_config_file",
         default=None,
     )
