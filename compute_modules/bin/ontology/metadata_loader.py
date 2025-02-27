@@ -16,8 +16,12 @@
 from collections import defaultdict
 from typing import Dict, List
 
-from ._types import ObjectTypeMetadata, OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
-from .metadata_client import OntologyMetadataClient
+from compute_modules.bin.ontology._types import (
+    ObjectTypeMetadata,
+    OntologyMetadataLinkTypeOuter,
+    OntologyMetadataObjectTypeOuter,
+)
+from compute_modules.bin.ontology.metadata_client import OntologyMetadataClient
 
 
 def load_object_type_metadata(

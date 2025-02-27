@@ -17,7 +17,7 @@ from typing import List, Tuple
 
 import requests
 
-from ._types import OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
+from compute_modules.bin.ontology._types import OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
 
 
 class OntologyMetadataClient:

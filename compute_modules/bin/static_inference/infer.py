@@ -12,16 +12,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import argparse
 import ast
 import importlib
 import inspect
+import json
 import logging
+import os
 import pkgutil
 import sys
 import types
 from typing import Any, Dict, Iterator, List, Optional, Set
 
 import compute_modules.startup
+from compute_modules.bin.ontology._config_path import get_ontology_config_file
 from compute_modules.function_registry.function import Function
 from compute_modules.function_registry.function_registry import add_function, add_functions
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema
@@ -42,7 +46,7 @@ def infer(
     py_modules: Set[types.ModuleType] = set(_import_python_modules(src_dir))
     cm_functions: List[Function] = list(_discover_functions(py_modules))
     _validate_functions(cm_functions)
-    return _serialise_functions(cm_functions, api_name_type_id_mapping)
+    return _parse_function_schemas(cm_functions, api_name_type_id_mapping)
 
 
 def _import_python_modules(directory: str) -> Iterator[types.ModuleType]:
@@ -141,7 +145,7 @@ def _validate_functions(functions: List[Function]) -> None:
         raise ValueError(f"Duplicate function(s) found: {duplicate_functions}")
 
 
-def _serialise_functions(
+def _parse_function_schemas(
     functions: List[Function],
     api_name_type_id_mapping: Dict[str, str],
 ) -> List[ComputeModuleFunctionSchema]:
@@ -150,3 +154,37 @@ def _serialise_functions(
         LOGGER.debug(f"Serialising function {function.__name__}")
         parsed_schemas.append(function.get_function_schema(api_name_type_id_mapping))
     return parsed_schemas
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source")
+    parser.add_argument(
+        "--ontology-metadata-config",
+        required=False,
+        dest="ontology_metadata_config_file",
+        default=None,
+    )
+    arguments = parser.parse_args()
+    config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
+    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path)
+    print(
+        json.dumps(
+            infer(
+                src_dir=arguments.source,
+                api_name_type_id_mapping=api_name_type_id_mapping,
+            )
+        )
+    )
+
+
+def _get_api_name_type_id_mapping(config_file_path: str) -> dict[str, str]:
+    if not os.path.isfile(config_file_path):
+        return {}
+    with open(config_file_path) as f:
+        config_data = json.load(f)
+    return config_data.get("apiNameToTypeId", {})  # type: ignore[no-any-return]
+
+
+if __name__ == "__main__":
+    main()

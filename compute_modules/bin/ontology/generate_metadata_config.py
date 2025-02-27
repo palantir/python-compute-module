@@ -13,11 +13,13 @@
 #  limitations under the License.
 
 
+import argparse
 import json
 from typing import Dict, List
 
-from ._types import ObjectTypeMetadata
-from .metadata_loader import load_object_type_metadata
+from compute_modules.bin.ontology._config_path import get_ontology_config_file
+from compute_modules.bin.ontology._types import ObjectTypeMetadata
+from compute_modules.bin.ontology.metadata_loader import load_object_type_metadata
 
 
 def generate_metadata_config(
@@ -47,3 +49,53 @@ def _get_api_name_type_id_mapping(
             raise ValueError(f"Duplicate api name found in ontology metadata: {metadata.api_name}")
         res[metadata.api_name] = metadata.type_id
     return res
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--object-type-rid",
+        required=False,
+        nargs="*",
+        dest="object_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "--link-type-rid",
+        required=False,
+        nargs="*",
+        dest="link_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "-t",
+        "--token",
+        required=True,
+        default=None,
+    )
+    parser.add_argument(
+        "--foundry-url",
+        required=True,
+        default=None,
+    )
+    parser.add_argument(
+        "--ontology-metadata-config",
+        required=False,
+        dest="ontology_metadata_config_file",
+        default=None,
+    )
+    arguments = parser.parse_args()
+    output_file = get_ontology_config_file(arguments.ontology_metadata_config_file)
+    print("Generating config file...")
+    generate_metadata_config(
+        foundry_url=arguments.foundry_url,
+        token=arguments.token,
+        object_type_rids=arguments.object_type_rids,
+        link_type_rids=arguments.link_type_rids,
+        output_file=output_file,
+    )
+    print(f"Wrote config file to {output_file}")
+
+
+if __name__ == "__main__":
+    main()
