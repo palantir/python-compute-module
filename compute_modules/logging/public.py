@@ -12,8 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from logging import Formatter
 
-from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
+from .common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter, _setup_logger_formatter
+
+
+def setup_logger_formatter(formatter: Formatter) -> None:
+    _setup_logger_formatter(formatter)
 
 
 def get_logger(name: str) -> ComputeModulesLoggerAdapter:
@@ -23,4 +28,5 @@ def get_logger(name: str) -> ComputeModulesLoggerAdapter:
 
 __all__ = [
     "get_logger",
+    "setup_logger_formatter",
 ]

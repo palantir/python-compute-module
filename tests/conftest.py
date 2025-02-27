@@ -12,14 +12,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import json
+import logging
+from typing import Any
 
-from ._version import __version__ as __version__
-from .function_registry.function_registry import add_function, add_functions
-from .startup import ConcurrencyType, start_compute_module
+import pytest
 
-__all__ = [
-    "add_function",
-    "add_functions",
-    "ConcurrencyType",
-    "start_compute_module",
-]
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: Any) -> str:
+        log_record = {
+            "level": record.levelname,
+            "process_id": record.process_id,
+            "job_id": record.job_id,
+            "location": f"{record.filename}:{record.lineno}",
+            "message": record.getMessage(),
+            "custom_text": "custom-message",
+        }
+        return json.dumps(log_record)
+
+
+@pytest.fixture
+def custom_formatter() -> JsonFormatter:
+    return JsonFormatter()

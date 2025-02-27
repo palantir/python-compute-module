@@ -13,25 +13,30 @@
 #  limitations under the License.
 
 
+import json
 import logging
 import uuid
 
 import pytest
 
-from compute_modules.logging import get_logger, internal
+from compute_modules.logging import get_logger, internal, setup_logger_formatter
 from compute_modules.logging.common import (
     COMPUTE_MODULES_ADAPTER_MANAGER,
     DEFAULT_LOG_FORMAT,
     ComputeModulesLoggerAdapter,
 )
+from tests.conftest import JsonFormatter
 
-from .logging_test_utils import CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
+from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
 
 logging.basicConfig(format=DEFAULT_LOG_FORMAT)
+
+PROCESS_ID = 12345
 
 
 def logger_fixtures() -> tuple[ComputeModulesLoggerAdapter, ComputeModulesLoggerAdapter, ComputeModulesLoggerAdapter]:
     """Initializes & configures loggers"""
+
     internal_logger = internal.get_internal_logger()
     internal_logger.setLevel(logging.INFO)
     logger_1 = get_logger("test.logger.1")
@@ -42,12 +47,10 @@ def logger_fixtures() -> tuple[ComputeModulesLoggerAdapter, ComputeModulesLogger
 
 
 def format_log_context(pid: int, job_id: str) -> str:
-    return f"PID: {pid:<2} JOB: {job_id:<37}"
+    return f"PID: {pid:<6} JOB: {job_id:<37}"
 
 
-def test_initial_log_format(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFormatter) -> None:
     """Verify initial state of logger context"""
     internal_logger, logger_1, logger_2 = logger_fixtures()
     internal_logger.info(INFO_STR)
@@ -58,7 +61,7 @@ def test_initial_log_format(
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=-1, job_id="") in log
-    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=2)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=PROCESS_ID)
     internal_logger.info(INFO_STR)
     logger_1.info(CLIENT_INFO_STR)
     logger_2.info(CLIENT_WARNING_STR)
@@ -66,7 +69,7 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id="") in log
+        assert format_log_context(pid=PROCESS_ID, job_id="") in log
     job_id = str(uuid.uuid4())
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
     internal_logger.info(INFO_STR)
@@ -76,7 +79,7 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id=job_id) in log
+        assert format_log_context(pid=PROCESS_ID, job_id=job_id) in log
     # Test clearing now
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
     internal_logger.info(INFO_STR)
@@ -86,4 +89,52 @@ def test_initial_log_format(
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=2, job_id="") in log
+        assert format_log_context(pid=PROCESS_ID, job_id="") in log
+
+    # Test Custom Formatting
+    # TODO split out into custom test once ComputeModuleLoggingAdapter made fixture to avoid capsys errors
+
+    client_logger = get_logger("twinkle")
+    client_logger.setLevel(logging.INFO)
+    setup_logger_formatter(custom_formatter)
+
+    job_id = str(uuid.uuid4())
+    process_id = 5
+
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id)
+
+    client_logger.info(CLIENT_INFO_STR)
+
+    logged = capsys.readouterr().err
+
+    try:
+        log_js = json.loads(logged)
+        valid_json = True
+    except ValueError:
+        valid_json = False
+
+    # Test external logger
+    assert valid_json, "Logs should be json"
+    assert log_js["level"] == "INFO", "Log has wrong level"
+    assert log_js["message"] == CLIENT_INFO_STR, "Log has wrong message"
+    assert log_js["job_id"] == job_id
+    assert log_js["process_id"] == str(process_id)
+
+    internal_logger = internal.get_internal_logger()
+
+    internal_logger.error(CLIENT_ERROR_STR)
+    internal_logged = capsys.readouterr().err
+
+    try:
+        interal_log_js = json.loads(internal_logged)
+        internal_valid_json = True
+    except ValueError:
+        internal_valid_json = False
+
+    # Test internal logger
+    assert internal_valid_json, "Logs should be json"
+    assert interal_log_js["level"] == "ERROR", "Log has wrong level"
+    assert interal_log_js["message"] == CLIENT_ERROR_STR, "Log has wrong message"
+    assert interal_log_js["job_id"] == job_id
+    assert interal_log_js["process_id"] == str(process_id)

@@ -87,6 +87,7 @@ def test_convert_payload(
     assert processed_payload.set_field == expected_return_value.set_field
     assert processed_payload.map_field == expected_return_value.map_field
     assert processed_payload.some_flag == expected_return_value.some_flag
+    assert processed_payload.optional_default_value_field == expected_return_value.optional_default_value_field
 
 
 def test_convert_payload_error(

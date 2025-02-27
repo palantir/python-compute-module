@@ -19,9 +19,18 @@ from .function_registry.function_registry import add_function
 from .startup import start_compute_module
 
 
-def function(func: Callable[..., Any]) -> Callable[..., Any]:
-    add_function(func)
-    return func
+def function(
+    maybe_func: Any = None,
+    *,
+    streaming: bool = False,
+) -> Callable[..., Any]:
+    def function_without_params(func: Callable[..., Any]) -> Callable[..., Any]:
+        add_function(func, streaming)
+        return func
+
+    if callable(maybe_func):
+        return function_without_params(maybe_func)
+    return function_without_params
 
 
 # Register the on_exit function to be called when the interpreter exits

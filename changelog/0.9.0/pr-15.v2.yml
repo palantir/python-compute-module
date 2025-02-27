@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: detect stream result and post
+  links:
+  - https://github.com/palantir/python-compute-module/pull/15

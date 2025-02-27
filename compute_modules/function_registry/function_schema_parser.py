@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 
+import collections
 import datetime
 import decimal
 import inspect
@@ -98,9 +99,7 @@ def _default_unknown_output() -> FunctionOutputType:
     return FunctionOutputType(
         type="single",
         single={
-            "dataType": {
-                "type": "string",
-            },
+            "dataType": {"type": "string", "string": {}},
         },
     )
 
@@ -244,6 +243,15 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "elementsType": element_type,
             },
         }, PythonClassNode(constructor=set, children={"set": element_class_node})
+    if typing.get_origin(type_hint) is collections.abc.Iterable:
+        element_hint = typing.get_args(type_hint)[0]
+        element_type, element_class_node = _extract_data_type(element_hint)
+        return {
+            "type": "list",
+            "list": {
+                "elementsType": element_type,
+            },
+        }, PythonClassNode(constructor=list, children={"list": element_class_node})
     # will throw error if it is not valid
     _assert_is_valid_custom_type(type_hint)
     custom_type_fields = {}

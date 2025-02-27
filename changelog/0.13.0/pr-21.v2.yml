@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Send OAuth scopes as space-separated string
+  links:
+  - https://github.com/palantir/python-compute-module/pull/21

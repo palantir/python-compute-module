@@ -16,7 +16,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, Optional, Set, Union
+from typing import Dict, Iterable, Optional, Set, Union
 
 from compute_modules.context import QueryContext
 
@@ -46,6 +46,7 @@ class DummyInput:
     set_field: Set[date]
     map_field: Dict[bytes, Decimal]
     some_flag: bool
+    optional_default_value_field: Optional[str] = None
 
 
 @dataclass
@@ -78,3 +79,9 @@ def dummy_func_3(context: QueryContext, event) -> int:  # type: ignore[no-untype
 def dummy_func_4(context: QueryContext, event: ClassWithBareDict) -> int:
     """Example function with type hint for context & return type only"""
     return 1
+
+
+def dummy_func_5(context, event) -> Iterable[str]:  # type: ignore[no-untyped-def]
+    """Example function with type hint for generator return type"""
+    for i in range(10):
+        yield f"string {i}"
