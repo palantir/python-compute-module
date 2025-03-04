@@ -160,7 +160,6 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "source",
-        required=True,
         help="Path to the source directory of your compute module",
     )
     parser.add_argument(
