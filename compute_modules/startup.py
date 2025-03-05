@@ -28,6 +28,8 @@ from compute_modules.function_registry.function_registry import (
     STREAMING,
 )
 
+# This is a workaround to prevent starting the CM when doing static function inference at build time
+DISABLE_STARTUP = False
 QUERY_CLIENT: Optional[InternalQueryService] = None
 
 
@@ -89,6 +91,9 @@ def start_compute_module(
     concurrency_type: ConcurrencyType = ConcurrencyType.PROCESS_POOL,
 ) -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
+    if DISABLE_STARTUP:
+        return
+
     global QUERY_CLIENT
     QUERY_CLIENT = InternalQueryService(
         registered_functions=REGISTERED_FUNCTIONS,
