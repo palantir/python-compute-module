@@ -1,4 +1,4 @@
-#  Copyright 2025 Palantir Technologies, Inc.
+#  Copyright 2024 Palantir Technologies, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ from compute_modules.function_registry.function_registry import (
     STREAMING,
 )
 
+# This is a workaround to prevent starting the CM when doing static function inference at build time
 DISABLE_STARTUP = False
 QUERY_CLIENT: Optional[InternalQueryService] = None
 

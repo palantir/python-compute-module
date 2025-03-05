@@ -1,4 +1,4 @@
-#  Copyright 2025 Palantir Technologies, Inc.
+#  Copyright 2024 Palantir Technologies, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -46,3 +46,6 @@ class QueryContext:
 
     sources: Optional[Dict[str, Any]] = None
     """dict containing the metadata of any sources configured for this compute module."""
+
+    userId: Optional[str] = None
+    """The unique identifier for the user who initiated the job"""
