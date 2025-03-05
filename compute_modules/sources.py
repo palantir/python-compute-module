@@ -56,7 +56,7 @@ def get_sources() -> Dict[str, Dict[str, str]]:
     return _source_credentials if _source_credentials is not None else {}
 
 
-def get_source_configurations() -> Dict[str, MountedSourceConfig]:
+def get_source_configurations() -> Dict[str, Any]:
     global _source_configurations
     if _source_configurations is None:
         configs_path = os.environ.get("SOURCE_CONFIGURATIONS_PATH")
@@ -69,7 +69,8 @@ def get_source_configurations() -> Dict[str, MountedSourceConfig]:
                 _source_configurations = source_configs
             else:
                 raise ValueError("The JSON content is not a dictionary")
-    return _source_configurations if _source_configurations is not None else {}
+    configs = _source_configurations if _source_configurations is not None else {}
+    return {key: value.source_configuration for key, value in configs.items()}
 
 
 def get_source_secret(source_api_name: str, credential_name: str) -> Any:
@@ -78,5 +79,4 @@ def get_source_secret(source_api_name: str, credential_name: str) -> Any:
 
 
 def get_source_config(source_api_name: str) -> Any:
-    source_config = get_source_configurations().get(source_api_name)
-    return source_config.source_configuration if source_config else None
+    return get_source_configurations().get(source_api_name)
