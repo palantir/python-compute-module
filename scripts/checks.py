@@ -16,6 +16,7 @@
 import shutil
 import subprocess
 import sys
+from datetime import date
 from itertools import chain
 from os import unlink
 from pathlib import Path
@@ -56,7 +57,9 @@ def format() -> None:
     subprocess.run(["isort", SOURCE_DIR, TESTS_DIR, SCRIPTS_DIR])
 
 
-def _get_license_content() -> Tuple[str, int]:
+def _get_license_content(
+    year: int,
+) -> Tuple[str, int]:
     with open(LICENSE_FILE, "r", encoding="utf-8") as f:
         lines = []
         for line in f.readlines():
@@ -66,7 +69,19 @@ def _get_license_content() -> Tuple[str, int]:
             else:
                 lines.append(f"#  {line}")
         content = "".join(lines)
+    content = content.format(YEAR=year)
     return content, len(lines)
+
+
+def _get_license_content_any_year() -> Tuple[List[str], int]:
+    start_year = 2024
+    current_year = date.today().year
+    num_lines = -1
+    contents = []
+    for year in range(start_year, current_year + 1):
+        content, num_lines = _get_license_content(year)
+        contents.append(content)
+    return contents, num_lines
 
 
 def _get_n_lines_of_file(filename: str, num_lines: int) -> str:
@@ -97,10 +112,10 @@ def _get_files_list_str(files_list: List[str]) -> str:
 
 def check_license() -> None:
     """Raises an exception if there are any files with no license present at the top of the file"""
-    expected_license_content, num_lines = _get_license_content()
+    contents, num_lines = _get_license_content_any_year()
     failed_files = []
     for filename, file_head in _iterate_licensed_files(num_lines=num_lines):
-        if not file_head.startswith(expected_license_content):
+        if not any(map(lambda license: file_head.startswith(license), contents)):
             failed_files.append(filename)
     if failed_files:
         print(
@@ -124,11 +139,12 @@ def _add_license_to_file(filepath: str, license_content: str) -> None:
 
 def license() -> None:
     """Adds license header to any files that are missing it"""
-    expected_license_content, num_lines = _get_license_content()
+    contents, num_lines = _get_license_content_any_year()
+    current_year_license = contents[-1]
     updated_files = []
     for filename, file_head in _iterate_licensed_files(num_lines=num_lines):
-        if not file_head.startswith(expected_license_content):
-            _add_license_to_file(filepath=filename, license_content=expected_license_content)
+        if not any(map(lambda license: file_head.startswith(license), contents)):
+            _add_license_to_file(filepath=filename, license_content=current_year_license)
             updated_files.append(filename)
 
     if updated_files:
