@@ -28,6 +28,7 @@ from compute_modules.function_registry.function_registry import (
     STREAMING,
 )
 
+# This is a workaround to prevent starting the CM when doing static function inference at build time
 DISABLE_STARTUP = False
 QUERY_CLIENT: Optional[InternalQueryService] = None
 
