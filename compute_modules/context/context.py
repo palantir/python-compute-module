@@ -16,11 +16,11 @@
 from typing import Any, Dict
 
 from ..auth import retrieve_third_party_id_and_creds
-from ..sources import get_sources
+from ..sources import get_source_configurations, get_sources
 
 
 def get_extra_context_parameters() -> Dict[str, Any]:
-    context_parameters = {"sources": get_sources()}
+    context_parameters: Dict[str, Any] = {"sources": get_sources(), "source_configs": get_source_configurations()}
     CLIENT_ID, CLIENT_SECRET = retrieve_third_party_id_and_creds()
 
     if CLIENT_ID and CLIENT_SECRET:
