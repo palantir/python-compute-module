@@ -23,7 +23,6 @@ pytest = "8.0.0"
 pytest-html = "4.1.1"
 poethepoet = "^0.29.0"
 types-requests = "^2.32.0.20241016"
-pydantic = "^2.10.6"
 
 [build-system]
 requires = ["poetry-core"]

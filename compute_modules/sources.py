@@ -15,27 +15,44 @@
 
 import json
 import os
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
 
-
-class MountedHttpConnectionConfig(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
+@dataclass
+class MountedHttpConnectionConfig:
     url: str
-    auth_headers: dict[str, str] = Field(alias="authHeaders", default_factory=dict)
-    query_parameters: dict[str, str] = Field(alias="queryParameters", default_factory=dict)
+    auth_headers: Dict[str, str] = field(default_factory=dict)
+    query_parameters: Dict[str, str] = field(default_factory=dict)
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "MountedHttpConnectionConfig":
+        return MountedHttpConnectionConfig(
+            url=data["url"], auth_headers=data.get("authHeaders", {}), query_parameters=data.get("queryParameters", {})
+        )
 
 
-class MountedSourceConfig(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+@dataclass
+class MountedSourceConfig:
+    secrets: Dict[str, str] = field(default_factory=dict)
+    http_connection_config: Optional[MountedHttpConnectionConfig] = None
+    proxy_token: Optional[str] = None
+    source_configuration: Any = None
+    resolved_credentials: Any = None
 
-    secrets: dict[str, str] = Field(alias="secrets", default_factory=dict)
-    proxy_token: Optional[str] = Field(alias="proxyToken", default=None)
-    http_connection_config: MountedHttpConnectionConfig = Field(alias="httpConnectionConfig")
-    source_configuration: Any = Field(alias="sourceConfiguration", default=None)
-    resolved_credentials: Any = Field(alias="resolvedCredentials", default=None)
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "MountedSourceConfig":
+        http_conn_config_data = data.get("httpConnectionConfig")
+        http_conn_config = (
+            MountedHttpConnectionConfig.from_dict(http_conn_config_data) if http_conn_config_data is not None else None
+        )
+        return MountedSourceConfig(
+            secrets=data.get("secrets", {}),
+            proxy_token=data.get("proxyToken"),
+            http_connection_config=http_conn_config,
+            source_configuration=data.get("sourceConfiguration"),
+            resolved_credentials=data.get("resolvedCredentials"),
+        )
 
 
 _source_credentials = None
@@ -62,11 +79,11 @@ def get_source_configurations() -> Dict[str, Any]:
         configs_path = os.environ.get("SOURCE_CONFIGURATIONS_PATH")
         if configs_path:
             with open(configs_path, "r", encoding="utf-8") as fr:
-                source_configs: Dict[str, MountedSourceConfig] = {
-                    key: MountedSourceConfig.model_validate(value) for key, value in json.load(fr).items()
+                raw_configs = json.load(fr)
+            if isinstance(raw_configs, dict):
+                _source_configurations = {
+                    key: MountedSourceConfig.from_dict(value) for key, value in raw_configs.items()
                 }
-            if isinstance(source_configs, dict):
-                _source_configurations = source_configs
             else:
                 raise ValueError("The JSON content is not a dictionary")
     configs = _source_configurations if _source_configurations is not None else {}
