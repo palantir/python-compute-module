@@ -13,7 +13,8 @@
 #  limitations under the License.
 
 import atexit
-from typing import Any, Callable, Collection, Optional
+from collections.abc import Collection
+from typing import Any, Callable, Optional
 
 from .function_registry.function import Function
 from .function_registry.function_registry import add_function

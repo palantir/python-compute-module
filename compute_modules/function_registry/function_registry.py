@@ -13,7 +13,8 @@
 #  limitations under the License.
 
 
-from typing import Any, Callable, Collection, Dict, List, Optional
+from collections.abc import Collection
+from typing import Any, Callable, Dict, List, Optional
 
 from .function_schema_parser import parse_function_schema
 from .types import ComputeModuleFunctionSchema, PythonClassNode
