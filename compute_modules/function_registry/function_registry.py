@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 
-from collections.abc import Collection
 from typing import Any, Callable, Dict, List, Optional
 
 from .function_schema_parser import parse_function_schema
@@ -35,7 +34,7 @@ def add_function(
     function_ref: Callable[..., Any],
     *,
     streaming: bool = False,
-    edits: Optional[Collection[Any]] = None,
+    edits: Optional[List[Any]] = None,
 ) -> None:
     """Parse & register a Compute Module function"""
     function_name = function_ref.__name__

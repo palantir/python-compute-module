@@ -18,7 +18,6 @@ import datetime
 import decimal
 import inspect
 import typing
-from collections.abc import Collection
 
 from compute_modules.context.types import QueryContext
 
@@ -45,7 +44,7 @@ RESERVED_KEYS = {CONTEXT_KEY, RETURN_KEY}
 def parse_function_schema(
     function_ref: typing.Callable[..., typing.Any],
     function_name: str,
-    edits: Collection[typing.Any],
+    edits: typing.List[typing.Any],
     api_name_type_id_mapping: typing.Dict[str, str],
     throw_on_missing_type_id: bool = False,
 ) -> ParseFunctionSchemaResult:
@@ -72,7 +71,7 @@ def parse_function_schema(
 
 
 def _get_ontology_provenance(
-    edits: Collection[typing.Any],
+    edits: typing.List[typing.Any],
     api_name_type_id_mapping: typing.Dict[str, str],
     throw_on_missing_type_id: bool,
 ) -> typing.Optional[FunctionOntologyProvenance]:

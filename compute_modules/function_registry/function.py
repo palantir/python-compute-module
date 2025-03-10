@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 import functools
-from typing import Any, Callable, Collection, Dict
+from typing import Any, Callable, Dict, List
 
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema
@@ -23,7 +23,7 @@ class Function(Callable[..., Any]):  # type: ignore[misc]
     def __init__(
         self,
         function: Callable[..., Any],
-        edits: Collection[Any],
+        edits: List[Any],
     ):
         self.function = function
         self.edits = edits
