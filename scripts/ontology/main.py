@@ -39,12 +39,12 @@ def main() -> None:
     parser.add_argument(
         "-t",
         "--token",
-        required=False,
+        required=True,
         default=None,
     )
     parser.add_argument(
         "--foundry-url",
-        required=False,
+        required=True,
         default=None,
     )
     parser.add_argument(
