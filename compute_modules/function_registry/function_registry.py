@@ -42,6 +42,8 @@ def add_function(
         function_ref,
         function_name,
         edits=edits if edits is not None else set(),
+        # TODO: currently do not support runtime function inference for OntologyEdits.
+        # Not sure if we will but would need to update here if we decide to do so
         api_name_type_id_mapping={},
     )
     _register_parsed_function(
