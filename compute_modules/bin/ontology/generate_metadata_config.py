@@ -14,41 +14,22 @@
 
 
 import argparse
+import dataclasses
 import json
-from typing import Dict, List
+from typing import Dict
 
 from compute_modules.bin.ontology._config_path import get_ontology_config_file
 from compute_modules.bin.ontology._types import ObjectTypeMetadata
 from compute_modules.bin.ontology.metadata_loader import load_object_type_metadata
 
 
-def generate_metadata_config(
-    foundry_url: str,
-    token: str,
-    object_type_rids: List[str],
-    link_type_rids: List[str],
+def write_inference_metadata(
+    ontology_metadata: Dict[str, ObjectTypeMetadata],
     output_file: str,
 ) -> None:
-    ontology_metadata = load_object_type_metadata(
-        foundry_url=foundry_url,
-        token=token,
-        object_type_rids=object_type_rids,
-        link_type_rids=link_type_rids,
-    )
-    config = {"apiNameToTypeId": _get_api_name_type_id_mapping(ontology_metadata)}
+    config = {"apiNameToTypeId": {key: value.objectTypeId for key, value in ontology_metadata.items()}}
     with open(output_file, "w") as f:
         json.dump(config, f)
-
-
-def _get_api_name_type_id_mapping(
-    ontology_metadata: Dict[str, ObjectTypeMetadata],
-) -> Dict[str, str]:
-    res = {}
-    for metadata in ontology_metadata.values():
-        if metadata.api_name in res:
-            raise ValueError(f"Duplicate api name found in ontology metadata: {metadata.api_name}")
-        res[metadata.api_name] = metadata.type_id
-    return res
 
 
 def main() -> None:
@@ -91,15 +72,17 @@ def main() -> None:
     )
     arguments = parser.parse_args()
     output_file = get_ontology_config_file(arguments.ontology_metadata_config_file)
-    print("Generating config file...")
-    generate_metadata_config(
+    ontology_metadata = load_object_type_metadata(
         foundry_url=arguments.foundry_url,
         token=arguments.token,
         object_type_rids=arguments.object_type_rids,
         link_type_rids=arguments.link_type_rids,
+    )
+    write_inference_metadata(
+        ontology_metadata=ontology_metadata.objectMetadata,
         output_file=output_file,
     )
-    print(f"Wrote config file to {output_file}")
+    print(json.dumps(dataclasses.asdict(ontology_metadata)))
 
 
 if __name__ == "__main__":

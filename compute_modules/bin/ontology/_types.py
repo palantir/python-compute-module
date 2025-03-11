@@ -23,11 +23,16 @@ from typing import Dict, List, Optional, TypedDict
 
 @dataclass(frozen=True)
 class ObjectTypeMetadata:
-    api_name: str
-    type_id: str
-    primary_key_id: str
-    property_api_name_to_id: Dict[str, str]
-    link_type_api_name_to_id: Dict[str, str]
+    objectTypeApiName: str
+    objectTypeId: str
+    primaryKeyPropertyId: str
+    properties: Dict[str, str]
+    links: Dict[str, str]
+
+
+@dataclass(frozen=True)
+class RuntimeMetadata:
+    objectMetadata: Dict[str, ObjectTypeMetadata]
 
 
 # Object types

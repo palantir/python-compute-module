@@ -20,6 +20,7 @@ from compute_modules.bin.ontology._types import (
     ObjectTypeMetadata,
     OntologyMetadataLinkTypeOuter,
     OntologyMetadataObjectTypeOuter,
+    RuntimeMetadata,
 )
 from compute_modules.bin.ontology.metadata_client import OntologyMetadataClient
 
@@ -29,14 +30,17 @@ def load_object_type_metadata(
     token: str,
     object_type_rids: List[str],
     link_type_rids: List[str],
-) -> Dict[str, ObjectTypeMetadata]:
+) -> RuntimeMetadata:
     client = OntologyMetadataClient(foundry_url=foundry_url, token=token)
     object_types, link_types = client.bulk_load_entities(
         object_type_rids=object_type_rids,
         link_type_rids=link_type_rids,
     )
     link_types_for_object = _get_link_types(link_types=link_types)
-    return _get_object_type_metadata(object_types=object_types, link_types_for_object=link_types_for_object)
+    object_type_metadata = _get_object_type_metadata(
+        object_types=object_types, link_types_for_object=link_types_for_object
+    )
+    return RuntimeMetadata(objectMetadata=object_type_metadata)
 
 
 def _get_object_type_metadata(
@@ -46,16 +50,16 @@ def _get_object_type_metadata(
     object_type_metadata = {}
     for object_type in object_types:
         object_type_details = object_type["objectType"]
+        if object_type_details["apiName"] in object_type_metadata:
+            raise ValueError(f"Duplicate api name found in ontology metadata: {object_type_details['apiName']}")
         primary_key_id = object_type_details["propertyTypes"][object_type_details["primaryKeys"][0]]["id"]
         object_rid = object_type_details["rid"]
-        object_type_metadata[object_rid] = ObjectTypeMetadata(
-            api_name=object_type_details["apiName"],
-            type_id=object_type_details["id"],
-            primary_key_id=primary_key_id,
-            property_api_name_to_id={
-                value["apiName"]: value["id"] for _, value in object_type_details["propertyTypes"].items()
-            },
-            link_type_api_name_to_id=link_types_for_object[object_rid],
+        object_type_metadata[object_type_details["apiName"]] = ObjectTypeMetadata(
+            objectTypeApiName=object_type_details["apiName"],
+            objectTypeId=object_type_details["id"],
+            primaryKeyPropertyId=primary_key_id,
+            properties={value["apiName"]: value["id"] for _, value in object_type_details["propertyTypes"].items()},
+            links=link_types_for_object[object_rid],
         )
     return object_type_metadata
 
