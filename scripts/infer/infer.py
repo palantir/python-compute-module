@@ -19,7 +19,7 @@ import logging
 import pkgutil
 import sys
 import types
-from typing import Dict, Iterator, List, Set
+from typing import Any, Dict, Iterator, List, Optional, Set
 
 import compute_modules.startup
 from compute_modules.function_registry.function import Function
@@ -98,15 +98,33 @@ def _discover_manually_registered_functions(py_module: types.ModuleType) -> Iter
             LOGGER.debug(f"Located function {fn.__name__} in module {py_module.__name__}")
             # Extracting ontology types if `edits=[...]` was provided
             edits_arg = next(filter(lambda k: k.arg == "edits", node.keywords), None)
-            parsed_edits = set()
-            if edits_arg and isinstance(edits_arg, ast.keyword) and isinstance(edits_arg.value, ast.List):
-                for edit in edits_arg.value.elts:
-                    if not isinstance(edit, ast.Name):
-                        continue
-                    parsed_edit = getattr(py_module, edit.id, None)
-                    if parsed_edit and hasattr(parsed_edit, "api_name") and callable(parsed_edit.api_name):
-                        parsed_edits.add(parsed_edit)
-            yield Function(fn, parsed_edits)
+            parsed_edits: Set[Any] = set()
+            _maybe_add_edits(py_module=py_module, edits_arg=edits_arg, parsed_edits=parsed_edits)
+            yield Function(fn, list(parsed_edits))
+
+
+def _maybe_add_edits(
+    py_module: types.ModuleType,
+    edits_arg: Optional[Any],
+    parsed_edits: Set[Any],
+) -> None:
+    if not edits_arg:
+        return
+    # edits=[...] literal list syntax
+    if isinstance(edits_arg, ast.keyword) and isinstance(edits_arg.value, ast.List):
+        for edit in edits_arg.value.elts:
+            if not isinstance(edit, ast.Name):
+                continue
+            parsed_edit = getattr(py_module, edit.id, None)
+            if parsed_edit and hasattr(parsed_edit, "api_name") and callable(parsed_edit.api_name):
+                parsed_edits.add(parsed_edit)
+    # edits=SOME_VAR syntax
+    if isinstance(edits_arg, ast.keyword) and isinstance(edits_arg.value, ast.Name):
+        edits_list = getattr(py_module, edits_arg.value.id, None)
+        if edits_list and isinstance(edits_list, list):
+            for edit_type in edits_list:
+                if edit_type and hasattr(edit_type, "api_name") and callable(edit_type.api_name):
+                    parsed_edits.add(edit_type)
 
 
 def _validate_functions(functions: List[Function]) -> None:

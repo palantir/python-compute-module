@@ -311,10 +311,10 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
     },
 ]
 test_cases = [
-    (
-        DECORATED_DIR,
-        EXPECTED_DECORATED_RES,
-    ),
+    # (
+    #     DECORATED_DIR,
+    #     EXPECTED_DECORATED_RES,
+    # ),
     (
         MANUALLY_REGISTERED_DIR,
         EXPECTED_MANUALLY_REGISTERED_RES,

@@ -139,7 +139,7 @@ EXPECTED_INPUTS = [
 
 def test_function_schema_parser() -> None:
     """Test the happy path for parse_function_schemas_from_module"""
-    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1", set(), {})
+    parse_result = parse_function_schema(dummy_func_1, "dummy_func_1", [], {})
     assert parse_result.function_schema["functionName"] == "dummy_func_1"
     assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_1
     assert len(parse_result.function_schema["inputs"]) == len(EXPECTED_INPUTS)
@@ -159,7 +159,7 @@ def test_function_schema_parser() -> None:
 
 def test_function_schema_parser_no_type_hints() -> None:
     """Test 'happy' path, but on a function with no type hints"""
-    parse_result = parse_function_schema(dummy_func_2, "dummy_func_2", set(), {})
+    parse_result = parse_function_schema(dummy_func_2, "dummy_func_2", [], {})
     assert parse_result.class_node is None
     assert parse_result.is_context_typed is False
     assert parse_result.function_schema == ComputeModuleFunctionSchema(
@@ -177,7 +177,7 @@ def test_function_schema_parser_no_type_hints() -> None:
 
 def test_function_schema_parser_context_output_only() -> None:
     """Test 'happy' path for a function that uses type hints only for the context & return type"""
-    parse_result = parse_function_schema(dummy_func_3, "dummy_func_3", set(), {})
+    parse_result = parse_function_schema(dummy_func_3, "dummy_func_3", [], {})
     assert parse_result.class_node is None
     assert parse_result.is_context_typed
     assert parse_result.function_schema["functionName"] == "dummy_func_3"
@@ -188,40 +188,40 @@ def test_function_schema_parser_context_output_only() -> None:
 def test_function_schema_parser_dict_witout_params() -> None:
     """Test 'happy' path for a function that uses type hints only for the context & return type"""
     with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_func_4, "dummy_func_4", set(), {})
+        parse_function_schema(dummy_func_4, "dummy_func_4", [], {})
     assert "dict type hints must have type parameters provided" in str(exc_info.value)
 
 
 def test_exception_no_type_hints() -> None:
     """CM function params should not have classes without type hints"""
     with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_no_type_hints, "dummy_no_type_hints", set(), {})
+        parse_function_schema(dummy_no_type_hints, "dummy_no_type_hints", [], {})
     assert "type_hints set() must match init args" in str(exc_info.value)
 
 
 def test_exception_no_init_hints() -> None:
     """CM function params should not have constructors without type hints"""
     with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_no_init_hints, "dummy_no_init_hints", set(), {})
+        parse_function_schema(dummy_no_init_hints, "dummy_no_init_hints", [], {})
     assert "Custom Type BadClassNoInitHints should have init args type annotations" in str(exc_info.value)
 
 
 def test_exception_args_init() -> None:
     """CM function params should not have constructors that use the `args` keyword"""
     with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_args_init, "dummy_args_init", set(), {})
+        parse_function_schema(dummy_args_init, "dummy_args_init", [], {})
     assert "The __init__ method should not use *args" in str(exc_info.value)
 
 
 def test_exception_kwargs_init() -> None:
     """CM function params should not have constructors that use the `kwargs` keyword"""
     with pytest.raises(ValueError) as exc_info:
-        parse_function_schema(dummy_kwargs_init, "dummy_kwargs_init", set(), {})
+        parse_function_schema(dummy_kwargs_init, "dummy_kwargs_init", [], {})
     assert "The __init__ method should not use **kwargs" in str(exc_info.value)
 
 
 def test_function_schema_parser_generator_output() -> None:
     """Test 'happy' path for a function that uses type hints for generator return type"""
-    parse_result = parse_function_schema(dummy_func_5, "dummy_func_5", set(), {})
+    parse_result = parse_function_schema(dummy_func_5, "dummy_func_5", [], {})
     assert parse_result.function_schema["functionName"] == "dummy_func_5"
     assert parse_result.function_schema["output"] == EXPECTED_OUTPUT_4

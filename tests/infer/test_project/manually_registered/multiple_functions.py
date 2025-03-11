@@ -73,7 +73,10 @@ def ontology_edit_function(
     return []
 
 
+EDIT_TYPES = [DummyOntologyType]
+
+
 if __name__ == "__main__":
     add_functions(return_complex_in_main, return_number_in_main)
-    add_function(ontology_edit_function, edits=[DummyOntologyType])
+    add_function(ontology_edit_function, edits=EDIT_TYPES)
     start_compute_module()
