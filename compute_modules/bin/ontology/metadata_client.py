@@ -14,17 +14,25 @@
 
 
 from typing import List, Tuple
+from urllib.parse import urlparse
 
 import requests
 
 from compute_modules.bin.ontology._types import OntologyMetadataLinkTypeOuter, OntologyMetadataObjectTypeOuter
 
 
+def _clean_url(url: str) -> str:
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme:
+        parsed_url = urlparse(f"https://{url}")
+    return f"https://{parsed_url.netloc}"
+
+
 class OntologyMetadataClient:
     bulk_load_entities_path = "{foundry_url}/ontology-metadata/api/ontology/ontology/bulkLoadEntities"
 
     def __init__(self, foundry_url: str, token: str):
-        self.foundry_url = foundry_url
+        self.foundry_url = _clean_url(foundry_url)
         self.token = token
 
     def bulk_load_entities(
