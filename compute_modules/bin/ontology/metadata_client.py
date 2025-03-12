@@ -56,5 +56,6 @@ class OntologyMetadataClient:
             },
             json=payload,
         )
+        response.raise_for_status()
         result = response.json()
         return result["objectTypes"], result["linkTypes"]
