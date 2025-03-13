@@ -56,3 +56,4 @@ def oauth(hostname: str, scope: List[str]) -> Any:
             except (ValueError, KeyError):
                 return None
     return None
+#d 
