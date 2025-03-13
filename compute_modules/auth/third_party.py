@@ -17,6 +17,7 @@ import http.client
 import json
 import os
 import ssl
+import time
 import urllib.parse
 from typing import Any, List, Optional, Tuple
 
@@ -56,4 +57,22 @@ def oauth(hostname: str, scope: List[str]) -> Any:
             except (ValueError, KeyError):
                 return None
     return None
-#d 
+
+
+class RefreshingOauthToken:
+    def __init__(self, hostname: str, scope: List[str], refresh_interval: int = 1800) -> None:
+        self.hostname = hostname
+        self.scope = scope
+        self.refresh_interval = refresh_interval
+        self.last_refresh_time = 0.0
+        self.token = None
+
+    def get_token(self) -> Any:
+        current_time = time.time()
+        if not self.token or current_time - self.last_refresh_time > self.refresh_interval:
+            self.token = self._fetch_token()
+            self.last_refresh_time = current_time
+        return self.token
+
+    def _fetch_token(self) -> Any:
+        return oauth(self.hostname, self.scope)
