@@ -313,6 +313,16 @@ access_token = oauth(HOSTNAME, ["api:datasets-read"])
 
 ```
 
+For usecases where you require the token to automatically refresh after expiry, you can utilize the `RefreshingOauthToken` class. By default, a token refresh will be triggered after 30 minutes. When using this class, you should ensure to only retrieve and generate tokens through the `get_token()` function.
+
+```python
+from compute_modules.auth import RefreshingOauthToken
+
+refreshing_token = RefreshingOauthToken(hostname=HOSTNAME, scope=["api:datasets-read"])
+# Token will automatically refresh when beyond expiry period
+access_token = refreshing_token.get_token()
+```
+
 ## Retrieving Arguments
 
 This SDK provides utilities for retrieving arguments passed into the compute module. There are two different functions available: `get_raw_arguments` and `get_parsed_arguments`. Below is an example showing the difference between the two.
