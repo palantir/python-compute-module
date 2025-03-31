@@ -31,7 +31,8 @@ def main() -> None:
     )
     arguments = parser.parse_args()
     config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
-    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path)
+    config_file_arg_provided = arguments.ontology_metadata_config_file is not None
+    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path, config_file_arg_provided)
     print(
         json.dumps(
             infer(
@@ -42,8 +43,10 @@ def main() -> None:
     )
 
 
-def _get_api_name_type_id_mapping(config_file_path: str) -> dict[str, str]:
+def _get_api_name_type_id_mapping(config_file_path: str, config_file_arg_provided: bool) -> dict[str, str]:
     if not os.path.isfile(config_file_path):
+        if config_file_arg_provided:
+            raise ValueError(f"No file found at {config_file_arg_provided}")
         return {}
     with open(config_file_path) as f:
         config_data = json.load(f)
