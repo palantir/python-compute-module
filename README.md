@@ -8,13 +8,14 @@
 > This SDK is incubating and subject to change.
 
 
-An open-source python library for compute modules for performing tasks like service discovery, getting a token, external source credentials, etc
+An open-source python library for compute modules for performing tasks like service discovery, getting a token, accessing external sources, etc.
 
 
 
 ## Functions Mode
-Sources can be used to store secrets for use within a Compute Module, they prevent you from having to put secrets in your container or in plaintext in the job specification. 
-Retrieving a source credential using this library is simple, if you are in Functions Mode they are passed to the context
+
+Sources can be used in Compute Modules to access secrets or the source configuration itself.
+Retrieving information about a source using this library is simple, if you are in Functions Mode both secrets and configurations are passed in the context.
 
 ### Basic usage
 
@@ -29,8 +30,13 @@ def add(context, event) -> int:
     return event["x"] + event["y"]
 
 @function
-def get_sources(context, event) -> List[str]:
-    return context["sources"].keys()
+def get_sources(context, event) -> dict:
+    source_secrets = context["sources"]
+    source_configs = context["source_configs"]
+    return {
+        "secrets": source_secrets
+        "configs": source_configs
+    }
 ```
 
 
@@ -251,17 +257,20 @@ If left un-annotated, the `context` param will be a `dict`.
 
 
 ## Pipelines Mode
-### Retrieving source credentials
+### Retrieving source information
 
-Sources allow you to store secrets securely for use within a Compute Module, eliminating the need to include secrets in your container or in plaintext within the job specification. Retrieving a source credential using this library is straightforward:
+Sources can be used in Compute Modules to access secrets or the source configuration itself.
+Retrieving information about a source using this library is straightforward:
 ```python
-from compute_modules.sources import get_sources, get_source_secret
+from compute_modules.sources import get_sources, get_source_secret, get_source_configurations, get_source_config
 
-# retrive a dict with all sources
-sources = get_sources()
+# retrieve a dict with all sources
+all_source_creds = get_sources()
+all_source_configs = get_source_configurations()
 
-# retrive the credentials of a specific source 
+# retrieve the credentials of a specific source 
 my_creds = get_source_secret("mySourceApiName", "MyCredential")
+my_config = get_source_config("mySourceApiName")
 
 ```
 
@@ -273,10 +282,10 @@ The SDK offers a convenient method for retrieving information on the resources c
 from compute_modules.resources import PipelineResource, get_pipeline_resources
 
 resources: dict[str, PipelineResource] = get_pipeline_resources()
-print(f"My reource's rid is: {resources['your-alias-name'].rid}")
+print(f"My resource's rid is: {resources['your-alias-name'].rid}")
 ```
 
-### Retriving pipeline token
+### Retrieving pipeline token
 
 To obtain an auth token for interacting with Foundry resources in Pipeline mode use the following function:
 
@@ -302,6 +311,16 @@ CLIENT_ID, CLIENT_CREDS = retrieve_third_party_id_and_creds()
 HOSTNAME = "myenvironment.palantirfoundry.com"
 access_token = oauth(HOSTNAME, ["api:datasets-read"])
 
+```
+
+For usecases where you require the token to automatically refresh after expiry, you can utilize the `RefreshingOauthToken` class. By default, a token refresh will be triggered after 30 minutes. When using this class, you should ensure to only retrieve and generate tokens through the `get_token()` function.
+
+```python
+from compute_modules.auth import RefreshingOauthToken
+
+refreshing_token = RefreshingOauthToken(hostname=HOSTNAME, scope=["api:datasets-read"])
+# Token will automatically refresh when beyond expiry period
+access_token = refreshing_token.get_token()
 ```
 
 ## Retrieving Arguments

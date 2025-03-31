@@ -45,7 +45,10 @@ class QueryContext:
     """
 
     sources: Optional[Dict[str, Any]] = None
-    """dict containing the metadata of any sources configured for this compute module."""
+    """dict containing the secrets of any sources configured for this compute module."""
+
+    source_configs: Optional[Dict[str, Any]] = None
+    """dict containing the configuration of any sources configured for this compute module."""
 
     userId: Optional[str] = None
     """The unique identifier for the user who initiated the job"""
