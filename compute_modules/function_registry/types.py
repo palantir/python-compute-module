@@ -49,6 +49,11 @@ class FunctionOutputType(typing.TypedDict):
     single: DataType
 
 
+class FunctionOntologyProvenance(typing.TypedDict):
+    editedObjects: typing.Dict[str, typing.Dict[None, None]]
+    editedLinks: typing.Dict[str, typing.Dict[None, None]]
+
+
 class ComputeModuleFunctionSchema(typing.TypedDict):
     """Represents the function schema for a Compute Module function"""
 
@@ -56,6 +61,7 @@ class ComputeModuleFunctionSchema(typing.TypedDict):
     functionName: str
     inputs: typing.List[FunctionInputType]
     output: FunctionOutputType
+    ontologyProvenance: typing.Optional[FunctionOntologyProvenance]
 
 
 @dataclass

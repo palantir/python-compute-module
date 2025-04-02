@@ -28,6 +28,7 @@ from .types import (
     DataTypeDict,
     Double,
     FunctionInputType,
+    FunctionOntologyProvenance,
     FunctionOutputType,
     Long,
     ParseFunctionSchemaResult,
@@ -43,6 +44,9 @@ RESERVED_KEYS = {CONTEXT_KEY, RETURN_KEY}
 def parse_function_schema(
     function_ref: typing.Callable[..., typing.Any],
     function_name: str,
+    edits: typing.List[typing.Any],
+    api_name_type_id_mapping: typing.Dict[str, str],
+    throw_on_missing_type_id: bool = False,
 ) -> ParseFunctionSchemaResult:
     """Convert function name, input(s) & output into ComputeModuleFunctionSchema"""
     type_hints = typing.get_type_hints(function_ref, globalns={})
@@ -53,12 +57,39 @@ def parse_function_schema(
         functionName=function_name,
         inputs=inputs,
         output=output,
+        ontologyProvenance=_get_ontology_provenance(
+            edits=edits,
+            api_name_type_id_mapping=api_name_type_id_mapping,
+            throw_on_missing_type_id=throw_on_missing_type_id,
+        ),
     )
     return ParseFunctionSchemaResult(
         function_schema=function_schema,
         class_node=root_class_node,
         is_context_typed=is_context_typed,
     )
+
+
+def _get_ontology_provenance(
+    edits: typing.List[typing.Any],
+    api_name_type_id_mapping: typing.Dict[str, str],
+    throw_on_missing_type_id: bool,
+) -> typing.Optional[FunctionOntologyProvenance]:
+    if not edits:
+        return None
+    ontology_provenance: FunctionOntologyProvenance = {
+        "editedObjects": {},
+        "editedLinks": {},
+    }
+    for edit in edits:
+        if hasattr(edit, "api_name") and callable(edit.api_name):
+            type_id = api_name_type_id_mapping.get(edit.api_name())
+            if type_id:
+                ontology_provenance["editedObjects"][type_id] = {}
+            elif throw_on_missing_type_id:
+                raise ValueError(f"Missing corresponding type_id for object api name: {edit.api_name()}")
+            # TODO: log warning about missing type_id for object api name at run time
+    return ontology_provenance
 
 
 def _extract_inputs(
@@ -224,6 +255,14 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
         }, PythonClassNode(constructor=dict, children={"key": key_class_node, "value": value_class_node})
     if typing.get_origin(type_hint) is typing.Union:
         type_args = typing.get_args(type_hint)
+        # ontology edits will only work as return types since
+        # the OntologyEdit type_hint is not a valid constructor
+        if _is_ontology_edit(type_args):
+            return {
+                "ontologyEdit": {},
+                "type": "ontologyEdit",
+            }, PythonClassNode(constructor=type_hint, children=None)
+
         if len(type_args) == 2 and type(None) in type_args:
             optional_type = next(arg for arg in type_args if arg is not type(None))
             optional_data_type, optional_class_node = _extract_data_type(optional_type)
@@ -267,6 +306,12 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "fields": custom_type_fields,
         },
     }, PythonClassNode(constructor=type_hint, children=child_class_nodes)
+
+
+def _is_ontology_edit(type_args: typing.Iterable[typing.Any]) -> bool:
+    type_arg_names = set(map(lambda type_arg: getattr(type_arg, "__name__", None), type_args))
+    ontology_edit_sub_types = {"AddObject", "ModifyObject", "DeleteObject", "AddLink", "RemoveLink"}
+    return ontology_edit_sub_types.issubset(type_arg_names)
 
 
 def _assert_is_valid_custom_type(item: typing.Any) -> None:

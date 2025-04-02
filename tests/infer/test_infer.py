@@ -30,6 +30,17 @@ MANUALLY_REGISTERED_DIR = os.path.join(CURRENT_DIR, "test_project", "manually_re
 
 EXPECTED_DECORATED_RES = [
     {
+        "functionName": "ontology_add_function",
+        "inputs": [],
+        "output": {
+            "type": "single",
+            "single": {
+                "dataType": {"type": "list", "list": {"elementsType": {"ontologyEdit": {}, "type": "ontologyEdit"}}}
+            },
+        },
+        "ontologyProvenance": {"editedObjects": {"dummy-ontology": {}}, "editedLinks": {}},
+    },
+    {
         "functionName": "return_dict",
         "inputs": [],
         "output": {
@@ -44,6 +55,7 @@ EXPECTED_DECORATED_RES = [
                 }
             },
         },
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_list",
@@ -52,6 +64,7 @@ EXPECTED_DECORATED_RES = [
             "type": "single",
             "single": {"dataType": {"type": "list", "list": {"elementsType": {"type": "string", "string": {}}}}},
         },
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_set",
@@ -60,11 +73,13 @@ EXPECTED_DECORATED_RES = [
             "type": "single",
             "single": {"dataType": {"type": "set", "set": {"elementsType": {"type": "string", "string": {}}}}},
         },
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_byte",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "byte", "byte": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "byte", "byte": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_double",
@@ -72,16 +87,19 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "double", "double": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "double", "double": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_long",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "long", "long": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "long", "long": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_short",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "short", "short": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "short", "short": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_bool",
@@ -89,6 +107,7 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "boolean", "boolean": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "boolean", "boolean": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_bytes",
@@ -96,11 +115,13 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "binary", "binary": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "binary", "binary": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_date",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "date", "date": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "date", "date": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_datetime",
@@ -108,6 +129,7 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "timestamp", "timestamp": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "timestamp", "timestamp": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_decimal",
@@ -115,11 +137,13 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "decimal", "decimal": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "decimal", "decimal": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_float",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "float", "float": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "float", "float": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_int",
@@ -127,6 +151,7 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "integer", "integer": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "integer", "integer": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_str",
@@ -134,6 +159,7 @@ EXPECTED_DECORATED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "string", "string": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "string", "string": {}}}},
+        "ontologyProvenance": None,
     },
 ]
 
@@ -155,6 +181,7 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
             }
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "integer", "integer": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_complex_in_main",
@@ -209,6 +236,7 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
             },
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "string", "string": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "return_number_in_main",
@@ -224,6 +252,18 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
                 }
             },
         },
+        "ontologyProvenance": None,
+    },
+    {
+        "functionName": "ontology_edit_function",
+        "inputs": [{"name": "name", "required": True, "constraints": [], "dataType": {"type": "string", "string": {}}}],
+        "output": {
+            "type": "single",
+            "single": {
+                "dataType": {"type": "list", "list": {"elementsType": {"ontologyEdit": {}, "type": "ontologyEdit"}}}
+            },
+        },
+        "ontologyProvenance": {"editedObjects": {"dummy-ontology": {}}, "editedLinks": {}},
     },
     {
         "functionName": "return_integer_in_main",
@@ -231,6 +271,7 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "integer", "integer": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "integer", "integer": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "mixed_1",
@@ -238,6 +279,7 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
             {"name": "value", "required": True, "constraints": [], "dataType": {"type": "integer", "integer": {}}}
         ],
         "output": {"type": "single", "single": {"dataType": {"type": "integer", "integer": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "mixed_2",
@@ -253,16 +295,19 @@ EXPECTED_MANUALLY_REGISTERED_RES = [
             "type": "single",
             "single": {"dataType": {"type": "set", "set": {"elementsType": {"type": "integer", "integer": {}}}}},
         },
+        "ontologyProvenance": None,
     },
     {
         "functionName": "mixed_3",
         "inputs": [{"name": "value", "required": True, "constraints": [], "dataType": {"type": "byte", "byte": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "byte", "byte": {}}}},
+        "ontologyProvenance": None,
     },
     {
         "functionName": "mixed_4",
         "inputs": [{"name": "name", "required": True, "constraints": [], "dataType": {"type": "string", "string": {}}}],
         "output": {"type": "single", "single": {"dataType": {"type": "string", "string": {}}}},
+        "ontologyProvenance": None,
     },
 ]
 test_cases = [
@@ -281,5 +326,6 @@ test_cases = [
 def test_infer(src_dir: str, expected_result: List[ComputeModuleFunctionSchema]) -> None:
     res = infer(
         src_dir=src_dir,
+        api_name_type_id_mapping=API_NAME_TYPE_ID_MAPPING,
     )
     assert sorted(res, key=lambda x: x["functionName"]) == sorted(expected_result, key=lambda x: x["functionName"])

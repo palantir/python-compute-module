@@ -17,8 +17,9 @@ from dataclasses import dataclass
 from typing import List
 
 from compute_modules.context import QueryContext
-from compute_modules.function_registry.function_registry import add_functions
+from compute_modules.function_registry.function_registry import add_function, add_functions
 from compute_modules.startup import start_compute_module
+from tests.infer.test_project._types import DummyOntologyType, OntologyEdit
 
 
 @dataclass
@@ -60,6 +61,22 @@ def return_number_in_main(context: QueryContext, number: Number) -> Number:
     return number.value  # type: ignore[return-value]
 
 
+@dataclass
+class OntologyEditParams:
+    name: str
+
+
+def ontology_edit_function(
+    context: QueryContext,
+    event: OntologyEditParams,
+) -> list[OntologyEdit]:
+    return []
+
+
+EDIT_TYPES = [DummyOntologyType]
+
+
 if __name__ == "__main__":
     add_functions(return_complex_in_main, return_number_in_main)
+    add_function(ontology_edit_function, edits=EDIT_TYPES)
     start_compute_module()

@@ -12,17 +12,41 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import argparse
-import json
-import os
 
-from scripts.infer.infer import infer
+import argparse
+
 from scripts.ontology._config_path import get_ontology_config_file
+from scripts.ontology.generate_metadata_config import generate_metadata_config
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("source")
+    parser.add_argument(
+        "--object-type-rid",
+        required=False,
+        nargs="*",
+        dest="object_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "--link-type-rid",
+        required=False,
+        nargs="*",
+        dest="link_type_rids",
+        default=[],
+    )
+    parser.add_argument(
+        "-t",
+        "--token",
+        required=True,
+        default=None,
+    )
+    parser.add_argument(
+        "--foundry-url",
+        required=True,
+        default=None,
+    )
     parser.add_argument(
         "--ontology-metadata-config",
         required=False,
@@ -30,27 +54,16 @@ def main() -> None:
         default=None,
     )
     arguments = parser.parse_args()
-    config_file_path = get_ontology_config_file(arguments.ontology_metadata_config_file)
-    config_file_arg_provided = arguments.ontology_metadata_config_file is not None
-    api_name_type_id_mapping = _get_api_name_type_id_mapping(config_file_path, config_file_arg_provided)
-    print(
-        json.dumps(
-            infer(
-                src_dir=arguments.source,
-                api_name_type_id_mapping=api_name_type_id_mapping,
-            )
-        )
+    output_file = get_ontology_config_file(arguments.ontology_metadata_config_file)
+    print("Generating config file...")
+    generate_metadata_config(
+        foundry_url=arguments.foundry_url,
+        token=arguments.token,
+        object_type_rids=arguments.object_type_rids,
+        link_type_rids=arguments.link_type_rids,
+        output_file=output_file,
     )
-
-
-def _get_api_name_type_id_mapping(config_file_path: str, config_file_arg_provided: bool) -> dict[str, str]:
-    if not os.path.isfile(config_file_path):
-        if config_file_arg_provided:
-            raise ValueError(f"No file found at {config_file_arg_provided}")
-        return {}
-    with open(config_file_path) as f:
-        config_data = json.load(f)
-    return config_data.get("apiNameToTypeId", {})  # type: ignore[no-any-return]
+    print(f"Wrote config file to {output_file}")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 import atexit
-from typing import Any, Callable
+from typing import Any, Callable, List, Optional
 
 from .function_registry.function import Function
 from .function_registry.function_registry import add_function
@@ -24,10 +24,11 @@ def function(
     maybe_func: Any = None,
     *,
     streaming: bool = False,
+    edits: Optional[List[Any]] = None,
 ) -> Callable[..., Any]:
     def function_wrapper(func: Callable[..., Any]) -> Callable[..., Any]:
-        add_function(func, streaming=streaming)
-        return Function(func)
+        add_function(func, streaming=streaming, edits=edits)
+        return Function(func, [] if edits is None else edits)
 
     if callable(maybe_func):
         return function_wrapper(maybe_func)
