@@ -97,7 +97,9 @@ class InternalQueryService:
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
 
     def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
+        self.logger.debug("iterating over result")
         for i in iterable:
+            self.logger.debug(f"yielding result: {i}")
             yield json.dumps(i).encode("utf-8")
 
     def init_session(self) -> None:
@@ -213,15 +215,20 @@ class InternalQueryService:
         except Exception as e:
             self.logger.error(f"Error executing job: {str(e)}")
             result = self.get_failed_query(e)
-        self.logger.debug("Reporting result for job")
-        if self.streaming[query_type] and isinstance(result, Iterable) and not isinstance(result, dict):
+        self.logger.debug("Checking if streaming result or not")
+        if self.streaming.get(query_type, False) and isinstance(result, Iterable) and not isinstance(result, dict):
+            self.logger.debug("Reporting streaming result for job")
             self.report_job_result(job_id, self._iterable_to_json_generator(result))
         else:
+            self.logger.debug("not a streaming result")
             try:
+                self.logger.debug("trying to serialize result")
                 serialized_result = json.dumps(result).encode("utf-8")
+                self.logger.debug("successfullly serialized result")
             except Exception as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
                 serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
+            self.logger.debug("Reporting non-streaming result for job")
             self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()
 

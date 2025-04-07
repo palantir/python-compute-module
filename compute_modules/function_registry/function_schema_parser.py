@@ -88,6 +88,7 @@ def _get_ontology_provenance(
                 ontology_provenance["editedObjects"][type_id] = {}
             elif throw_on_missing_type_id:
                 raise ValueError(f"Missing corresponding type_id for object api name: {edit.api_name()}")
+            # TODO: log warning about missing type_id for object api name at run time
     return ontology_provenance
 
 

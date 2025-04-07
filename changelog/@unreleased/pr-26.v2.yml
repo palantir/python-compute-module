@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Support for `ontologyProvenance` in static function schema generation
+  links:
+  - https://github.com/palantir/python-compute-module/pull/26
