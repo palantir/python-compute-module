@@ -37,6 +37,10 @@ check_license = "python -c 'from scripts.checks import check_license; check_lice
 license = "python -c 'from scripts.checks import license; license()'"
 set_version = "python -c 'from scripts.set_version import main; main()'"
 
+[tool.poetry.scripts]
+cm_ontology_metadata_config = "compute_modules.bin.ontology.generate_metadata_config:main"
+cm_python_function_infer = "compute_modules.bin.static_inference.infer:main"
+
 [tool.black]
 line_length = 120
 
