@@ -16,7 +16,7 @@ jobs:
       - image: cimg/python:<< parameters.python_version >>
     steps:
       - checkout
-      - run: poetry install
+      - run: poetry install --extras sources
       - run: poetry run poe test
 
   mypy:
@@ -24,7 +24,7 @@ jobs:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - run: poetry install
+      - run: poetry install --extras sources
       - run: poetry run poe check_mypy
 
   check_format:
@@ -32,7 +32,7 @@ jobs:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - run: poetry install
+      - run: poetry install --extras sources
       - run: poetry run poe check_format
 
   check_license:
@@ -40,7 +40,7 @@ jobs:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - run: poetry install
+      - run: poetry install --extras sources
       - run: poetry run poe check_license
 
   circle-all:
@@ -54,7 +54,7 @@ jobs:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - run: poetry install
+      - run: poetry install --extras sources
       - run: poetry run poe set_version
       - run: poetry publish -v -u $PYPI_USERNAME -p $PYPI_PASSWORD --build
 
