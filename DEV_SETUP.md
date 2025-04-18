@@ -14,7 +14,7 @@
 This command will install all deps specified in `pyproject.toml` and make the scripts specified in `pyproject.toml` available in your python environment.
 
 ```sh
-poetry install
+poetry install --extras sources
 ```
 
 ### Run tests

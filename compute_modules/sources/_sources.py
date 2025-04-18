@@ -15,8 +15,17 @@
 
 import json
 import os
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
+
+# Global Mutable State
+_source_credentials = None
+_source_configurations = None
+
+# Env var constants
+SOURCE_CONFIGURATIONS_PATH = "SOURCE_CONFIGURATIONS_PATH"
+SOURCE_CREDENTIALS_PATH = "SOURCE_CREDENTIALS"
 
 
 @dataclass
@@ -55,14 +64,15 @@ class MountedSourceConfig:
         )
 
 
-_source_credentials = None
-_source_configurations = None
-
-
 def get_sources() -> Dict[str, Dict[str, str]]:
+    warnings.warn(
+        "get_sources is deprecated. Use get_source in compute_modules.sources_v2 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     global _source_credentials
     if _source_credentials is None:
-        creds_path = os.environ.get("SOURCE_CREDENTIALS")
+        creds_path = os.environ.get(SOURCE_CREDENTIALS_PATH)
         if creds_path:
             with open(creds_path, "r", encoding="utf-8") as fr:
                 data = json.load(fr)
@@ -74,9 +84,14 @@ def get_sources() -> Dict[str, Dict[str, str]]:
 
 
 def get_source_configurations() -> Dict[str, Any]:
+    warnings.warn(
+        "get_source_configurations is deprecated. Use get_source in compute_modules.sources_v2 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     global _source_configurations
     if _source_configurations is None:
-        configs_path = os.environ.get("SOURCE_CONFIGURATIONS_PATH")
+        configs_path = os.environ.get(SOURCE_CONFIGURATIONS_PATH)
         if configs_path:
             with open(configs_path, "r", encoding="utf-8") as fr:
                 raw_configs = json.load(fr)
@@ -91,9 +106,19 @@ def get_source_configurations() -> Dict[str, Any]:
 
 
 def get_source_secret(source_api_name: str, credential_name: str) -> Any:
+    warnings.warn(
+        "get_source_secret is deprecated. Use get_source in compute_modules.sources_v2 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     source_credentials = get_sources()
     return source_credentials.get(source_api_name, {}).get(credential_name)
 
 
 def get_source_config(source_api_name: str) -> Any:
-    return get_source_configurations().get(source_api_name)
+    warnings.warn(
+        "get_source_config is deprecated. Use get_source in compute_modules.sources_v2 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return get_source_configurations().get(source_api_name, {})
