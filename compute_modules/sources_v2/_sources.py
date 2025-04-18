@@ -23,7 +23,7 @@ from ._back_compat import get_mounted_sources
 
 def __get_on_prem_proxy_service_uris() -> list[str]:
     try:
-        import yaml # type: ignore[import-untyped]
+        import yaml  # type: ignore[import-untyped]
     except ImportError:
         raise ImportError(
             "the sources extras is not installed. Please install it with `pip install compute-modules[sources]`"
