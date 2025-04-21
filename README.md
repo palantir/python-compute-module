@@ -12,10 +12,23 @@ An open-source python library for compute modules for performing tasks like serv
 
 
 
+## Installation
+
+Install the package via `pip`:
+
+```bash
+pip install foundry-compute-modules
+```
+
+For [Foundry Sources](#sources-in-compute-modules) support, include the sources optional dependency:
+```bash
+pip install foundry-compute-modules[sources]
+```
+
+
 ## Functions Mode
 
-Sources can be used in Compute Modules to access secrets or the source configuration itself.
-Retrieving information about a source using this library is simple, if you are in Functions Mode both secrets and configurations are passed in the context.
+> Looking for documentation on Foundry Sources? Please refer to the [Sources in Compute Modules](#sources-in-compute-modules) section for more information.
 
 ### Basic usage
 
@@ -28,6 +41,12 @@ from compute_modules.annotations import function
 @function
 def add(context, event) -> int:
     return event["x"] + event["y"]
+```
+
+#### (Deprecated) Retrieving source information
+```python
+# functions/source_example.py
+from compute_modules.annotations import function
 
 @function
 def get_sources(context, event) -> dict:
@@ -257,10 +276,11 @@ If left un-annotated, the `context` param will be a `dict`.
 
 
 ## Pipelines Mode
-### Retrieving source information
+### (Deprecated) Retrieving source information
 
-Sources can be used in Compute Modules to access secrets or the source configuration itself.
-Retrieving information about a source using this library is straightforward:
+Please use the recommended approach for interacting with Sources as detailed in the [Sources in Compute Modules section](#sources-in-compute-modules)
+
+You can still access Source secrets and configuration using the deprecated API with the following snippet:
 ```python
 from compute_modules.sources import get_sources, get_source_secret, get_source_configurations, get_source_config
 
@@ -269,8 +289,10 @@ all_source_creds = get_sources()
 all_source_configs = get_source_configurations()
 
 # retrieve the credentials of a specific source 
-my_creds = get_source_secret("mySourceApiName", "MyCredential")
-my_config = get_source_config("mySourceApiName")
+my_creds = get_source_secret("<SOURCE_API_NAME>", "MyCredential")
+
+# retrieve the source configuration
+my_config = get_source_config("<SOURCE_API_NAME>")
 
 ```
 
@@ -296,6 +318,25 @@ import requests
 pipeline_token = retrieve_pipeline_token()
 requests.post(..., headers={"Authorization": f"Bearer {pipeline_token}")
 ```
+
+## Sources in Compute Modules
+
+For every Foundry Source imported into your Compute Module (CM), a pre-configured client is generated based on the Source's provided configuration. Before using Sources in Compute Modules please follow the [Installation guide](#installation) to make sure you have the correct dependencies installed.
+
+> For more information about the functionality available on the client, please visit the [External Systems library documentation](https://github.com/palantir/external-systems/)
+
+### Example
+
+For Compute Modules running in either Pipelines or Functions mode, the Source can be retrieved using the following snippet:
+
+```python
+from compute_modules.sources_v2 import get_source
+from external_systems.sources import Source
+
+source: Source = get_source("<SOURCE_API_NAME>")
+```
+
+**NOTE:** Connections to on-premise external systems require additional configuration. Please contact your Palantir representative for more information.
 
 
 ## Application's permissions/ Third Party App

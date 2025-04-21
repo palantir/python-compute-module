@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: '[Connectivity] Source interface in Compute Modules Lib'
+  links:
+  - https://github.com/palantir/python-compute-module/pull/32
