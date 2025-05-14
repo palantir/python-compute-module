@@ -26,7 +26,7 @@ def __get_on_prem_proxy_service_uris() -> list[str]:
         import yaml  # type: ignore[import-untyped]
     except ImportError:
         raise ImportError(
-            "the sources extras is not installed. Please install it with `pip install compute-modules[sources]`"
+            "the sources extras is not installed. Please install it with `pip install foundry-compute-modules[sources]`"
         )
 
     with open(os.environ[SERVICE_DISCOVERY_PATH], "r") as f:
@@ -48,7 +48,7 @@ def get_source(source_api_name: str):  # type: ignore[no-untyped-def]
         )
     except ImportError:
         raise ImportError(
-            "the sources extras is not installed. Please install it with `pip install compute-modules[sources]`"
+            "the sources extras is not installed. Please install it with `pip install foundry-compute-modules[sources]`"
         )
 
     def convert_resolved_source_credentials(
