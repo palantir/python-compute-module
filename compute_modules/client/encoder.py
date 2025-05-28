@@ -13,16 +13,20 @@
 #  limitations under the License.
 
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
-            return obj.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            obj = obj.astimezone(timezone.utc)
+            # Format as ISO 8601 string with 'Z' suffix
+            return obj.strftime("%Y-%m-%dT%H:%M:%SZ")
         if isinstance(obj, date):
             return obj.isoformat()
         if isinstance(obj, list):
-            return [self.default(obj) for item in obj]
+            return [self.default(item) for item in obj]
+        if isinstance(obj, dict):
+            return {k: self.default(v) for k, v in obj.items()}
         return obj

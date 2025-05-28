@@ -26,7 +26,7 @@ RAW_PAYLOAD = {
     "parent_class": {
         "some_flag": False,
         "some_value": 1234,
-        "child": {"timestamp": 1725491095009, "some_value": 1.234, "another_optional_field": "something!"},
+        "child": {"timestamp": "1979-05-27T07:32:00Z", "some_value": 1.234, "another_optional_field": "something!"},
     },
     "optional_field": None,
     "set_field": ["2024-09-04", "2024-07-20", "1984-05-19"],
@@ -38,7 +38,7 @@ BAD_RAW_PAYLOAD = {
     "parent_class": {
         "some_flag": False,
         "some_value": 1234,
-        "child": {"timestamp": 1725491095009, "some_value": 1.234, "another_optional_field": "something!"},
+        "child": {"timestamp": "1979-05-27T07:32:00Z", "some_value": 1.234, "another_optional_field": "something!"},
     },
     "optional_field": None,
     "set_field": ["do", "re", "mi"],
@@ -52,7 +52,7 @@ def expected_return_value() -> DummyInput:
     parent_dict = RAW_PAYLOAD["parent_class"]
     child_dict = parent_dict["child"]  # type: ignore[index, call-overload]
     child = ChildClass(
-        timestamp=datetime.datetime.utcfromtimestamp(child_dict["timestamp"] / 1e3),  # type: ignore[index]
+        timestamp=datetime.datetime.strptime(child_dict["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),  # type: ignore[index]
         some_value=child_dict["some_value"],  # type: ignore[index]
         another_optional_field=child_dict["another_optional_field"],  # type: ignore[index]
     )

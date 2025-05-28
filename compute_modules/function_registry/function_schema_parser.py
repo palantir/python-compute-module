@@ -215,11 +215,10 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
             "string": {},
         }, PythonClassNode(constructor=str, children=None)
     if type_hint is datetime.datetime:
-        # TODO: datetime.fromtimestamp(timestamp, datetime.UTC) instead once python version upgraded
         return {
             "type": "timestamp",
             "timestamp": {},
-        }, PythonClassNode(constructor=lambda d: datetime.datetime.utcfromtimestamp(d / 1e3), children=None)
+        }, PythonClassNode(constructor=lambda d: datetime.datetime.strptime(d, "%Y-%m-%dT%H:%M:%SZ"), children=None)
     if typing.get_origin(type_hint) is list:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
