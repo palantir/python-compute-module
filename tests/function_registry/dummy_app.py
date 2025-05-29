@@ -16,7 +16,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, Iterable, Optional, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 from compute_modules.context import QueryContext
 
@@ -45,6 +45,7 @@ class DummyInput:
     optional_field: Optional[str]
     set_field: Set[date]
     map_field: Dict[bytes, Decimal]
+    datetime_list: List[datetime]
     some_flag: bool
     optional_default_value_field: Optional[str] = None
 
@@ -53,6 +54,7 @@ class DummyInput:
 class DummyOutput:
     res1: bool
     res2: Dict[str, float]
+    res3: List[datetime]
 
 
 @dataclass
@@ -63,7 +65,7 @@ class ClassWithBareDict:
 def dummy_func_1(context, event: DummyInput) -> DummyOutput:  # type: ignore[no-untyped-def]
     """Example function with type hints"""
     key_value = event.optional_field or "default"
-    return DummyOutput(res1=True, res2={key_value: event.parent_class.child.some_value})
+    return DummyOutput(res1=True, res2={key_value: event.parent_class.child.some_value}, res3=event.datetime_list)
 
 
 def dummy_func_2(context, event):  # type: ignore[no-untyped-def]

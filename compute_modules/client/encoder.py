@@ -13,16 +13,16 @@
 #  limitations under the License.
 
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import Any
+
+from compute_modules.function_registry.datetime_conversion_util import DatetimeConversionUtil
 
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
-            obj = obj.astimezone(timezone.utc)
-            # Format as ISO 8601 string with 'Z' suffix
-            return obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+            return DatetimeConversionUtil.datetime_to_string(obj)
         if isinstance(obj, date):
             return obj.isoformat()
         if isinstance(obj, list):

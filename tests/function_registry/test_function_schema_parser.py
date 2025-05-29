@@ -48,6 +48,7 @@ EXPECTED_OUTPUT_1 = {
                         },
                         "type": "map",
                     },
+                    "res3": {"list": {"elementsType": {"timestamp": {}, "type": "timestamp"}}, "type": "list"},
                 }
             },
             "type": "anonymousCustomType",
@@ -124,6 +125,12 @@ EXPECTED_INPUTS = [
             "map": {"keysType": {"binary": {}, "type": "binary"}, "valuesType": {"decimal": {}, "type": "decimal"}},
             "type": "map",
         },
+        "required": True,
+        "constraints": [],
+    },
+    {
+        "name": "datetime_list",
+        "dataType": {"list": {"elementsType": {"timestamp": {}, "type": "timestamp"}}, "type": "list"},
         "required": True,
         "constraints": [],
     },

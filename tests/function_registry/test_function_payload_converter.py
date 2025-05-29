@@ -32,6 +32,7 @@ RAW_PAYLOAD = {
     "set_field": ["2024-09-04", "2024-07-20", "1984-05-19"],
     "map_field": {"dmFsdWU=": "1.0", "dmFsdWUy": "2.0"},
     "some_flag": True,
+    "datetime_list": ["2024-09-04T12:00:00Z", "2024-07-20T15:30:00Z", "1984-05-19T08:45:00Z"],
 }
 
 BAD_RAW_PAYLOAD = {
@@ -44,6 +45,7 @@ BAD_RAW_PAYLOAD = {
     "set_field": ["do", "re", "mi"],
     "map_field": {"dmFsdWU=": "1.0", "dmFsdWUy": "2.0"},
     "some_flag": True,
+    "datetime_list": ["2024-09-04T12:00:00Z", "2024-07-20T15:30:00Z", "1984-05-19T08:45:00Z"],
 }
 
 
@@ -61,12 +63,14 @@ def expected_return_value() -> DummyInput:
         some_value=parent_dict["some_value"],  # type: ignore[index, call-overload, arg-type]
         child=child,
     )
+    datetime_list = [datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%SZ") for dt in RAW_PAYLOAD["datetime_list"]]  # type: ignore[union-attr]
     set_field = set([datetime.date.fromisoformat(d) for d in RAW_PAYLOAD["set_field"]])  # type: ignore[union-attr]
     map_field = {bytes(k, encoding="utf8"): decimal.Decimal(v) for k, v in RAW_PAYLOAD["map_field"].items()}  # type: ignore[union-attr, arg-type]
     return DummyInput(
         parent_class=parent,
         optional_field=RAW_PAYLOAD["optional_field"],  # type: ignore[arg-type]
         set_field=set_field,
+        datetime_list=datetime_list,
         map_field=map_field,
         some_flag=RAW_PAYLOAD["some_flag"],  # type: ignore[arg-type]
     )
@@ -88,6 +92,7 @@ def test_convert_payload(
     assert processed_payload.map_field == expected_return_value.map_field
     assert processed_payload.some_flag == expected_return_value.some_flag
     assert processed_payload.optional_default_value_field == expected_return_value.optional_default_value_field
+    assert processed_payload.datetime_list == expected_return_value.datetime_list
 
 
 def test_convert_payload_error(
