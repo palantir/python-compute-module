@@ -30,6 +30,7 @@ from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER
 from compute_modules.logging.internal import get_internal_logger
 
 from ..context import get_extra_context_parameters
+from .encoder import CustomJSONEncoder
 
 POST_RESULT_MAX_ATTEMPTS = 5
 POST_SCHEMAS_MAX_ATTEMPTS = 5
@@ -223,11 +224,11 @@ class InternalQueryService:
             self.logger.debug("not a streaming result")
             try:
                 self.logger.debug("trying to serialize result")
-                serialized_result = json.dumps(result).encode("utf-8")
-                self.logger.debug("successfullly serialized result")
+                serialized_result = json.dumps(result, cls=CustomJSONEncoder).encode("utf-8")
+                self.logger.debug("successfully serialized result")
             except Exception as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
-                serialized_result = json.dumps(self.get_failed_query(e)).encode("utf-8")
+                serialized_result = json.dumps(self.get_failed_query(e), cls=CustomJSONEncoder).encode("utf-8")
             self.logger.debug("Reporting non-streaming result for job")
             self.report_job_result(job_id, serialized_result)
         self._clear_logger_job_id()

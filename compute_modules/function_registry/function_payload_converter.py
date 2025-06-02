@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 
+import datetime
 import logging
 import typing
 
@@ -32,6 +33,8 @@ def convert_payload(
         if class_tree["children"] is None:
             return class_tree["constructor"](raw_payload)
         type_constructor = class_tree["constructor"]
+        if type_constructor is datetime.datetime:
+            return datetime.datetime.fromisoformat(raw_payload.replace("Z", "+00:00"))
         if type_constructor is list:
             child_class_tree = class_tree["children"]["list"]
             return list([convert_payload(el, child_class_tree) for el in raw_payload])

@@ -21,6 +21,7 @@ import typing
 
 from compute_modules.context.types import QueryContext
 
+from .datetime_conversion_util import DatetimeConversionUtil
 from .types import (
     AllowedKeyTypes,
     Byte,
@@ -159,67 +160,6 @@ def _extract_output(type_hints: typing.Dict[str, typing.Any]) -> FunctionOutputT
 def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, PythonClassNode]:
     # TODO: not sure how to actually test the Byte/Long/Short/etc. DataTypes here...
     # As in how someone would actually define a Pyhton CM with those types
-    if type_hint is bytes:
-        return {
-            "type": "binary",
-            "binary": {},
-        }, PythonClassNode(constructor=lambda x: bytes(x, encoding="utf8"), children=None)
-    if type_hint is bool:
-        return {
-            "type": "boolean",
-            "boolean": {},
-        }, PythonClassNode(constructor=bool, children=None)
-    if type_hint is Byte:
-        return {
-            "type": "byte",
-            "byte": {},
-        }, PythonClassNode(constructor=Byte, children=None)
-    if type_hint is datetime.date:
-        return {
-            "type": "date",
-            "date": {},
-        }, PythonClassNode(constructor=datetime.date.fromisoformat, children=None)
-    if type_hint is decimal.Decimal:
-        return {
-            "type": "decimal",
-            "decimal": {},
-        }, PythonClassNode(constructor=decimal.Decimal, children=None)
-    if type_hint is Double:
-        return {
-            "type": "double",
-            "double": {},
-        }, PythonClassNode(constructor=Double, children=None)
-    if type_hint is float:
-        return {
-            "type": "float",
-            "float": {},
-        }, PythonClassNode(constructor=float, children=None)
-    if type_hint is int:
-        return {
-            "type": "integer",
-            "integer": {},
-        }, PythonClassNode(constructor=int, children=None)
-    if type_hint is Long:
-        return {
-            "type": "long",
-            "long": {},
-        }, PythonClassNode(constructor=Long, children=None)
-    if type_hint is Short:
-        return {
-            "type": "short",
-            "short": {},
-        }, PythonClassNode(constructor=Short, children=None)
-    if type_hint is str:
-        return {
-            "type": "string",
-            "string": {},
-        }, PythonClassNode(constructor=str, children=None)
-    if type_hint is datetime.datetime:
-        # TODO: datetime.fromtimestamp(timestamp, datetime.UTC) instead once python version upgraded
-        return {
-            "type": "timestamp",
-            "timestamp": {},
-        }, PythonClassNode(constructor=lambda d: datetime.datetime.utcfromtimestamp(d / 1e3), children=None)
     if typing.get_origin(type_hint) is list:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
@@ -292,6 +232,66 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "elementsType": element_type,
             },
         }, PythonClassNode(constructor=list, children={"list": element_class_node})
+    if type_hint is bytes:
+        return {
+            "type": "binary",
+            "binary": {},
+        }, PythonClassNode(constructor=lambda x: bytes(x, encoding="utf8"), children=None)
+    if type_hint is bool:
+        return {
+            "type": "boolean",
+            "boolean": {},
+        }, PythonClassNode(constructor=bool, children=None)
+    if type_hint is Byte:
+        return {
+            "type": "byte",
+            "byte": {},
+        }, PythonClassNode(constructor=Byte, children=None)
+    if type_hint is datetime.date:
+        return {
+            "type": "date",
+            "date": {},
+        }, PythonClassNode(constructor=datetime.date.fromisoformat, children=None)
+    if type_hint is decimal.Decimal:
+        return {
+            "type": "decimal",
+            "decimal": {},
+        }, PythonClassNode(constructor=decimal.Decimal, children=None)
+    if type_hint is Double:
+        return {
+            "type": "double",
+            "double": {},
+        }, PythonClassNode(constructor=Double, children=None)
+    if type_hint is float:
+        return {
+            "type": "float",
+            "float": {},
+        }, PythonClassNode(constructor=float, children=None)
+    if type_hint is int:
+        return {
+            "type": "integer",
+            "integer": {},
+        }, PythonClassNode(constructor=int, children=None)
+    if type_hint is Long:
+        return {
+            "type": "long",
+            "long": {},
+        }, PythonClassNode(constructor=Long, children=None)
+    if type_hint is Short:
+        return {
+            "type": "short",
+            "short": {},
+        }, PythonClassNode(constructor=Short, children=None)
+    if type_hint is str:
+        return {
+            "type": "string",
+            "string": {},
+        }, PythonClassNode(constructor=str, children=None)
+    if type_hint is datetime.datetime:
+        return {
+            "type": "timestamp",
+            "timestamp": {},
+        }, PythonClassNode(constructor=lambda d: DatetimeConversionUtil.string_to_datetime(d), children=None)
     # will throw error if it is not valid
     _assert_is_valid_custom_type(type_hint)
     custom_type_fields = {}
