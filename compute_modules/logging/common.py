@@ -13,8 +13,10 @@
 #  limitations under the License.
 
 
+import json
 import logging
 import threading
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, MutableMapping, Optional, Tuple, Union
 
 # logging.LoggerAdapter was made generic in 3.11 so we need to determine at runtime
@@ -27,11 +29,30 @@ if TYPE_CHECKING:
 else:
     _LoggerAdapter = logging.LoggerAdapter
 
+DEFAULT_LOG_FORMAT = "PID: %(process_id)-6s JOB: %(job_id)-36s - %(message)s"
+DEFAULT_LOG_STRING_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
 
-# TODO: add replica ID to default log format
-DEFAULT_LOG_FORMAT = (
-    "%(levelname)-8s PID: %(process_id)-6s JOB: %(job_id)-36s LOC: %(filename)s:%(lineno)d - %(message)s"
-)
+
+class SlsFormatter(logging.Formatter):
+    """Custom SLS formatter for structured logging by sidecar"""
+
+    def format(self, record: Any) -> str:
+        process_id = getattr(record, "process_id", "-1")
+        job_id = getattr(record, "job_id", "")
+
+        log_entry = {
+            "type": getattr(record, "service_type", "service.1"),
+            "level": record.levelname,
+            "process_id": str(process_id),
+            "job_id": str(job_id),
+            "time": datetime.now(timezone.utc).isoformat(),
+            "origin": f"{record.filename}:{record.lineno}",
+            "safe": True,
+            "thread": threading.current_thread().name,
+            "message": record.getMessage(),
+        }
+        return json.dumps(log_entry)
+
 
 LOG_FORMATTER = None
 
@@ -56,7 +77,7 @@ def _create_logger(name: str) -> logging.Logger:
     """
     logger = logging.getLogger(name)
     handler = logging.StreamHandler()
-    formatter = LOG_FORMATTER if LOG_FORMATTER else logging.Formatter(DEFAULT_LOG_FORMAT)
+    formatter = LOG_FORMATTER if LOG_FORMATTER else DEFAULT_LOG_STRING_FORMATTER
     handler.setFormatter(formatter)
     logger.handlers.clear()
     logger.addHandler(handler)
@@ -90,13 +111,14 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         # Need to pass empty dict as `extra` param for 3.9 support
         super().__init__(_create_logger(logger_name), dict())
 
-    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
+    def process(self, msg: Any, kwargs: MutableMapping[str, Any]) -> Tuple[Any, MutableMapping[str, Any]]:
         custom_data = {
             "process_id": str(get_thread_local_data("process_id", "-1")),
             "job_id": str(get_thread_local_data("job_id", "")),
         }
         kwargs["extra"] = kwargs.get("extra", {})
         kwargs["extra"].update(custom_data)
+
         return msg, kwargs
 
 

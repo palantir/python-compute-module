@@ -20,16 +20,10 @@ import uuid
 import pytest
 
 from compute_modules.logging import get_logger, internal, setup_logger_formatter
-from compute_modules.logging.common import (
-    COMPUTE_MODULES_ADAPTER_MANAGER,
-    DEFAULT_LOG_FORMAT,
-    ComputeModulesLoggerAdapter,
-)
+from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
 from tests.conftest import JsonFormatter
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
-
-logging.basicConfig(format=DEFAULT_LOG_FORMAT)
 
 PROCESS_ID = 12345
 
@@ -61,6 +55,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=-1, job_id="") in log
+
     COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=PROCESS_ID)
     internal_logger.info(INFO_STR)
     logger_1.info(CLIENT_INFO_STR)
@@ -70,6 +65,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=PROCESS_ID, job_id="") in log
+
     job_id = str(uuid.uuid4())
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
     internal_logger.info(INFO_STR)
@@ -80,6 +76,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     assert len(parsed_out) == 3
     for log in parsed_out:
         assert format_log_context(pid=PROCESS_ID, job_id=job_id) in log
+
     # Test clearing now
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
     internal_logger.info(INFO_STR)

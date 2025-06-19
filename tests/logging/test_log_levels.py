@@ -41,11 +41,13 @@ def test_default_log_levels(
     # Need to actually re-set it here since we're overriding in other tests
     set_internal_log_level(logging.ERROR)
     emit_internal_logs()
-    assert DEBUG_STR not in caplog.text
-    assert INFO_STR not in caplog.text
-    assert WARNING_STR not in caplog.text
-    assert ERROR_STR in caplog.text
-    assert CRITICAL_STR in caplog.text
+    logged_messages = [record.message for record in caplog.records]
+
+    assert DEBUG_STR not in logged_messages
+    assert INFO_STR not in logged_messages
+    assert WARNING_STR not in logged_messages
+    assert ERROR_STR in logged_messages
+    assert CRITICAL_STR in logged_messages
 
 
 def test_log_level_override(
