@@ -25,7 +25,8 @@ class DatetimeConversionUtil:
         obj = datetime_obj.astimezone(timezone.utc)
         # Format as ISO 8601 string with 'Z' suffix
         return obj.strftime(
-            DatetimeConversionUtil.DATETIME_FORMAT_HIGHER_PRECISION_STRING if obj.microsecond > 0
+            DatetimeConversionUtil.DATETIME_FORMAT_HIGHER_PRECISION_STRING
+            if obj.microsecond > 0
             else DatetimeConversionUtil.DATETIME_FORMAT_STRING
         )
 
