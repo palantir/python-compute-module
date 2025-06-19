@@ -80,7 +80,7 @@ def _create_logger(name: str) -> logging.Logger:
     """
     logger = logging.getLogger(name)
     handler = logging.StreamHandler()
-    formatter = LOG_FORMATTER if LOG_FORMATTER else DEFAULT_LOG_STRING_FORMATTER
+    formatter = LOG_FORMATTER if LOG_FORMATTER else SLS_FORMATTER
     handler.setFormatter(formatter)
     logger.handlers.clear()
     logger.addHandler(handler)
