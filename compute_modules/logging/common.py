@@ -36,24 +36,27 @@ DEFAULT_LOG_STRING_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
 class SlsFormatter(logging.Formatter):
     """Custom SLS formatter for structured logging by sidecar"""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.string_formatter = DEFAULT_LOG_STRING_FORMATTER
+
     def format(self, record: Any) -> str:
-        process_id = getattr(record, "process_id", "-1")
-        job_id = getattr(record, "job_id", "")
+        # Use the default string formatter for the message field
+        formatted_message = self.string_formatter.format(record)
 
         log_entry = {
             "type": getattr(record, "service_type", "service.1"),
             "level": record.levelname,
-            "process_id": str(process_id),
-            "job_id": str(job_id),
             "time": datetime.now(timezone.utc).isoformat(),
             "origin": f"{record.filename}:{record.lineno}",
             "safe": True,
             "thread": threading.current_thread().name,
-            "message": record.getMessage(),
+            "message": formatted_message,
         }
         return json.dumps(log_entry)
 
 
+SLS_FORMATTER = SlsFormatter()
 LOG_FORMATTER = None
 
 
