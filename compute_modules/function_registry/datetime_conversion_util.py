@@ -18,13 +18,21 @@ from datetime import datetime, timezone
 
 class DatetimeConversionUtil:
     DATETIME_FORMAT_STRING = "%Y-%m-%dT%H:%M:%SZ"
+    DATETIME_FORMAT_HIGHER_PRECISION_STRING = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     @staticmethod
     def datetime_to_string(datetime_obj: datetime) -> str:
         obj = datetime_obj.astimezone(timezone.utc)
         # Format as ISO 8601 string with 'Z' suffix
-        return obj.strftime(DatetimeConversionUtil.DATETIME_FORMAT_STRING)
+        return obj.strftime(
+            DatetimeConversionUtil.DATETIME_FORMAT_HIGHER_PRECISION_STRING
+            if obj.microsecond > 0
+            else DatetimeConversionUtil.DATETIME_FORMAT_STRING
+        )
 
     @staticmethod
     def string_to_datetime(datetime_string: str) -> datetime:
-        return datetime.strptime(datetime_string, DatetimeConversionUtil.DATETIME_FORMAT_STRING)
+        try:
+            return datetime.strptime(datetime_string, DatetimeConversionUtil.DATETIME_FORMAT_STRING)
+        except ValueError:
+            return datetime.strptime(datetime_string, DatetimeConversionUtil.DATETIME_FORMAT_HIGHER_PRECISION_STRING)
