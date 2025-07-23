@@ -161,6 +161,29 @@ class InternalQueryService:
             self.logger.error(f"Get job request failed, attempting to re-establish connection {str(e)}")
             self.logger.error(traceback.format_exc())
             return None
+        
+    def report_job_result_failed(self, post_result_url: str, error: str) -> None:
+        body = json.dumps({"error": f"Unable to post job result: {error}"}).encode("utf-8")
+        for _ in range(POST_RESULT_MAX_ATTEMPTS):
+            try:
+                with self.session.request(
+                    method="POST",
+                    url=post_result_url,
+                    headers=self.post_result_headers,
+                    data=body,
+                    verify=self.certPath,
+                ) as response:
+                    if response.status_code == 204:
+                        self.logger.debug("Successfully reported that job result posting has failed")
+                        return
+                    else:
+                        self.logger.error(
+                            f"Failed to post result: {response.status_code} {response.reason} {response.text}"
+                        )
+            except Exception as e:
+                self.logger.error(f"Failed to report that post result has failed: {str(e)}")
+                
+        raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
 
     def report_job_result(self, job_id: str, body: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
@@ -179,17 +202,17 @@ class InternalQueryService:
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
-                        self.logger.error(
-                            f"Failed to post result: {response.status_code} {response.reason} {response.text}"
-                        )
+                        error = f"Failed to post result: {response.status_code} {response.reason} {response.text}"
+                        self.logger.error(error)
             except TypeError as e:
                 self.logger.error(f"Failed to serialize result to json: {str(e)}")
                 self.report_job_result(job_id, json.dumps(self.get_failed_query(e)).encode("utf-8"))
                 return
             except Exception as e:
-                self.logger.error(f"POST of job result failed, attempting to re-establish connection: {str(e)}")
-                self.logger.error(traceback.format_exc())
-        raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
+                error = f"POST of job result failed, attempting to re-establish connection: {str(e)} \n {traceback.format_exc()}"
+                self.logger.error(error)
+
+        self.report_job_result_failed(post_result_url, error)
 
     def handle_job(self, job: Dict[str, Any]) -> None:
         self.logger.info("handling job")
