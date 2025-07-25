@@ -33,6 +33,7 @@ from ..context import get_extra_context_parameters
 from .encoder import CustomJSONEncoder
 
 POST_RESULT_MAX_ATTEMPTS = 5
+POST_ERROR_MAX_ATTEMPTS = 3
 POST_SCHEMAS_MAX_ATTEMPTS = 5
 
 
@@ -163,8 +164,8 @@ class InternalQueryService:
             return None
         
     def report_job_result_failed(self, post_result_url: str, error: str) -> None:
-        body = json.dumps({"error": f"Unable to post job result: {error}"}).encode("utf-8")
-        for _ in range(POST_RESULT_MAX_ATTEMPTS):
+        body = json.dumps({"error": f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts; \n Now attempting to return the error as the result: {error}"}).encode("utf-8")
+        for _ in range(POST_ERROR_MAX_ATTEMPTS):
             try:
                 with self.session.request(
                     method="POST",
@@ -183,7 +184,7 @@ class InternalQueryService:
             except Exception as e:
                 self.logger.error(f"Failed to report that post result has failed: {str(e)}")
                 
-        raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts")
+        raise RuntimeError(f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts and unable to report that post result has failed after {POST_ERROR_MAX_ATTEMPTS} attempts")
 
     def report_job_result(self, job_id: str, body: Any) -> None:
         post_result_path = f"{self.post_result_path}/{job_id}"
