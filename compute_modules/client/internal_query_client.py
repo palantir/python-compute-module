@@ -163,14 +163,14 @@ class InternalQueryService:
             self.logger.error(traceback.format_exc())
             return None
 
-    def report_job_result_failed(self, post_result_url: str, error_body: bytes) -> None:
+    def report_job_result_failed(self, post_result_url: str, error: str) -> None:
         for _ in range(POST_ERROR_MAX_ATTEMPTS):
             try:
                 with self.session.request(
                     method="POST",
                     url=post_result_url,
                     headers=self.post_result_headers,
-                    data=error_body,
+                    data=json.dumps({"error": error}).encode("utf-8"),
                     verify=self.certPath,
                 ) as response:
                     if response.status_code == 204:
@@ -207,17 +207,13 @@ class InternalQueryService:
             except TypeError as e:
                 error = f"Failed to serialize result to json: {self.get_failed_query(e)}"
                 self.logger.error(error)
-                self.report_job_result_failed(post_result_url, json.dumps({"error": error}).encode("utf-8"))
+                self.report_job_result_failed(post_result_url, error)
                 return
             except Exception as e:
                 error = f"POST of job result failed, attempting to re-establish connection: {str(e)} \n {traceback.format_exc()}"
                 self.logger.error(error)
 
-        error = json.dumps(
-            {
-                "error": f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts; \n Now attempting to return the error as the result: {error}"
-            }
-        ).encode("utf-8")
+        error = f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts; \n Now attempting to return the error as the result: {error}"
         self.logger.debug(error)
         self.report_job_result_failed(post_result_url, error)
 
