@@ -214,7 +214,7 @@ class InternalQueryService:
                 self.logger.error(error)
 
         error = f"Unable to post job result after {POST_RESULT_MAX_ATTEMPTS} attempts; \n Now attempting to return the error as the result: {error}"
-        self.logger.debug(error)
+        self.logger.error(error)
         self.report_job_result_failed(post_result_url, error)
 
     def handle_job(self, job: Dict[str, Any]) -> None:
