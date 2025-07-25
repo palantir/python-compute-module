@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: 'After this fix: If the job posting fails 5 times (e.g. result too
+    large) then the client tries 5 more times to post just a simple error message.'
+  links:
+  - https://github.com/palantir/python-compute-module/pull/39
