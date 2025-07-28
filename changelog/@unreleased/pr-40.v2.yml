@@ -1,0 +1,14 @@
+type: fix
+fix:
+  description: "Before this PR:\n<!-- What's wrong with the current state of the world
+    and why change it now? -->\nIf the user code crashes the forwarder will think
+    the user code is still running until the user code posts a result for the same
+    jobId. However, after restarting the user code will not know about the previously
+    failed job so it will never report on it. This way a node/module might be blocked
+    from receiving new requests after restarting.
+    
+    \n\nAfter this PR:\n<!-- User-facing outcomes this PR delivers go below -->\nWe inform the
+    forwarder whenever a node starts up so it will remove all existing jobs related
+    to it that it thinks are still running."
+  links:
+  - https://github.com/palantir/python-compute-module/pull/40

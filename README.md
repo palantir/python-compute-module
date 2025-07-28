@@ -254,6 +254,24 @@ class MyPayload:
 | Iterable (w/ streaming) | Array        | stream of JSON          |
 
 
+### Advanced Usage 3 - Disabling Reporting restart:
+
+If your runtime don't has the restart-notify endpoint defined, you can set report_restart to False in the `start_compute_module` call and it will not call the endpoint when the module is restarted. The default is True. If set to True it will automatically clear all jobs that the forwarder thinks are still running in the user container.
+
+```python
+# app.py
+from compute_modules.annotations import function
+from compute_modules import start_compute_module
+
+
+@function
+def add(context, event) -> int:
+    return event["x"] + event["y"]
+
+if __name__ == "__main__":
+    start_compute_module(report_restart=False)
+```
+
 ### `QueryContext` typing
 
 You can annotate the `context` param in any function with the `QueryContext` type to make it statically typed:

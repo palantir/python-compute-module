@@ -89,6 +89,7 @@ def _worker_thread_init() -> None:
 
 def start_compute_module(
     concurrency_type: ConcurrencyType = ConcurrencyType.PROCESS_POOL,
+    report_restart: bool = True,
 ) -> None:
     """Starts a Compute Module that will Poll for jobs indefinitely"""
     if DISABLE_STARTUP:
@@ -103,6 +104,8 @@ def start_compute_module(
         streaming=STREAMING,
     )
     QUERY_CLIENT.post_query_schemas()
+    if report_restart:
+        QUERY_CLIENT.report_restart()
     QUERY_CLIENT.logger.info(f"Starting to poll for jobs with concurrency {QUERY_CLIENT.concurrency}")
     if concurrency_type == ConcurrencyType.PROCESS_POOL:
         with Pool(QUERY_CLIENT.concurrency, initializer=_worker_process_init) as pool:
