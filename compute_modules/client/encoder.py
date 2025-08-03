@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import dataclasses
 import json
 from datetime import date, datetime
 from typing import Any
@@ -21,6 +22,12 @@ from compute_modules.function_registry.datetime_conversion_util import DatetimeC
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
+        if dataclasses.is_dataclass(obj):
+            return {
+                field.name: self.default(getattr(obj, field.name))
+                for field in dataclasses.fields(obj)
+                if getattr(obj, field.name) is not None
+            }
         if isinstance(obj, datetime):
             return DatetimeConversionUtil.datetime_to_string(obj)
         if isinstance(obj, date):
