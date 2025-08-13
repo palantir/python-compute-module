@@ -41,7 +41,9 @@ def get_source(source_api_name: str):  # type: ignore[no-untyped-def]
         from external_systems.sources import (
             AwsCredentials,
             ClientCertificate,
+            GcpOauthCredentials,
             HttpsConnectionParameters,
+            OauthCredentials,
             Source,
             SourceCredentials,
             SourceParameters,
@@ -57,6 +59,47 @@ def get_source(source_api_name: str):  # type: ignore[no-untyped-def]
         if credentials is None:
             return None
 
+        cloud_credentials = _maybe_get_cloud_credentials(credentials)
+        if cloud_credentials is not None:
+            return cloud_credentials
+
+        gcp_oauth_credentials = _maybe_get_gcp_oauth_credentials(credentials)
+        if gcp_oauth_credentials is not None:
+            return gcp_oauth_credentials
+
+        oauth2_credentials = _maybe_get_oauth_credentials(credentials)
+        if oauth2_credentials is not None:
+            return oauth2_credentials
+
+        return None
+
+    def _maybe_get_oauth_credentials(
+        credentials: Any,
+    ) -> Optional[SourceCredentials]:
+        oauth_credentials = credentials.get("oauth2Credentials")
+        if oauth_credentials is None:
+            return None
+
+        return OauthCredentials(
+            access_token=oauth_credentials.get("accessToken"),
+            expiration=datetime.strptime(oauth_credentials.get("expiration"), JAVA_OFFSET_DATETIME_FORMAT),
+        )
+
+    def _maybe_get_gcp_oauth_credentials(
+        credentials: Any,
+    ) -> Optional[SourceCredentials]:
+        gcp_oauth_credentials = credentials.get("gcpOauthCredentials", None)
+        if gcp_oauth_credentials is None:
+            return None
+
+        return GcpOauthCredentials(
+            access_token=gcp_oauth_credentials.get("accessToken"),
+            expiration=datetime.strptime(gcp_oauth_credentials.get("expiration"), JAVA_OFFSET_DATETIME_FORMAT),
+        )
+
+    def _maybe_get_cloud_credentials(
+        credentials: Any,
+    ) -> Optional[SourceCredentials]:
         cloud_credentials = credentials.get("cloudCredentials", None)
         if cloud_credentials is None:
             return None
