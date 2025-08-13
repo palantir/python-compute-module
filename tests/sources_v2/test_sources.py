@@ -127,7 +127,6 @@ def test_get_source_without_http_connection(mock_source_config_file: Path, mock_
 def test_get_source_get_aws_credentials_with_aws_session_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with session credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -169,7 +168,6 @@ def test_get_source_get_aws_credentials_with_aws_session_credentials(
 def test_get_source_get_aws_credentials_with_aws_basic_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with basic credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -204,7 +202,6 @@ def test_get_source_get_aws_credentials_with_aws_basic_credentials(
 def test_get_source_get_session_credentials_with_aws_session_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with session credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -246,7 +243,6 @@ def test_get_source_get_session_credentials_with_aws_session_credentials(
 def test_get_source_get_session_credentials_with_aws_basic_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with basic credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -281,7 +277,6 @@ def test_get_source_get_session_credentials_with_aws_basic_credentials(
 def test_get_source_get_session_credentials_with_gcp_oauth_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with basic credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -315,7 +310,6 @@ def test_get_source_get_session_credentials_with_gcp_oauth_credentials(
 def test_get_source_get_session_credentials_with_oauth2_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with basic credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
