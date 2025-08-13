@@ -20,7 +20,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
-from external_systems.sources import AwsCredentials, Source
+from external_systems.sources import AwsCredentials, GcpOauthCredentials, OauthCredentials, Source
 
 from compute_modules.sources_v2 import get_source
 from compute_modules.sources_v2._api import (
@@ -120,12 +120,13 @@ def test_get_source_without_http_connection(mock_source_config_file: Path, mock_
         ]
         with pytest.raises(ValueError):
             source.get_https_connection()
+        with pytest.raises(ValueError):
+            source.get_session_credentials()
 
 
-def test_get_source_with_aws_session_credentials(
+def test_get_source_get_aws_credentials_with_aws_session_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with session credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -164,10 +165,9 @@ def test_get_source_with_aws_session_credentials(
         )
 
 
-def test_get_source_with_aws_basic_credentials(
+def test_get_source_get_aws_credentials_with_aws_basic_credentials(
     mock_source_config_file: Path, mock_service_discovery_file: Path
 ) -> None:
-    # Create a source config with basic credentials directly in the JSON
     source_config = {
         "test_source": {
             "secrets": {},
@@ -196,6 +196,144 @@ def test_get_source_with_aws_basic_credentials(
         assert source.get_aws_credentials().get() == AwsCredentials(
             access_key_id="ACCESS_KEY",
             secret_access_key="SECRET_KEY",
+        )
+
+
+def test_get_source_get_session_credentials_with_aws_session_credentials(
+    mock_source_config_file: Path, mock_service_discovery_file: Path
+) -> None:
+    source_config = {
+        "test_source": {
+            "secrets": {},
+            "sourceConfiguration": {"type": "s3"},
+            "resolvedCredentials": {
+                "cloudCredentials": {
+                    "awsCredentials": {
+                        "sessionCredentials": {
+                            "accessKeyId": "ACCESS_KEY",
+                            "secretAccessKey": "SECRET_KEY",
+                            "sessionToken": "SESSION_TOKEN",
+                            "expiration": "2023-01-01T00:00:00Z",
+                        }
+                    }
+                }
+            },
+        }
+    }
+
+    mock_source_config_file.write_text(json.dumps(source_config))
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            SOURCE_CONFIGURATIONS_PATH: str(mock_source_config_file),
+            SERVICE_DISCOVERY_PATH: str(mock_service_discovery_file),
+        },
+    ):
+        source = get_source("test_source")
+        assert isinstance(source, Source)
+        assert source.get_session_credentials().get() == AwsCredentials(
+            access_key_id="ACCESS_KEY",
+            secret_access_key="SECRET_KEY",
+            session_token="SESSION_TOKEN",
+            expiration=datetime.strptime("2023-01-01T00:00:00Z", JAVA_OFFSET_DATETIME_FORMAT),
+        )
+
+
+def test_get_source_get_session_credentials_with_aws_basic_credentials(
+    mock_source_config_file: Path, mock_service_discovery_file: Path
+) -> None:
+    source_config = {
+        "test_source": {
+            "secrets": {},
+            "sourceConfiguration": {"type": "s3"},
+            "resolvedCredentials": {
+                "cloudCredentials": {
+                    "awsCredentials": {
+                        "basicCredentials": {"accessKeyId": "ACCESS_KEY", "secretAccessKey": "SECRET_KEY"}
+                    }
+                }
+            },
+        }
+    }
+
+    mock_source_config_file.write_text(json.dumps(source_config))
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            SOURCE_CONFIGURATIONS_PATH: str(mock_source_config_file),
+            SERVICE_DISCOVERY_PATH: str(mock_service_discovery_file),
+        },
+    ):
+        source = get_source("test_source")
+        assert isinstance(source, Source)
+        assert source.get_session_credentials().get() == AwsCredentials(
+            access_key_id="ACCESS_KEY",
+            secret_access_key="SECRET_KEY",
+        )
+
+
+def test_get_source_get_session_credentials_with_gcp_oauth_credentials(
+    mock_source_config_file: Path, mock_service_discovery_file: Path
+) -> None:
+    source_config = {
+        "test_source": {
+            "secrets": {},
+            "sourceConfiguration": {"type": "bigquery"},
+            "resolvedCredentials": {
+                "gcpOauthCredentials": {
+                    "accessToken": "ACCESS_TOKEN",
+                    "expiration": "2023-01-01T00:00:00Z",
+                }
+            },
+        }
+    }
+
+    mock_source_config_file.write_text(json.dumps(source_config))
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            SOURCE_CONFIGURATIONS_PATH: str(mock_source_config_file),
+            SERVICE_DISCOVERY_PATH: str(mock_service_discovery_file),
+        },
+    ):
+        source = get_source("test_source")
+        assert isinstance(source, Source)
+        assert source.get_session_credentials().get() == GcpOauthCredentials(
+            access_token="ACCESS_TOKEN",
+            expiration=datetime.strptime("2023-01-01T00:00:00Z", JAVA_OFFSET_DATETIME_FORMAT),
+        )
+
+
+def test_get_source_get_session_credentials_with_oauth2_credentials(
+    mock_source_config_file: Path, mock_service_discovery_file: Path
+) -> None:
+    source_config = {
+        "test_source": {
+            "secrets": {},
+            "sourceConfiguration": {"type": "webhooks-rest"},
+            "resolvedCredentials": {
+                "oauth2Credentials": {"accessToken": "ACCESS_TOKEN", "expiration": "2023-01-01T00:00:00Z"}
+            },
+        }
+    }
+
+    mock_source_config_file.write_text(json.dumps(source_config))
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            SOURCE_CONFIGURATIONS_PATH: str(mock_source_config_file),
+            SERVICE_DISCOVERY_PATH: str(mock_service_discovery_file),
+        },
+    ):
+        source = get_source("test_source")
+        assert isinstance(source, Source)
+        assert source.get_session_credentials().get() == OauthCredentials(
+            access_token="ACCESS_TOKEN",
+            expiration=datetime.strptime("2023-01-01T00:00:00Z", JAVA_OFFSET_DATETIME_FORMAT),
         )
 
 
