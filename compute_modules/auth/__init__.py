@@ -14,10 +14,11 @@
 
 
 from .pipeline import retrieve_pipeline_token
-from .third_party import oauth, retrieve_third_party_id_and_creds
+from .third_party import RefreshingOauthToken, oauth, retrieve_third_party_id_and_creds
 
 __all__ = [
     "oauth",
+    "RefreshingOauthToken",
     "retrieve_pipeline_token",
     "retrieve_third_party_id_and_creds",
 ]

@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from compute_modules.auth.third_party import RefreshingOauthToken
+from compute_modules.auth import RefreshingOauthToken
 
 # Mock data
 MOCK_HOSTNAME: str = "example.com"
