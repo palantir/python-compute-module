@@ -303,7 +303,8 @@ class InternalQueryService:
                         f"Reporting restart response status: {response.status_code} reason: {response.reason}"
                     )
                     if response.status_code == 200:
-                        self.logger.debug("Successfully reported restart")
+                        removed_jobs = response.json()
+                        self.logger.warning("Successfully reported restart. The following jobs got removed from the queue: " + ", ".join(removed_jobs))
                         return
                     else:
                         self.logger.error(
