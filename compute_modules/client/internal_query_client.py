@@ -34,7 +34,7 @@ from .encoder import CustomJSONEncoder
 
 POST_RESULT_MAX_ATTEMPTS = 5
 POST_ERROR_MAX_ATTEMPTS = 3
-POST_SCHEMAS_MAX_ATTEMPTS = 5
+POST_SCHEMAS_MAX_ATTEMPTS = 10
 POST_RESTART_MAX_ATTEMPTS = 5
 
 
@@ -289,7 +289,6 @@ class InternalQueryService:
     def report_restart(self) -> None:
         post_restart_url = self.build_url(self.post_restart_path)
         self.logger.debug(f"Reporting restart to {post_restart_url}")
-        self.logger.info("Reporting restart to {post_restart_url}")
 
         for _ in range(POST_RESTART_MAX_ATTEMPTS):
             try:
@@ -304,7 +303,7 @@ class InternalQueryService:
                     )
                     if response.status_code == 200:
                         removed_jobs = response.json()
-                        self.logger.warning("Successfully reported restart. The following jobs got removed from the queue: " + ", ".join(removed_jobs))
+                        self.logger.warning(f"Successfully reported restart. The following jobs got removed from the queue: {", ".join(removed_jobs)}")
                         return
                     else:
                         self.logger.error(
