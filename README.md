@@ -257,7 +257,7 @@ class MyPayload:
 ### Advanced Usage 3 - Disabling Reporting restart:
 
 
-If your runtime don't has the restart-notify endpoint defined, you can set report_restart to False in the `start_compute_module` call and it will not call the endpoint when the module is restarted. The default is True. If set to True it will automatically clear all jobs that the forwarder thinks are still running in the user container.
+If your runtime doesn't have the restart-notify endpoint defined, you can set report_restart to False in the `start_compute_module` call and it will not call the endpoint when the module is restarted. The default is True. If set to True it will automatically clear all jobs that the forwarder thinks are still running in the user container.
 
 Reporting the restart is important, because if the container restarts, the forwarder container will wait up to 22 hours for the job to complete. As a result, your replicas could become blocked and make no progress on new jobs. Therefore, it is recommended that you always set report_restart to True.
 
