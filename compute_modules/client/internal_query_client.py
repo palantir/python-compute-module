@@ -35,6 +35,7 @@ from .encoder import CustomJSONEncoder
 POST_RESULT_MAX_ATTEMPTS = 5
 POST_ERROR_MAX_ATTEMPTS = 3
 POST_SCHEMAS_MAX_ATTEMPTS = 5
+POST_RESTART_MAX_ATTEMPTS = 5
 
 
 def _extract_path_from_url(url: str) -> str:
@@ -61,6 +62,7 @@ class InternalQueryService:
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
         self.post_result_path = _extract_path_from_url(os.environ["POST_RESULT_URI"])
         self.post_schema_path = _extract_path_from_url(os.environ["POST_SCHEMA_URI"])
+        self.post_restart_path = _extract_path_from_url(os.environ["RESTART_NOTIFICATION_URI"])
         self._initialize_auth_token()
         self._initialize_headers()
         self.certPath = os.environ["CONNECTIONS_TO_OTHER_PODS_CA_PATH"]
@@ -97,6 +99,7 @@ class InternalQueryService:
             "Module-Auth-Token": self.moduleAuthToken,
         }
         self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
+        self.post_restart_headers = {"Module-Auth-Token": self.moduleAuthToken}
 
     def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
         self.logger.debug("iterating over result")
@@ -282,3 +285,33 @@ class InternalQueryService:
     @staticmethod
     def get_failed_query(exception: Exception) -> Dict[str, str]:
         return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
+
+    def report_restart(self) -> None:
+        post_restart_url = self.build_url(self.post_restart_path)
+        self.logger.debug(f"Reporting restart to {post_restart_url}")
+
+        for _ in range(POST_RESTART_MAX_ATTEMPTS):
+            try:
+                with self.session.request(
+                    method="POST",
+                    url=post_restart_url,
+                    headers=self.post_restart_headers,
+                    verify=self.certPath,
+                ) as response:
+                    self.logger.debug(
+                        f"Reporting restart response status: {response.status_code} reason: {response.reason}"
+                    )
+                    if response.status_code == 200:
+                        removed_jobs = ", ".join(response.json())
+                        self.logger.warning(
+                            f"Successfully reported restart. The following jobs got removed from the queue: {removed_jobs}"
+                        )
+                        return
+                    else:
+                        self.logger.error(
+                            f"Unsuccessful in reporting restart: {response.status_code} {response.reason} {response.text}"
+                        )
+            except Exception as e:
+                self.logger.error(f"Failed to report restart: {str(e)}")
+
+        raise RuntimeError(f"Unable to report restart after {POST_RESTART_MAX_ATTEMPTS} attempts")
