@@ -53,7 +53,8 @@ class InternalQueryService:
         self.get_job_url = os.environ["GET_JOB_URI_V2"]
         self.post_result_url = os.environ["POST_RESULT_URI_V2"]
         self.post_schema_url = os.environ["POST_SCHEMA_URI_V2"]
-        self.post_restart_url = os.environ["RESTART_NOTIFICATION_URI_V2"]
+        # self.post_restart_url = os.environ["RESTART_NOTIFICATION_URI_V2"]
+        self.post_restart_url = f"http://{os.environ['RUNTIME_API_V2']}/restart-notify"
         self._initialize_headers()
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
