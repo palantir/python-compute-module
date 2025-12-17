@@ -95,7 +95,7 @@ class InternalQueryService:
         self.session = requests.Session()
 
     def build_url(self, path: str) -> str:
-        return f"https://{self.host}:{self.port}{path}"
+        return f"http://{self.host}:{self.port}{path}"
 
     def post_query_schemas(self) -> None:
         """Post the function schemas of the Compute Module"""
