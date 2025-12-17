@@ -15,7 +15,6 @@
 
 import json
 import os
-import ssl
 import time
 import traceback
 from typing import Any, Callable, Dict, Iterable, List
@@ -58,15 +57,12 @@ class InternalQueryService:
         self.is_function_context_typed = is_function_context_typed
         self.streaming = streaming
         self.host = os.environ["RUNTIME_HOST"]
-        self.port = int(os.environ["RUNTIME_PORT"])
+        self.port = int(os.environ["RUNTIME_PORT_V2"])
         self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
         self.post_result_path = _extract_path_from_url(os.environ["POST_RESULT_URI"])
         self.post_schema_path = _extract_path_from_url(os.environ["POST_SCHEMA_URI"])
         self.post_restart_path = _extract_path_from_url(os.environ["RESTART_NOTIFICATION_URI"])
-        self._initialize_auth_token()
         self._initialize_headers()
-        self.certPath = os.environ["CONNECTIONS_TO_OTHER_PODS_CA_PATH"]
-        self.context = ssl.create_default_context(cafile=self.certPath)
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
         self.logger = get_internal_logger()
@@ -84,22 +80,9 @@ class InternalQueryService:
         """Set the process_id for internal & public logger"""
         COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=process_id)
 
-    def _initialize_auth_token(self) -> None:
-        try:
-            with open(os.environ["MODULE_AUTH_TOKEN"], "r", encoding="utf-8") as f:
-                self.moduleAuthToken = f.read()
-        except Exception as e:
-            self.logger.error(f"Failed to read auth token: {str(e)}")
-            raise
-
     def _initialize_headers(self) -> None:
-        self.get_job_headers = {"Module-Auth-Token": self.moduleAuthToken}
-        self.post_result_headers = {
-            "Content-Type": "application/octet-stream",
-            "Module-Auth-Token": self.moduleAuthToken,
-        }
-        self.post_schema_headers = {"Content-Type": "application/json", "Module-Auth-Token": self.moduleAuthToken}
-        self.post_restart_headers = {"Module-Auth-Token": self.moduleAuthToken}
+        self.post_result_headers = {"Content-Type": "application/octet-stream"}
+        self.post_schema_headers = {"Content-Type": "application/json"}
 
     def _iterable_to_json_generator(self, iterable: Iterable[Any]) -> Iterable[bytes]:
         self.logger.debug("iterating over result")
@@ -124,7 +107,6 @@ class InternalQueryService:
                     url=self.build_url(self.post_schema_path),
                     json=self.function_schemas,
                     headers=self.post_schema_headers,
-                    verify=self.certPath,
                 ) as response:
                     self.logger.debug(
                         f"POST /schemas response status: {response.status_code} reason: {response.reason}"
@@ -144,8 +126,6 @@ class InternalQueryService:
             with self.session.request(
                 method="GET",
                 url=self.build_url(self.get_job_path),
-                headers=self.get_job_headers,
-                verify=self.certPath,
             ) as response:
                 result = None
                 if response.status_code == 200:
@@ -174,7 +154,6 @@ class InternalQueryService:
                     url=post_result_url,
                     headers=self.post_result_headers,
                     data=json.dumps({"error": error}).encode("utf-8"),
-                    verify=self.certPath,
                 ) as response:
                     if response.status_code == 204:
                         self.logger.debug("Successfully reported that job result posting has failed")
@@ -199,7 +178,6 @@ class InternalQueryService:
                     url=post_result_url,
                     headers=self.post_result_headers,
                     data=body,
-                    verify=self.certPath,
                 ) as response:
                     if response.status_code == 204:
                         self.logger.debug("Successfully reported job result")
@@ -295,8 +273,6 @@ class InternalQueryService:
                 with self.session.request(
                     method="POST",
                     url=post_restart_url,
-                    headers=self.post_restart_headers,
-                    verify=self.certPath,
                 ) as response:
                     self.logger.debug(
                         f"Reporting restart response status: {response.status_code} reason: {response.reason}"
