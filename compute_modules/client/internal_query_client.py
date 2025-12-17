@@ -54,7 +54,7 @@ class InternalQueryService:
         self.post_result_url = os.environ["POST_RESULT_URI_V2"]
         self.post_schema_url = os.environ["POST_SCHEMA_URI_V2"]
         # self.post_restart_url = os.environ["RESTART_NOTIFICATION_URI_V2"]
-        self.post_restart_url = f"http://{os.environ['RUNTIME_API_V2']}/restart-notify"
+        self.post_restart_url = f"{os.environ['RUNTIME_API_V2']}/restart-notify"
         self._initialize_headers()
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
@@ -169,7 +169,8 @@ class InternalQueryService:
                     headers=self.post_result_headers,
                     data=body,
                 ) as response:
-                    if response.status_code == 204:
+                    # HTTP version returns 202 while witchcraft returns 204
+                    if response.status_code in (202, 204):
                         self.logger.debug("Successfully reported job result")
                         return
                     else:
