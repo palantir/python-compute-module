@@ -146,7 +146,8 @@ class InternalQueryService:
                     headers=self.post_result_headers,
                     data=json.dumps({"error": error}).encode("utf-8"),
                 ) as response:
-                    if response.status_code == 204:
+                    # HTTP version returns 202 while witchcraft returns 204
+                    if response.status_code in (202, 204):
                         self.logger.debug("Successfully reported that job result posting has failed")
                         return
                     else:
