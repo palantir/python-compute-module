@@ -18,7 +18,6 @@ import os
 import time
 import traceback
 from typing import Any, Callable, Dict, Iterable, List
-from urllib.parse import urlparse
 
 import requests
 
@@ -37,11 +36,6 @@ POST_SCHEMAS_MAX_ATTEMPTS = 5
 POST_RESTART_MAX_ATTEMPTS = 5
 
 
-def _extract_path_from_url(url: str) -> str:
-    parsed_url = urlparse(url)
-    return parsed_url.path
-
-
 class InternalQueryService:
     def __init__(
         self,
@@ -56,12 +50,10 @@ class InternalQueryService:
         self.function_schema_conversions = function_schema_conversions
         self.is_function_context_typed = is_function_context_typed
         self.streaming = streaming
-        self.host = os.environ["RUNTIME_HOST"]
-        self.port = int(os.environ["RUNTIME_PORT_V2"])
-        self.get_job_path = _extract_path_from_url(os.environ["GET_JOB_URI"])
-        self.post_result_path = _extract_path_from_url(os.environ["POST_RESULT_URI"])
-        self.post_schema_path = _extract_path_from_url(os.environ["POST_SCHEMA_URI"])
-        self.post_restart_path = _extract_path_from_url(os.environ["RESTART_NOTIFICATION_URI"])
+        self.get_job_url = os.environ["GET_JOB_URI_V2"]
+        self.post_result_url = os.environ["POST_RESULT_URI_V2"]
+        self.post_schema_url = os.environ["POST_SCHEMA_URI_V2"]
+        self.post_restart_url = os.environ["RESTART_NOTIFICATION_URI_V2"]
         self._initialize_headers()
         self.connection_refused_count: int = 0
         self.concurrency = int(os.environ.get("MAX_CONCURRENT_TASKS", 1))
@@ -94,17 +86,15 @@ class InternalQueryService:
         """Initialize requests.Session"""
         self.session = requests.Session()
 
-    def build_url(self, path: str) -> str:
-        return f"http://{self.host}:{self.port}{path}"
-
     def post_query_schemas(self) -> None:
         """Post the function schemas of the Compute Module"""
         self.logger.debug(f"Posting function schemas: {self.function_schemas}")
+        self.logger.debug(f"post_schema_url: {self.post_schema_url}")
         for i in range(POST_SCHEMAS_MAX_ATTEMPTS):
             try:
                 with self.session.request(
                     method="POST",
-                    url=self.build_url(self.post_schema_path),
+                    url=self.post_schema_url,
                     json=self.function_schemas,
                     headers=self.post_schema_headers,
                 ) as response:
@@ -125,7 +115,7 @@ class InternalQueryService:
         try:
             with self.session.request(
                 method="GET",
-                url=self.build_url(self.get_job_path),
+                url=self.get_job_url,
             ) as response:
                 result = None
                 if response.status_code == 200:
@@ -168,8 +158,7 @@ class InternalQueryService:
         raise RuntimeError(f"Unable to report that post result has failed after {POST_ERROR_MAX_ATTEMPTS} attempts")
 
     def report_job_result(self, job_id: str, body: Any) -> None:
-        post_result_path = f"{self.post_result_path}/{job_id}"
-        post_result_url = self.build_url(post_result_path)
+        post_result_url = f"{self.post_result_url}/{job_id}"
         self.logger.debug(f"Posting result to {post_result_url}")
         for _ in range(POST_RESULT_MAX_ATTEMPTS):
             try:
@@ -265,14 +254,13 @@ class InternalQueryService:
         return {"exception": f"{str(exception)}: {traceback.format_exc()}"}
 
     def report_restart(self) -> None:
-        post_restart_url = self.build_url(self.post_restart_path)
-        self.logger.debug(f"Reporting restart to {post_restart_url}")
+        self.logger.debug(f"Reporting restart to {self.post_restart_url}")
 
         for _ in range(POST_RESTART_MAX_ATTEMPTS):
             try:
                 with self.session.request(
                     method="POST",
-                    url=post_restart_url,
+                    url=self.post_restart_url,
                 ) as response:
                     self.logger.debug(
                         f"Reporting restart response status: {response.status_code} reason: {response.reason}"
