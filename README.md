@@ -1,3 +1,7 @@
+<p align="right">
+<a href="https://autorelease.general.dmz.palantir.tech/palantir/python-compute-module"><img src="https://img.shields.io/badge/Perform%20an-Autorelease-success.svg" alt="Autorelease"></a>
+</p>
+
 # Compute Module Lib
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/foundry-compute-modules)
 [![PyPI](https://img.shields.io/pypi/v/foundry-compute-modules)](https://pypi.org/project/foundry-compute-modules/)
