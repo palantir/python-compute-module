@@ -52,10 +52,8 @@ class SlsFormatter(logging.Formatter):
             "origin": f"{record.filename}:{record.lineno}",
             "safe": True,
             "thread": threading.current_thread().name,
-            "sessionId": getattr(record, "session_id", ""),
-            "message": formatted_message,
             "params": getattr(record, "params", {}),
-            "unsafeParams": getattr(record, "unsafeParams", {}),
+            "message": formatted_message,
         }
         return json.dumps(log_entry)
 
@@ -127,7 +125,6 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         kwargs["extra"] = kwargs.get("extra", {})
         kwargs["extra"].update(custom_data)
         kwargs["extra"]["params"] = custom_data
-        kwargs["extra"]["unsafeParams"] = custom_data
 
         return msg, kwargs
 
