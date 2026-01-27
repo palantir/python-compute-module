@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 else:
     _LoggerAdapter = logging.LoggerAdapter
 
-DEFAULT_LOG_FORMAT = "PID: %(process_id)-6s JOB: %(job_id)-36s - %(message)s"
+DEFAULT_LOG_FORMAT = "%(message)s"
 DEFAULT_LOG_STRING_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
 
 
