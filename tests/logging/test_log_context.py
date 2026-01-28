@@ -40,8 +40,13 @@ def logger_fixtures() -> tuple[ComputeModulesLoggerAdapter, ComputeModulesLogger
     return (internal_logger, logger_1, logger_2)
 
 
-def format_log_context(pid: int, job_id: str) -> str:
-    return f"PID: {pid:<6} JOB: {job_id:<37}"
+def assert_log_params(log: str, process_id: int, job_id: str, session_id: str = "") -> None:
+    """Parse log JSON and verify params field contains expected values"""
+    log_json = json.loads(log)
+    params = log_json["params"]
+    assert params["process_id"] == str(process_id), f"Expected process_id {process_id}, got {params['process_id']}"
+    assert params["job_id"] == job_id, f"Expected job_id {job_id}, got {params['job_id']}"
+    assert params["session_id"] == session_id, f"Expected session_id {session_id}, got {params['session_id']}"
 
 
 def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFormatter) -> None:
@@ -54,7 +59,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=-1, job_id="") in log
+        assert_log_params(log, process_id=-1, job_id="")
 
     COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=PROCESS_ID)
     internal_logger.info(INFO_STR)
@@ -64,7 +69,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=PROCESS_ID, job_id="") in log
+        assert_log_params(log, process_id=PROCESS_ID, job_id="")
 
     job_id = str(uuid.uuid4())
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id=job_id)
@@ -75,7 +80,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=PROCESS_ID, job_id=job_id) in log
+        assert_log_params(log, process_id=PROCESS_ID, job_id=job_id)
 
     # Test clearing now
     COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
@@ -86,7 +91,7 @@ def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFo
     parsed_out = list(filter(lambda x: x, captured.err.split("\n")))
     assert len(parsed_out) == 3
     for log in parsed_out:
-        assert format_log_context(pid=PROCESS_ID, job_id="") in log
+        assert_log_params(log, process_id=PROCESS_ID, job_id="")
 
     # Test Custom Formatting
     # TODO split out into custom test once ComputeModuleLoggingAdapter made fixture to avoid capsys errors

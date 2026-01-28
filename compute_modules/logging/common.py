@@ -15,6 +15,7 @@
 
 import json
 import logging
+import os
 import threading
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, MutableMapping, Optional, Tuple, Union
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 else:
     _LoggerAdapter = logging.LoggerAdapter
 
-DEFAULT_LOG_FORMAT = "PID: %(process_id)-6s JOB: %(job_id)-36s - %(message)s"
+DEFAULT_LOG_FORMAT = "%(message)s"
 DEFAULT_LOG_STRING_FORMATTER = logging.Formatter(DEFAULT_LOG_FORMAT)
 
 
@@ -51,6 +52,7 @@ class SlsFormatter(logging.Formatter):
             "origin": f"{record.filename}:{record.lineno}",
             "safe": True,
             "thread": threading.current_thread().name,
+            "params": getattr(record, "params", {}),
             "message": formatted_message,
         }
         return json.dumps(log_entry)
@@ -118,9 +120,11 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         custom_data = {
             "process_id": str(get_thread_local_data("process_id", "-1")),
             "job_id": str(get_thread_local_data("job_id", "")),
+            "session_id": os.environ.get("COMPUTE_SESSION_ID", ""),
         }
         kwargs["extra"] = kwargs.get("extra", {})
         kwargs["extra"].update(custom_data)
+        kwargs["extra"]["params"] = custom_data
 
         return msg, kwargs
 
