@@ -114,6 +114,7 @@ class ComputeModulesLoggerAdapter(_LoggerAdapter):
         logger_name: str,
     ) -> None:
         # Need to pass empty dict as `extra` param for 3.9 support
+        # TODO: update since 3.9 is no longer supported
         super().__init__(_create_logger(logger_name), dict())
 
     def process(self, msg: Any, kwargs: MutableMapping[str, Any]) -> Tuple[Any, MutableMapping[str, Any]]:

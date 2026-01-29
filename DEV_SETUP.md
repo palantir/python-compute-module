@@ -4,7 +4,7 @@
 
 ## Requirements
 
-* python >= 3.9
+* python >= 3.10
 * [poetry](https://python-poetry.org/docs/)
 
 ## Commands
