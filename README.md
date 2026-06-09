@@ -441,6 +441,7 @@ You can add SLS safe logging params to an individual log line with the `params` 
 with the SDK-provided `process_id`, `job_id`, and `session_id` values.
 
 ```python
+import logging
 from compute_modules.logging import get_logger
 
 logger = get_logger(__name__)
