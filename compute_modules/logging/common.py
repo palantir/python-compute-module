@@ -62,7 +62,7 @@ class SlsFormatter(logging.Formatter):
             log_entry[SLS_UNSAFE_PARAMS_KEY] = unsafe_params
         else:
             log_entry["safe"] = True
-        return json.dumps(log_entry)
+        return json.dumps(log_entry, default=str)
 
 
 SLS_FORMATTER = SlsFormatter()
