@@ -437,6 +437,40 @@ logger.error("Peekaboo!")
 logger.critical("Peekaboo!")
 ```
 
+You can add SLS safe logging params to an individual log line with the `params` keyword. Params are merged
+with the SDK-provided `process_id`, `job_id`, and `session_id` values.
+
+```python
+import logging
+from compute_modules.logging import get_logger
+
+logger = get_logger(__name__)
+logger.setLevel(logging.INFO)
+
+logger.info("Processed event", params={"event_primary_key": event_primary_key, "row_count": row_count})
+```
+
+For context that should be included on many log lines, bind it once. Bound params are copied into a new logger
+adapter, and per-call params with the same key take precedence.
+
+```python
+request_logger = logger.bind(params={"trace_id": trace_id, "event_primary_key": event_primary_key})
+
+request_logger.info("Started processing")
+request_logger.info("Finished processing", params={"duration_ms": duration_ms})
+```
+
+Unsafe params can be logged separately using the `unsafe_params` keyword. When unsafe params are present, they
+are written to the SLS `unsafeParams` field and the log entry is not marked `safe`.
+
+```python
+request_logger.info(
+    "Received request",
+    params={"request_type": request_type},
+    unsafe_params={"display_name": display_name},
+)
+```
+
 ### Applying your own custom log formatter via the SDK
 
 If you would like to use the SDK logging but apply your own formatter, you can use the utility function provided. 

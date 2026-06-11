@@ -20,7 +20,7 @@ import uuid
 import pytest
 
 from compute_modules.logging import get_logger, internal, setup_logger_formatter
-from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter
+from compute_modules.logging.common import COMPUTE_MODULES_ADAPTER_MANAGER, ComputeModulesLoggerAdapter, SlsFormatter
 from tests.conftest import JsonFormatter
 
 from .logging_test_utils import CLIENT_ERROR_STR, CLIENT_INFO_STR, CLIENT_WARNING_STR, INFO_STR
@@ -49,8 +49,69 @@ def assert_log_params(log: str, process_id: int, job_id: str, session_id: str = 
     assert params["session_id"] == session_id, f"Expected session_id {session_id}, got {params['session_id']}"
 
 
+def test_log_params_can_be_added_per_call(capsys: pytest.CaptureFixture[str]) -> None:
+    setup_logger_formatter(SlsFormatter())
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(PROCESS_ID)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id("")
+
+    logger = get_logger("test.logger.params-per-call")
+    logger.setLevel(logging.INFO)
+    logger.info("with params", params={"event_primary_key": "event-1", "row_count": 5})
+
+    logged = json.loads(capsys.readouterr().err)
+    assert logged["safe"] is True
+    assert logged["params"]["event_primary_key"] == "event-1"
+    assert logged["params"]["row_count"] == 5
+    assert logged["params"]["process_id"] == str(PROCESS_ID)
+    assert logged["params"]["job_id"] == ""
+
+
+def test_bound_params_are_added_to_every_log_and_per_call_params_win(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    setup_logger_formatter(SlsFormatter())
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(PROCESS_ID)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id("")
+
+    logger = get_logger("test.logger.bound-params")
+    logger.setLevel(logging.INFO)
+    bound_logger = logger.bind(params={"trace_id": "trace-1", "event_primary_key": "default-event"})
+
+    logger.info("without bound params")
+    bound_logger.info("with bound params", params={"event_primary_key": "event-2"})
+
+    logged = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert "trace_id" not in logged[0]["params"]
+    assert logged[1]["params"]["trace_id"] == "trace-1"
+    assert logged[1]["params"]["event_primary_key"] == "event-2"
+
+
+def test_unsafe_params_are_written_to_unsafe_params_and_mark_log_unsafe(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    setup_logger_formatter(SlsFormatter())
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(PROCESS_ID)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id("")
+
+    logger = get_logger("test.logger.unsafe-params")
+    logger.setLevel(logging.INFO)
+    logger.info(
+        "with unsafe params",
+        params={"dataset_rid": "ri.foundry.main.dataset.123", "dataset_name": "should-not-be-safe"},
+        unsafe_params={"dataset_name": "Customers"},
+    )
+
+    logged = json.loads(capsys.readouterr().err)
+    assert "safe" not in logged
+    assert logged["params"]["dataset_rid"] == "ri.foundry.main.dataset.123"
+    assert "dataset_name" not in logged["params"]
+    assert logged["unsafeParams"]["dataset_name"] == "Customers"
+
+
 def test_log_format(capsys: pytest.CaptureFixture[str], custom_formatter: JsonFormatter) -> None:
     """Verify initial state of logger context"""
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_process_id(process_id=-1)
+    COMPUTE_MODULES_ADAPTER_MANAGER.update_job_id(job_id="")
     internal_logger, logger_1, logger_2 = logger_fixtures()
     internal_logger.info(INFO_STR)
     logger_1.info(CLIENT_INFO_STR)

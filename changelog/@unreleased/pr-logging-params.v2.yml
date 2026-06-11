@@ -1,0 +1,4 @@
+type: improvement
+improvement:
+  description: Add dictionary-based safe and unsafe SLS logging params, plus bound logging context.
+  links: []
