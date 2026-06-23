@@ -17,6 +17,7 @@ import collections
 import datetime
 import decimal
 import inspect
+import types
 import typing
 
 from compute_modules.context.types import QueryContext
@@ -193,7 +194,7 @@ def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, Pyth
                 "valuesType": value_data_type,
             },
         }, PythonClassNode(constructor=dict, children={"key": key_class_node, "value": value_class_node})
-    if typing.get_origin(type_hint) is typing.Union:
+    if _is_union_type(type_hint):
         type_args = typing.get_args(type_hint)
         # ontology edits will only work as return types since
         # the OntologyEdit type_hint is not a valid constructor
@@ -314,7 +315,14 @@ def _is_ontology_edit(type_args: typing.Iterable[typing.Any]) -> bool:
     return ontology_edit_sub_types.issubset(type_arg_names)
 
 
+def _is_union_type(item: typing.Any) -> bool:
+    origin = typing.get_origin(item)
+    return origin is typing.Union or origin is types.UnionType
+
+
 def _assert_is_valid_custom_type(item: typing.Any) -> None:
+    if not inspect.isclass(item):
+        raise ValueError(f"Custom Type {item} found but invalid, expected a class")
     # If using a TypedDict, _assert_is_valid_custom_type will raise an erroneous exception
     # So we only want to validate if this is a true class
     if issubclass(item, dict):

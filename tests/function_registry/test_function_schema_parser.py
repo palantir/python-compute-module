@@ -13,10 +13,12 @@
 #  limitations under the License.
 
 
-from typing import Optional
+from dataclasses import dataclass
+from typing import Optional, Union
 
 import pytest
 
+from compute_modules.context import QueryContext
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
 from compute_modules.function_registry.types import ComputeModuleFunctionSchema, FunctionOutputType
 from tests.function_registry.dummy_app import (
@@ -34,6 +36,91 @@ from tests.function_registry.dummy_app_with_issues import (
     dummy_no_init_hints,
     dummy_no_type_hints,
 )
+
+EXPECTED_STRING = {"string": {}, "type": "string"}
+EXPECTED_OPTIONAL_STRING = {"optionalType": {"wrappedType": EXPECTED_STRING}, "type": "optionalType"}
+
+
+@dataclass
+class SimpleInput:
+    x: str
+
+
+@dataclass
+class Pep604Input:
+    error: str | None = None
+
+
+@dataclass
+class Pep604Inner:
+    name: str
+    error: str | None = None
+
+
+@dataclass
+class Pep604DirectOuter:
+    inner: Pep604Inner
+
+
+@dataclass
+class Pep604ListOuter:
+    items: list[Pep604Inner]
+
+
+@dataclass
+class OptionalInner:
+    name: str
+    error: Optional[str] = None
+
+
+@dataclass
+class OptionalListOuter:
+    items: list[OptionalInner]
+
+
+@dataclass
+class UnionInner:
+    name: str
+    error: Union[str, None] = None
+
+
+@dataclass
+class UnionListOuter:
+    items: list[UnionInner]
+
+
+@dataclass
+class UnsupportedPep604UnionInput:
+    value: str | int
+
+
+def pep604_top_level_input(context: QueryContext, event: Pep604Input) -> str:
+    return event.error or context.userId or ""
+
+
+def pep604_nested_direct_output(context: QueryContext, event: SimpleInput) -> Pep604DirectOuter:
+    return Pep604DirectOuter(inner=Pep604Inner(name=event.x, error=context.userId))
+
+
+def pep604_nested_list_output(context: QueryContext, event: SimpleInput) -> Pep604ListOuter:
+    return Pep604ListOuter(items=[Pep604Inner(name=event.x, error=context.userId)])
+
+
+def pep604_nested_input(context: QueryContext, event: Pep604ListOuter) -> str:
+    return event.items[0].error or context.userId or ""
+
+
+def optional_nested_list_output(context: QueryContext, event: SimpleInput) -> OptionalListOuter:
+    return OptionalListOuter(items=[OptionalInner(name=event.x, error=context.userId)])
+
+
+def union_nested_list_output(context: QueryContext, event: SimpleInput) -> UnionListOuter:
+    return UnionListOuter(items=[UnionInner(name=event.x, error=context.userId)])
+
+
+def unsupported_pep604_union_input(context: QueryContext, event: UnsupportedPep604UnionInput) -> str:
+    return str(event.value or context.userId or "")
+
 
 EXPECTED_OUTPUT_1 = {
     "single": {
@@ -162,6 +249,70 @@ def test_function_schema_parser() -> None:
     assert parse_result.class_node["children"]["some_flag"]["children"] is None
     assert parse_result.class_node["children"]["optional_default_value_field"]["constructor"] is Optional
     assert parse_result.is_context_typed is False
+
+
+def test_function_schema_parser_pep604_top_level_optional_input() -> None:
+    parse_result = parse_function_schema(pep604_top_level_input, "pep604_top_level_input", [], {})
+
+    assert parse_result.function_schema["inputs"] == [
+        {
+            "name": "error",
+            "dataType": EXPECTED_OPTIONAL_STRING,
+            "required": True,
+            "constraints": [],
+        }
+    ]
+    assert parse_result.class_node is not None
+    assert parse_result.class_node["children"] is not None
+    assert parse_result.class_node["children"]["error"]["constructor"] is Optional
+    assert parse_result.is_context_typed
+
+
+def test_function_schema_parser_pep604_nested_direct_output() -> None:
+    parse_result = parse_function_schema(pep604_nested_direct_output, "pep604_nested_direct_output", [], {})
+
+    output_fields = parse_result.function_schema["output"]["single"]["dataType"]["anonymousCustomType"]["fields"]
+    inner_fields = output_fields["inner"]["anonymousCustomType"]["fields"]
+    assert inner_fields["name"] == EXPECTED_STRING
+    assert inner_fields["error"] == EXPECTED_OPTIONAL_STRING
+
+
+def test_function_schema_parser_pep604_nested_list_output() -> None:
+    parse_result = parse_function_schema(pep604_nested_list_output, "pep604_nested_list_output", [], {})
+
+    output_fields = parse_result.function_schema["output"]["single"]["dataType"]["anonymousCustomType"]["fields"]
+    item_fields = output_fields["items"]["list"]["elementsType"]["anonymousCustomType"]["fields"]
+    assert item_fields["name"] == EXPECTED_STRING
+    assert item_fields["error"] == EXPECTED_OPTIONAL_STRING
+
+
+def test_function_schema_parser_pep604_nested_input() -> None:
+    parse_result = parse_function_schema(pep604_nested_input, "pep604_nested_input", [], {})
+
+    input_data_type = parse_result.function_schema["inputs"][0]["dataType"]
+    item_fields = input_data_type["list"]["elementsType"]["anonymousCustomType"]["fields"]
+    assert item_fields["name"] == EXPECTED_STRING
+    assert item_fields["error"] == EXPECTED_OPTIONAL_STRING
+
+
+def test_function_schema_parser_optional_union_and_pep604_nested_lists_match() -> None:
+    pep604_output = parse_function_schema(
+        pep604_nested_list_output, "pep604_nested_list_output", [], {}
+    ).function_schema["output"]
+    optional_output = parse_function_schema(
+        optional_nested_list_output, "optional_nested_list_output", [], {}
+    ).function_schema["output"]
+    union_output = parse_function_schema(union_nested_list_output, "union_nested_list_output", [], {}).function_schema[
+        "output"
+    ]
+
+    assert pep604_output == optional_output == union_output
+
+
+def test_function_schema_parser_unsupported_pep604_union() -> None:
+    with pytest.raises(ValueError) as exc_info:
+        parse_function_schema(unsupported_pep604_union_input, "unsupported_pep604_union_input", [], {})
+    assert "Only unions with two types where one of the types is `None` are supported" in str(exc_info.value)
 
 
 def test_function_schema_parser_no_type_hints() -> None:
