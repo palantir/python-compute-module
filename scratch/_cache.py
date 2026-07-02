@@ -32,27 +32,31 @@ class DistributedCache:
         from scratch import DistributedCache, CacheTTL
         import json
 
-        cache = DistributedCache()
+        cache = DistributedCache(default_ttl=CacheTTL.FIVE_MINUTES)
 
         key = "expensive-result"
         cached = cache.get(key)
         if cached is None:
             result = expensive_computation()
-            cache.put(key, json.dumps(result), ttl=CacheTTL.ONE_HOUR)
+            cache.put(key, json.dumps(result))
         else:
             result = json.loads(cached)
     """
 
-    def __init__(self) -> None:
+    def __init__(self, default_ttl: CacheTTL = CacheTTL.ONE_HOUR) -> None:
         self._client = _get_default_client()
+        self._default_ttl = default_ttl
 
     def get(self, key: str) -> Optional[str]:
         """Retrieve a cached value. Returns None if the key does not exist or has expired."""
         return self._client.get(key)
 
-    def put(self, key: str, value: str, ttl: CacheTTL = CacheTTL.ONE_HOUR) -> None:
-        """Write a value to the cache. Overwrites if exists."""
-        self._client.put(key, value, ttl)
+    def put(self, key: str, value: str, ttl: Optional[CacheTTL] = None) -> None:
+        """Write a value to the cache. Overwrites if exists.
+
+        Uses the default TTL from the constructor unless overridden with ``ttl``.
+        """
+        self._client.put(key, value, ttl or self._default_ttl)
 
     def delete(self, key: str) -> None:
         """Remove a key from the cache. No-op if absent."""

@@ -26,7 +26,10 @@ class Lock:
 
     For example::
 
-        lock = lock_service.try_lock("my-lock")
+        from scratch import DistributedLock
+
+        lock_manager = DistributedLock()
+        lock = lock_manager.try_lock("my-lock")
         if lock:
             try:
                 for item in items:
@@ -87,9 +90,12 @@ class DistributedLock:
     Call ``refresh()`` periodically for long-running work, and always check its
     return value — ``False`` means the lock was lost.
 
-    For example:
+    For example::
 
-        lock = lock_service.try_lock("process-batch")
+        from scratch import DistributedLock
+
+        lock_manager = DistributedLock()
+        lock = lock_manager.try_lock("process-batch")
         if lock:
             try:
                 for chunk in get_chunks():

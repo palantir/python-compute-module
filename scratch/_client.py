@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 
-import json
 import logging
 import os
 from functools import cache
@@ -83,7 +82,6 @@ class ScratchClient:
     def _headers(self) -> dict:
         return {
             "Authorization": os.environ.get(SCRATCH_TOKEN, ""),
-            "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
@@ -107,7 +105,7 @@ class ScratchClient:
     # ── Cache operations ──
 
     def get(self, key: str) -> Optional[str]:
-        resp = self._session.post(self._url("/v1/cache/get"), headers=self._headers(), data=json.dumps({"key": key}))
+        resp = self._session.post(self._url("/v1/cache/get"), headers=self._headers(), json={"key": key})
         data = self._handle_response(resp)
         if data is None:
             return None
@@ -117,18 +115,18 @@ class ScratchClient:
         body = {"key": key, "value": {"value": value}}
         if ttl is not None:
             body["ttl"] = ttl.value
-        resp = self._session.post(self._url("/v1/cache"), headers=self._headers(), data=json.dumps(body))
+        resp = self._session.post(self._url("/v1/cache"), headers=self._headers(), json=body)
         self._handle_response(resp)
 
     def delete(self, key: str) -> None:
         resp = self._session.post(
-            self._url("/v1/cache/delete"), headers=self._headers(), data=json.dumps({"key": key})
+            self._url("/v1/cache/delete"), headers=self._headers(), json={"key": key}
         )
         self._handle_response(resp)
 
     def exists(self, key: str) -> bool:
         resp = self._session.post(
-            self._url("/v1/cache/exists"), headers=self._headers(), data=json.dumps({"key": key})
+            self._url("/v1/cache/exists"), headers=self._headers(), json={"key": key}
         )
         data = self._handle_response(resp)
         if data is None:
@@ -139,7 +137,7 @@ class ScratchClient:
         if len(keys) > 100:
             raise ValueError(f"batch_get supports at most 100 keys, got {len(keys)}")
         resp = self._session.post(
-            self._url("/v1/cache/batch-get"), headers=self._headers(), data=json.dumps({"keys": keys})
+            self._url("/v1/cache/batch-get"), headers=self._headers(), json={"keys": keys}
         )
         data = self._handle_response(resp)
         if data is None:
@@ -151,7 +149,7 @@ class ScratchClient:
 
     def try_lock(self, lock_name: str) -> Optional[dict]:
         resp = self._session.post(
-            self._url("/v1/lock/try-lock"), headers=self._headers(), data=json.dumps({"lockName": lock_name})
+            self._url("/v1/lock/try-lock"), headers=self._headers(), json={"lockName": lock_name}
         )
         data = self._handle_response(resp)
         if data is not None and "acquired" in data:
@@ -160,13 +158,13 @@ class ScratchClient:
 
     def unlock(self, handle: dict) -> None:
         resp = self._session.post(
-            self._url("/v1/lock/unlock"), headers=self._headers(), data=json.dumps({"handle": handle})
+            self._url("/v1/lock/unlock"), headers=self._headers(), json={"handle": handle}
         )
         self._handle_response(resp)
 
     def refresh_lock(self, handle: dict) -> bool:
         resp = self._session.post(
-            self._url("/v1/lock/refresh"), headers=self._headers(), data=json.dumps({"handle": handle})
+            self._url("/v1/lock/refresh"), headers=self._headers(), json={"handle": handle}
         )
         data = self._handle_response(resp)
         if data is None:
