@@ -50,7 +50,7 @@ def _stub_post(client: ScratchClient, resp: MagicMock) -> MagicMock:
 
 
 def _posted_body(post_mock: MagicMock) -> Any:
-    return json.loads(post_mock.call_args[1]["data"])
+    return post_mock.call_args[1]["json"]
 
 
 def test_get_default_client_no_token() -> None:
