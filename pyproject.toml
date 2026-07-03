@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/palantir/python-compute-module"
 keywords = ["Palantir", "Foundry", "Compute Modules"]
-packages = [{ include = "compute_modules" }]
+packages = [{ include = "compute_modules" }, { include = "scratch" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -18,6 +18,7 @@ pyyaml = { version = "^6.0.1", optional = true }
 
 [tool.poetry.extras]
 sources = ["external-systems", "pyyaml"]
+scratch = ["pyyaml"]
 
 
 [tool.poetry.group.dev.dependencies]

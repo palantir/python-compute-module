@@ -420,6 +420,57 @@ INFO: raw_args: ['--test', 'hello', '--another-param', 'world']
 INFO: parsed_args: Namespace(test='hello' , another_param= 'world' )
 ```
 
+## Scratch: Distributed Cache & Locking
+
+The `scratch` package provides a distributed cache and distributed locking primitives shared across all replicas of a 
+compute module. Install the scratch extras to use it:
+
+```bash
+pip install foundry-compute-modules[scratch]
+```
+
+### Distributed Cache
+
+```python
+from scratch import DistributedCache, CacheTTL
+import json
+
+cache = DistributedCache(default_ttl=CacheTTL.FIVE_MINUTES)
+
+# Write to cache
+cache.put("my-key", json.dumps({"result": 42}))
+
+# Read from cache (returns None if missing or expired)
+value = cache.get("my-key")
+
+# Batch read (up to 100 keys)
+values = cache.batch_get(["key1", "key2", "key3"])
+
+# Override default TTL for a specific write
+cache.put("long-lived", "data", ttl=CacheTTL.ONE_DAY)
+```
+
+Data expires after the configured TTL (max 24 hours) and carries no durability guarantees.
+
+### Distributed Lock
+
+```python
+from scratch import DistributedLock
+
+lock_manager = DistributedLock()
+lock = lock_manager.try_lock("process-batch")
+if lock:
+    try:
+        for chunk in get_chunks():
+            process(chunk)
+            if not lock.refresh():  # call before 20s expires
+                raise RuntimeError("Lost lock")
+    finally:
+        lock.unlock()
+```
+
+Locks auto-expire after 20 seconds if not refreshed. Only one replica can hold a given lock at a time. Call `refresh()` periodically for long-running work and always check its return value.
+
 ## Logging
 
 To ensure your logs are emitted to properly we recommend you use the `get_logger` utility function provided by the SDK. This returns a normal `logging.Logger` instance so once you have the logger, you can use it as a drop-in replacement for `logging.getLogger`.
