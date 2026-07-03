@@ -19,7 +19,7 @@ import os
 import ssl
 import time
 import urllib.parse
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def retrieve_third_party_id_and_creds() -> Tuple[Optional[str], Optional[str]]:
@@ -28,7 +28,7 @@ def retrieve_third_party_id_and_creds() -> Tuple[Optional[str], Optional[str]]:
     return CLIENT_ID, CLIENT_SECRET
 
 
-def oauth(hostname: str, scope: List[str]) -> Any:
+def _request_oauth_token(hostname: str, scope: List[str]) -> Optional[Dict[str, Any]]:
     CLIENT_ID, CLIENT_SECRET = retrieve_third_party_id_and_creds()
     if CLIENT_ID and CLIENT_SECRET:
         params = urllib.parse.urlencode(
@@ -53,10 +53,17 @@ def oauth(hostname: str, scope: List[str]) -> Any:
             try:
                 token_data = json.loads(data)
                 if isinstance(token_data, dict):
-                    return token_data.get("access_token")
+                    return token_data
             except (ValueError, KeyError):
                 return None
     return None
+
+
+def oauth(hostname: str, scope: List[str]) -> Any:
+    token_data = _request_oauth_token(hostname, scope)
+    if token_data is None:
+        return None
+    return token_data.get("access_token")
 
 
 class RefreshingOauthToken:
@@ -64,15 +71,19 @@ class RefreshingOauthToken:
         self.hostname = hostname
         self.scope = scope
         self.refresh_interval = refresh_interval
-        self.last_refresh_time = 0.0
-        self.token = None
+        self.next_refresh_time = 0.0
+        self.token: Optional[str] = None
 
     def get_token(self) -> Any:
         current_time = time.time()
-        if not self.token or current_time - self.last_refresh_time > self.refresh_interval:
-            self.token = self._fetch_token()
-            self.last_refresh_time = current_time
+        if not self.token or current_time >= self.next_refresh_time:
+            token_data = _request_oauth_token(self.hostname, self.scope) or {}
+            self.token = token_data.get("access_token")
+            self.next_refresh_time = current_time + self._effective_refresh_interval(token_data)
         return self.token
 
-    def _fetch_token(self) -> Any:
-        return oauth(self.hostname, self.scope)
+    def _effective_refresh_interval(self, token_data: Dict[str, Any]) -> float:
+        expires_in = token_data.get("expires_in")
+        if isinstance(expires_in, (int, float)) and expires_in > 0:
+            return min(self.refresh_interval, float(expires_in))
+        return float(self.refresh_interval)
