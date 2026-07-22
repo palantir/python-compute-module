@@ -161,6 +161,14 @@ def _extract_output(type_hints: typing.Dict[str, typing.Any]) -> FunctionOutputT
 def _extract_data_type(type_hint: typing.Any) -> typing.Tuple[DataTypeDict, PythonClassNode]:
     # TODO: not sure how to actually test the Byte/Long/Short/etc. DataTypes here...
     # As in how someone would actually define a Pyhton CM with those types
+    if isinstance(type_hint, typing.TypeVar):
+        # Check if the type hint is a type alias
+        if hasattr(type_hint, "__constraints__"):
+            # Extract the aliased type
+            aliased_type_hint = type_hint.__constraints__[0]
+            return _extract_data_type(aliased_type_hint)
+        else:
+            raise ValueError("Type alias must have a constraint")
     if typing.get_origin(type_hint) is list:
         element_hint = typing.get_args(type_hint)[0]
         element_type, element_class_node = _extract_data_type(element_hint)
