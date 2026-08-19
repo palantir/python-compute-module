@@ -14,6 +14,7 @@
 
 from scratch._cache import DistributedCache
 from scratch._lock import DistributedLock, Lock
+from scratch._routing import PeerNetwork, ReplicaRouter
 from scratch._types import CacheTTL
 
 __all__ = [
@@ -21,4 +22,6 @@ __all__ = [
     "DistributedCache",
     "DistributedLock",
     "Lock",
+    "PeerNetwork",
+    "ReplicaRouter",
 ]
