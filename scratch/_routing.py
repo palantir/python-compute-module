@@ -138,7 +138,7 @@ class PeerNetwork:
         Submits the query as a job to the peer's forwarder, which queues it for the
         peer's Python replica. Blocks until the result is ready. Returns raw result bytes.
         """
-        job_id = f"fwd-{uuid.uuid4()}"
+        job_id = str(uuid.uuid4())
         url = f"https://{target_ip}:{self._port}{_EXECUTE_V2_PATH}/{job_id}/v2"
 
         body = json.dumps({
