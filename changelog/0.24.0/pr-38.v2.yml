@@ -1,6 +1,0 @@
-type: fix
-fix:
-  description: Timestamps can now be in the format with fractional seconds through
-    Python datetime as many timestamps are.
-  links:
-  - https://github.com/palantir/python-compute-module/pull/38

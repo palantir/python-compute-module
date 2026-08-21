@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Fix telemetry SLS parsing
-  links:
-  - https://github.com/palantir/python-compute-module/pull/37
