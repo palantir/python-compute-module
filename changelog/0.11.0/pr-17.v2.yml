@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: 'Performance improvements: process pooling; reusing connections'
-  links:
-  - https://github.com/palantir/python-compute-module/pull/17

@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Remove executable scripts
-  links:
-  - https://github.com/palantir/python-compute-module/pull/11

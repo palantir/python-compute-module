@@ -1,5 +1,0 @@
-type: manualTask
-manualTask:
-  description: Add poe task runner
-  links:
-  - https://github.com/palantir/python-compute-module/pull/14

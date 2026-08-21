@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Fix foundry-compute-modules[sources] package name in exception
-  links:
-  - https://github.com/palantir/python-compute-module/pull/35
