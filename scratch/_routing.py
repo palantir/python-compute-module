@@ -112,6 +112,12 @@ class PeerNetwork:
             session.mount("https://", _PeerTLSAdapter(tls_name))
         return session
 
+    def _require_tls(self) -> None:
+        if not self._ca_path:
+            raise RuntimeError("CONNECTIONS_TO_OTHER_PODS_CA_PATH is required for peer TLS")
+        if not _peer_tls_name():
+            raise RuntimeError("COMPUTE_PEER_SERVICE_HOST is required for peer TLS hostname verification")
+
     @property
     def self_ip(self) -> str:
         return self._self_ip
@@ -138,6 +144,7 @@ class PeerNetwork:
         Submits the query as a job to the peer's forwarder, which queues it for the
         peer's Python replica. Blocks until the result is ready. Returns raw result bytes.
         """
+        self._require_tls()
         job_id = str(uuid.uuid4())
         url = f"https://{target_ip}:{self._port}{_EXECUTE_V2_PATH}/{job_id}/v2"
 
@@ -179,6 +186,7 @@ class PeerNetwork:
         For Pattern 1 CMs where the user runs their own HTTP server. Headers pass
         through verbatim (including custom headers like loop-prevention markers).
         """
+        self._require_tls()
         url = f"https://{target_ip}:{self._port}{_PASSTHROUGH_PATH}{path}"
         fwd_headers = {**(headers or {})}
         if self._auth_token:
