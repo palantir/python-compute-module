@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: '[Connectivity] Support mounted source config'
-  links:
-  - https://github.com/palantir/python-compute-module/pull/28
