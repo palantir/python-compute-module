@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: add CLI for running schema inference at build time
-  links:
-  - https://github.com/palantir/python-compute-module/pull/24

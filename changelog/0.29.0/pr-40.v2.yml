@@ -1,7 +1,0 @@
-type: fix
-fix:
-  description: "Inform the
-    forwarder whenever a node starts up so it will remove all existing jobs related
-    to it that it thinks are still running."
-  links:
-  - https://github.com/palantir/python-compute-module/pull/40
