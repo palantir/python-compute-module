@@ -17,6 +17,7 @@ import datetime
 import logging
 import typing
 
+from .function_schema_parser import is_omittable_field
 from .types import PythonClassNode
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,9 @@ def convert_payload(
         # Complex class
         converted_children = {}
         for child_key, child_class_tree in class_tree["children"].items():
+            # Leave omitted fields out so the constructor applies the declared default
+            if child_key not in raw_payload and is_omittable_field(type_constructor, child_key):
+                continue
             # if child is optional and no value provided, default to None
             if child_class_tree["constructor"] is typing.Optional and child_key not in raw_payload:
                 raw_payload[child_key] = None

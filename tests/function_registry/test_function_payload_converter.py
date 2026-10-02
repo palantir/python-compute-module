@@ -15,12 +15,29 @@
 
 import datetime
 import decimal
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 import pytest
 
+from compute_modules.context import QueryContext
 from compute_modules.function_registry.function_payload_converter import convert_payload
 from compute_modules.function_registry.function_schema_parser import parse_function_schema
 from tests.function_registry.dummy_app import ChildClass, DummyInput, ParentClass, dummy_func_1
+
+
+@dataclass
+class DefaultsInput:
+    name: str
+    nullable: Optional[str]
+    count: Optional[int] = 3
+    limit: int = 5
+    tags: List[str] = field(default_factory=list)
+
+
+def defaults_input(context: QueryContext, event: DefaultsInput) -> str:
+    return event.name
+
 
 RAW_PAYLOAD = {
     "parent_class": {
@@ -105,3 +122,23 @@ def test_convert_payload_error(
         convert_payload(BAD_RAW_PAYLOAD, parse_result.class_node)
     assert str(exc_info.value) == "Invalid isoformat string: 'do'"
     assert "Error converting do to type <built-in method fromisoformat" in caplog.text
+
+
+def test_convert_payload_omitted_fields_use_declared_defaults() -> None:
+    parse_result = parse_function_schema(defaults_input, "defaults_input", [], {})
+    assert parse_result.class_node
+
+    processed_payload: DefaultsInput = convert_payload({"name": "a"}, parse_result.class_node)
+
+    assert processed_payload == DefaultsInput(name="a", nullable=None, count=3, limit=5, tags=[])
+
+
+def test_convert_payload_explicit_values_override_defaults() -> None:
+    parse_result = parse_function_schema(defaults_input, "defaults_input", [], {})
+    assert parse_result.class_node
+
+    processed_payload: DefaultsInput = convert_payload(
+        {"name": "a", "nullable": "b", "count": None, "limit": 1, "tags": ["x"]}, parse_result.class_node
+    )
+
+    assert processed_payload == DefaultsInput(name="a", nullable="b", count=None, limit=1, tags=["x"])
