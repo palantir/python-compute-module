@@ -113,7 +113,7 @@ def _extract_inputs(
         inputs.append(
             FunctionInputType(
                 name=field_name,
-                required=not is_omittable_field(payload, field_name),
+                required=is_required_field(payload, field_name),
                 constraints=[],
                 dataType=value_data_type,
             )
@@ -125,12 +125,12 @@ def _extract_inputs(
     return inputs, root_class_node
 
 
-def is_omittable_field(cls: typing.Any, field_name: str) -> bool:
-    """Whether callers may leave the field out, i.e. it has a default or is a NotRequired TypedDict key"""
+def is_required_field(cls: typing.Any, field_name: str) -> bool:
+    """Whether callers must send the field, i.e. it has no default and is not a NotRequired TypedDict key"""
     if issubclass(cls, dict):
-        return field_name in getattr(cls, "__optional_keys__", ())
+        return field_name not in getattr(cls, "__optional_keys__", ())
     parameter = inspect.signature(cls).parameters.get(field_name)
-    return parameter is not None and parameter.default is not inspect.Parameter.empty
+    return parameter is None or parameter.default is inspect.Parameter.empty
 
 
 def _default_unknown_output() -> FunctionOutputType:
