@@ -13,8 +13,8 @@
 #  limitations under the License.
 
 
-from dataclasses import dataclass
-from typing import Optional, Union
+from dataclasses import dataclass, field
+from typing import List, Optional, TypedDict, Union
 
 import pytest
 
@@ -225,7 +225,7 @@ EXPECTED_INPUTS = [
     {
         "name": "optional_default_value_field",
         "dataType": {"optionalType": {"wrappedType": {"string": {}, "type": "string"}}, "type": "optionalType"},
-        "required": True,
+        "required": False,
         "constraints": [],
     },
 ]
@@ -258,7 +258,7 @@ def test_function_schema_parser_pep604_top_level_optional_input() -> None:
         {
             "name": "error",
             "dataType": EXPECTED_OPTIONAL_STRING,
-            "required": True,
+            "required": False,
             "constraints": [],
         }
     ]
@@ -266,6 +266,49 @@ def test_function_schema_parser_pep604_top_level_optional_input() -> None:
     assert parse_result.class_node["children"] is not None
     assert parse_result.class_node["children"]["error"]["constructor"] is Optional
     assert parse_result.is_context_typed
+
+
+@dataclass
+class DefaultsInput:
+    name: str
+    nullable: Optional[str]
+    note: Optional[str] = None
+    limit: int = 5
+    tags: List[str] = field(default_factory=list)
+
+
+def defaults_input(context: QueryContext, event: DefaultsInput) -> str:
+    return event.name
+
+
+class PartialTypedDictInput(TypedDict, total=False):
+    note: str
+
+
+class TypedDictInput(PartialTypedDictInput):
+    name: str
+
+
+def typed_dict_input(context: QueryContext, event: TypedDictInput) -> str:
+    return event["name"]
+
+
+def test_function_schema_parser_fields_with_defaults_are_not_required() -> None:
+    inputs = parse_function_schema(defaults_input, "defaults_input", [], {}).function_schema["inputs"]
+
+    assert {i["name"]: i["required"] for i in inputs} == {
+        "name": True,
+        "nullable": True,
+        "note": False,
+        "limit": False,
+        "tags": False,
+    }
+
+
+def test_function_schema_parser_not_required_typed_dict_keys_are_not_required() -> None:
+    inputs = parse_function_schema(typed_dict_input, "typed_dict_input", [], {}).function_schema["inputs"]
+
+    assert {i["name"]: i["required"] for i in inputs} == {"name": True, "note": False}
 
 
 def test_function_schema_parser_pep604_nested_direct_output() -> None:

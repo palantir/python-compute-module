@@ -38,7 +38,7 @@ class FunctionInputType(DataType):
     """Function input schema"""
 
     name: str
-    required: typing.Literal[True]
+    required: bool
     constraints: typing.List[typing.Any]
 
 
