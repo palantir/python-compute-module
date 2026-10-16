@@ -290,7 +290,10 @@ class InternalQueryService:
         post_restart_url = self.build_url(self.post_restart_path)
         self.logger.debug(f"Reporting restart to {post_restart_url}")
 
+        attempts = 0
         for _ in range(POST_RESTART_MAX_ATTEMPTS):
+            attempts += 1
+            received_500 = False
             try:
                 with self.session.request(
                     method="POST",
@@ -311,7 +314,15 @@ class InternalQueryService:
                         self.logger.error(
                             f"Unsuccessful in reporting restart: {response.status_code} {response.reason} {response.text}"
                         )
+                        received_500 = response.status_code == 500
             except Exception as e:
                 self.logger.error(f"Failed to report restart: {str(e)}")
 
-        raise RuntimeError(f"Unable to report restart after {POST_RESTART_MAX_ATTEMPTS} attempts")
+            if received_500:
+                # A 500 means the restart-notification service itself errored; retrying the
+                # identical request is unlikely to help and only delays startup. Stop early
+                # instead of burning through the remaining attempts.
+                self.logger.error("Restart notification endpoint returned 500, not retrying")
+                break
+
+        raise RuntimeError(f"Unable to report restart after {attempts} attempt(s)")
