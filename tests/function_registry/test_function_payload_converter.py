@@ -39,6 +39,24 @@ def defaults_input(context: QueryContext, event: DefaultsInput) -> str:
     return event.name
 
 
+@dataclass
+class OptionalValuesChild:
+    timestamp: datetime.datetime
+
+
+@dataclass
+class OptionalValuesInput:
+    timestamp: Optional[datetime.datetime]
+    day: Optional[datetime.date]
+    child: Optional[OptionalValuesChild]
+    amounts: Optional[List[decimal.Decimal]]
+    missing: Optional[datetime.datetime]
+
+
+def optional_values_input(context: QueryContext, event: OptionalValuesInput) -> str:
+    return "ok"
+
+
 RAW_PAYLOAD = {
     "parent_class": {
         "some_flag": False,
@@ -142,3 +160,27 @@ def test_convert_payload_explicit_values_override_defaults() -> None:
     )
 
     assert processed_payload == DefaultsInput(name="a", nullable="b", count=None, limit=1, tags=["x"])
+
+
+def test_convert_payload_converts_values_of_optional_fields() -> None:
+    parse_result = parse_function_schema(optional_values_input, "optional_values_input", [], {})
+    assert parse_result.class_node
+
+    processed_payload: OptionalValuesInput = convert_payload(
+        {
+            "timestamp": "2024-09-04T12:00:00Z",
+            "day": "2024-09-04",
+            "child": {"timestamp": "1979-05-27T07:32:00Z"},
+            "amounts": ["1.0", "2.5"],
+            "missing": None,
+        },
+        parse_result.class_node,
+    )
+
+    assert processed_payload == OptionalValuesInput(
+        timestamp=datetime.datetime(2024, 9, 4, 12, 0),
+        day=datetime.date(2024, 9, 4),
+        child=OptionalValuesChild(timestamp=datetime.datetime(1979, 5, 27, 7, 32)),
+        amounts=[decimal.Decimal("1.0"), decimal.Decimal("2.5")],
+        missing=None,
+    )

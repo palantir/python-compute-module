@@ -47,7 +47,7 @@ def convert_payload(
                 for key, value in raw_payload.items()
             }
         if type_constructor is typing.Optional:
-            return raw_payload
+            return convert_payload(raw_payload, class_tree["children"]["optional"])
         if type_constructor is set:
             child_class_tree = class_tree["children"]["set"]
             return set([convert_payload(el, child_class_tree) for el in raw_payload])
