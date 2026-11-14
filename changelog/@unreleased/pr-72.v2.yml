@@ -1,5 +1,0 @@
-type: fix
-fix:
-  description: Fix syntax errors in README Python examples.
-  links:
-    - https://github.com/palantir/python-compute-module/pull/72
