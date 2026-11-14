@@ -13,7 +13,10 @@
 #  limitations under the License.
 
 
+import ast
 import os
+import re
+from pathlib import Path
 from typing import List
 
 import pytest
@@ -329,3 +332,11 @@ def test_infer(src_dir: str, expected_result: List[ComputeModuleFunctionSchema])
         api_name_type_id_mapping=API_NAME_TYPE_ID_MAPPING,
     )
     assert sorted(res, key=lambda x: x["functionName"]) == sorted(expected_result, key=lambda x: x["functionName"])
+
+
+def test_readme_python_examples_have_valid_syntax() -> None:
+    readme = Path(__file__).resolve().parents[2] / "README.md"
+    examples = re.findall(r"```python\n(.*?)```", readme.read_text(encoding="utf-8"), re.DOTALL)
+    assert examples
+    for example in examples:
+        ast.parse(example)

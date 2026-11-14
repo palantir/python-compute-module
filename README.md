@@ -57,7 +57,7 @@ def get_sources(context, event) -> dict:
     source_secrets = context["sources"]
     source_configs = context["source_configs"]
     return {
-        "secrets": source_secrets
+        "secrets": source_secrets,
         "configs": source_configs
     }
 ```
@@ -182,7 +182,7 @@ class GoodExample:
 
 @function
 def typed_function(context, event: GoodExample) -> int:
-    return return event.some_value
+    return event.some_value
 ```
 
 **❌ AVOID python class with no class type hints**
@@ -341,7 +341,7 @@ from compute_modules.auth import retrieve_pipeline_token
 import requests
 
 pipeline_token = retrieve_pipeline_token()
-requests.post(..., headers={"Authorization": f"Bearer {pipeline_token}")
+requests.post(..., headers={"Authorization": f"Bearer {pipeline_token}"})
 ```
 
 ## Sources in Compute Modules
